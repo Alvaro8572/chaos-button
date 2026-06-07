@@ -1,0 +1,255 @@
+# CHAOS ENGINE v6 — Plan de Expansión
+
+> Reorganizado del PLAN original. Cada fase desbloquea la siguiente.
+> Items marcados con ⚠️ necesitan decisión del usuario.
+
+---
+
+## FASE 0 — Fundación [PREREQUISITO DE TODO]
+
+### 0.1 Contador de clicks interactivo
+- Display grande visible (propuesta: junto al chaos meter arriba)
+- Animación de tick por click (escala + color)
+- Guarda total histórico en localStorage (`totalClicks`)
+- Es la base para los requisitos de "X clicks" en la tienda
+
+### 0.2 Performance — efectos simultáneos
+- Pool de elementos DOM (reutilizar en vez de crear/borrar)
+- Límite duro de elementos simultáneos por tipo (ej: 30 símbolos max)
+- Throttle del `chaos()` a 60fps (requestAnimationFrame)
+- Los eventos nuevos (gatos, sardina, botón moneda) van a sumar más elementos
+- Si no se arregla esto, el proyecto se arrastra con todas las features nuevas
+
+---
+
+## FASE 1 — Sistema de Economía
+
+### 1.1 Moneda
+- Variable `coins` en localStorage
+- **NO se gana moneda por click**. Las monedas vienen SOLO de:
+  - Botón de monedas random (3s, 1 click = 1 moneda) — fuente principal
+  - Gato cayendo clickeado = +5 monedas
+  - Sardina clickeada = +5 monedas
+  - Boost bar lleno = +50 monedas
+- Display de monedas en UI con animación de "+N" flotante
+- Color del "+N" según origen:
+  - Botón random → blanco
+  - Gato/sardina → dorado
+  - Boost → rojo
+
+### 1.2 Animaciones de moneda
+- "+N" sube desde el botón hacia el contador
+- Posición del popup: en la ubicación del item que dio la moneda
+- Sonido: "coin-collect" al ganar (Mario coin — ver Fase 9)
+
+---
+
+## FASE 2 — Barra de Boost
+
+### 2.1 Mecánica
+- Barra separada del chaos meter (más pequeña, otra esquina — propuesta: arriba a la izquierda)
+- Color: **azul (vacía) → amarillo → rojo (llena)**
+- Cada click suma ~0.5% al boost (a calibrar, debe ser difícil llenarla)
+- **Decay**: si dejás de clickear 800ms, empieza a vaciarse
+- **Activación**: al llenarse → 10s de `click * 2` + **50 monedas** + sonido épico
+- **Cooldown**: 30s entre activaciones
+
+### 2.2 Efecto boost activo
+- Click value = 2 (también cuenta para boost y coins)
+- Indicador visual: borde del botón pulsa, banner "BOOST x2" arriba
+- Click sound cambia (más agudo/épico — clip alternativo)
+
+### 2.3 UX consideration
+- "Vamos a reventar el mouse" → la barra incentiva el spam pero:
+  - Decay agresivo (800ms) previene el RSI
+  - Animación del botón con cada click (haptic feel sin serlo)
+  - No forzar clicks por segundo, solo recompensar la actividad
+
+---
+
+## FASE 3 — Eventos Generadores de Monedas
+
+> Solo 1 evento de moneda activo a la vez. Probabilidad por click + timer independiente.
+
+### 3.1 Gato cayendo 🐱
+- Aparece 1 gato en posición X aleatoria, cae desde arriba
+- Velocidad: 1-2 segundos hasta el suelo
+- **Click antes de tocar el suelo = +5 monedas**
+- Si toca el suelo, desaparece sin dar monedas
+- Sonido "meow" al clickear, "purr" mientras cae
+- Frecuencia: timer aleatorio 15-30s entre apariciones
+
+### 3.2 Sardina 🐟
+- Sale de la esquina inferior derecha, nada hacia la izquierda
+- Visible 3-5 segundos
+- Click en cualquier parte de la sardina = +5 monedas
+- Sonido "splash" al clickear
+- Frecuencia: timer aleatorio 30-60s
+
+### 3.3 Botón de monedas 💰
+- Aparece en coordenadas aleatorias por 3 segundos
+- Texto "+1 MONEDA" o ícono de moneda
+- 1 click = 1 moneda, desaparece al clickear o a los 3s
+- Frecuencia: timer aleatorio 20-40s
+
+### 3.4 Cooldown entre eventos
+- Solo 1 evento de moneda activo simultáneamente
+- Timer de próximo spawn: random entre 15-60s post-evento terminado
+
+---
+
+## FASE 4 — Sistema de Tienda
+
+### 4.1 Modal de tienda
+- Botón de acceso en UI (esquina inferior)
+- Categorías: 📸 Fotos | 🔤 Fuentes | 👑 Adornos
+- Cada item muestra: preview, nombre, precio (monedas), requisito (clicks si tiene)
+- **Comprar** = descuenta monedas + guarda en inventario
+- **Equipar** = cambia el item activo
+- "Sin monedas suficientes" → mensaje + sonido de error
+
+### 4.2 LocalStorage
+```js
+{
+  inventory:  { pictures: [], fonts: [], accessories: [] },
+  equipped:   { picture: null, font: null, accessory: null }
+}
+```
+
+---
+
+## FASE 5 — Fotos de Perfil (12 items)
+
+| Foto | Precio (monedas) | Requisito extra |
+|---|---|---|
+| Donald Trump | 50 | — |
+| Obama | 50 | 500 clicks totales |
+| Homero | 50 | — |
+| Gojo | 75 | 500 clicks totales |
+| Megumi | 60 | 2500 clicks totales |
+| Nezuko | 75 | 500 clicks totales |
+| Muichiro | 60 | 2500 clicks totales |
+| Tomioka | 60 | 2500 clicks totales |
+| Knight | 60 | 2750 clicks totales |
+| Reina Isabel II | 100 | 750 clicks |
+| Abuela Green | 100 | 1000 clicks |
+| Gumball | 150 | 1500 clicks |
+| Messi | 150 | 1500 clicks |
+| Cristiano Ronaldo | 150 | 1500 clicks |
+
+### Estructura
+- Carpeta `profiles/` con archivos: `trump.webp`, `obama.webp`, etc.
+- El perfil activo se renderiza en la barra superior (Fase 8)
+
+⚠️ **DECISIÓN PENDIENTE**: ¿Imágenes reales o versiones estilizadas/dibujos?
+- Reales: más fácil de reconocer, problema de copyright si se distribuye
+- Estilizadas: tu propio arte o versiones meme, más seguro
+
+---
+
+## FASE 6 — Nombre y Fuentes
+
+### 6.1 Nombre personalizable
+- 5 a 15 caracteres
+- Validación: alfanumérico + espacios + acentos
+- Guardado en `localStorage.userName`
+- Editable desde la barra de perfil
+
+### 6.2 Fuentes (6 items)
+
+| Fuente | Precio | Sugerencia Google Fonts |
+|---|---|---|
+| Arial | Gratis (default) | system-ui |
+| Cursiva elegante 1 | 10 | "Dancing Script" |
+| Cursiva elegante 2 | 10 | "Great Vibes" |
+| Stranger Things style | 50 | "Creepster" (no oficial) |
+| KitKat style | 50 | "Bowlby One" (no oficial) |
+| Squid Game style | 50 | "Black Ops One" (no oficial) |
+
+⚠️ **DECISIÓN PENDIENTE**: ¿Querés las oficiales (tienen licencia) o alternativas gratuitas con estética similar? Recomiendo las alternativas — son gratis y se ven parecidas.
+
+---
+
+## FASE 7 — Adornos (TBD) ⚠️
+
+El plan original dice: "Adornos la esquina superior derecha de la barra como una corona, collar, etc."
+
+**No hay lista concreta.** Necesito que decidas:
+
+### Propuesta mía (6 adornos):
+| Adorno | Precio |
+|---|---|
+| Corona dorada | 50 |
+| Gafas de sol | 40 |
+| Sombrero de copa | 60 |
+| Alas de ángel | 100 |
+| Aura de fuego | 150 |
+| Halo | 80 |
+
+¿Aceptás esta lista? ¿Querés agregar/quitar algo?
+
+---
+
+## FASE 8 — Barra de Perfil (UI)
+
+### 8.1 Estructura visual
+```
+[ foto ]  NOMBRE_PERSONALIZADO
+              ^^^^^^^^^^^^^^^^^
+              (fuente equipada)
+                  👑 [adorno]
+```
+
+- Esquina superior derecha
+- Rectángulo con bordes redondeados
+- Foto circular de 40-50px
+- Nombre al lado con la fuente equipada
+- Adorno en esquina superior derecha de la foto (overlay)
+
+### 8.2 Interacción
+- Click en la barra → abre modal de tienda/personalización
+- Opciones: click en foto → selector de fotos, click en nombre → editor, click en adorno → selector de adornos
+
+---
+
+## FASE 9 — Efectos de Sonido Adicionales
+
+Libres de copyright / memes clásicos / dominios públicos:
+
+| Sonido | Trigger | Sugerencia de fuente |
+|---|---|---|
+| `coin-collect.mp3` | Ganar moneda | Mario coin (freesound.org) |
+| `level-up.mp3` | Subir de tier | Pokémon level up (freesound.org) |
+| `purchase.mp3` | Compra exitosa | Cash register (freesound.org) |
+| `error.mp3` | Sin monedas | Windows error / "nope" meme |
+| `whoosh.mp3` | Boost activation | Power-up sound (freesound.org) |
+| `purr.mp3` | Gato cayendo | Cat purring (freesound.org) |
+| `meow.mp3` | Gato clickeado | Cat meow (freesound.org) |
+| `splash.mp3` | Sardina clickeada | Water splash (freesound.org) |
+| `equip.mp3` | Equipar item | Item get (freesound.org) |
+| `achievement.mp3` | Achievement desbloqueado | Success jingle (freesound.org) |
+
+---
+
+## Orden de Implementación Sugerido
+
+1. **Fase 0** — Fundación (sin esto, todo lo demás se arrastra)
+2. **Fase 1** — Economía base
+3. **Fase 2** — Boost bar (necesita monedas)
+4. **Fase 5** — Fotos de perfil (assets primero)
+5. **Fase 6** — Nombre y fuentes
+6. **Fase 7** — Adornos (necesito tu input)
+7. **Fase 4** — Tienda modal (necesita los items ya definidos)
+8. **Fase 8** — Barra de perfil (necesita tienda)
+9. **Fase 3** — Eventos de moneda (al final, ya con todo el contexto)
+10. **Fase 9** — Sonidos adicionales (pulido)
+
+---
+
+## Resumen de Decisiones
+
+✅ **Imágenes de famosos** (Fase 5): Usuario pasa los assets. Sin problema de copyright porque no se va a monetizar.
+✅ **Fuentes de marca** (Fase 6): Usuario pasa las fuentes.
+✅ **Lista de adornos** (Fase 7): Aprobada — Corona 50, Gafas 40, Sombrero 60, Alas 100, Aura fuego 150, Halo 80.
+⏳ **Ubicación del contador** (Fase 0.1): Pendiente — se define al implementar.
+⏳ **Ubicación de la boost bar** (Fase 2): Pendiente — se define al implementar.

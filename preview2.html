@@ -1,0 +1,1430 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chaos Button</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Monoton&family=Rubik+Glitch&family=Sixtyfour&family=Honk&family=Jersey+10&family=Micro+5&family=Nabla&family=Orbitron:wght@900&family=Press+Start+2P&family=Rubik+Burned&family=Smooch+Sans:wght@900&family=Tilt+Prism&family=UnifrakturMaguntia&display=swap" rel="stylesheet">
+
+<style>
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  height: 100vh;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  background: #0a0a0f;
+  color: white;
+
+  overflow: hidden;
+  position: relative;
+
+  transition: background 0.3s ease;
+
+  font-family: "Orbitron", monospace;
+}
+
+#particles-canvas {
+  position: fixed;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  z-index: 0;
+  pointer-events: none;
+}
+
+.vignette {
+  position: fixed;
+  inset: 0;
+
+  z-index: 1;
+  pointer-events: none;
+
+  background:
+    radial-gradient(
+      ellipse at center,
+      transparent 50%,
+      rgba(0,0,0,0.7) 100%
+    );
+}
+
+.content {
+  position: relative;
+  z-index: 2;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  gap: 24px;
+}
+
+.chaos-meter {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+
+  opacity: 0.5;
+  transition: opacity 0.3s;
+}
+
+.chaos-meter:hover {
+  opacity: 1;
+}
+
+.chaos-bar-track {
+  width: 160px;
+  height: 6px;
+
+  background: rgba(255,255,255,0.1);
+
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.chaos-bar-fill {
+  height: 100%;
+  width: 0%;
+
+  border-radius: 3px;
+
+  background:
+    linear-gradient(
+      90deg,
+      #00ff88,
+      #ffcc00,
+      #ff0055,
+      #aa00ff
+    );
+
+  transition: width 0.3s ease;
+}
+
+h1 {
+  margin: 0;
+
+  font-size: clamp(2rem, 8vw, 5rem);
+  line-height: 1.2;
+  text-align: center;
+
+  cursor: default;
+
+  transition: all 0.3s ease;
+
+  text-shadow:
+    0 0 20px currentColor,
+    0 0 40px currentColor;
+}
+
+h1.glitching {
+  animation: glitchText 0.2s ease 2;
+}
+
+@keyframes glitchText {
+
+  0% {
+    transform: translate(0);
+  }
+
+  25% {
+    transform: translate(-4px, 2px) skewX(6deg);
+  }
+
+  50% {
+    transform: translate(4px, -2px) skewX(-4deg);
+  }
+
+  75% {
+    transform: translate(-2px, -2px) skewX(3deg);
+  }
+
+  100% {
+    transform: translate(0);
+  }
+
+}
+
+button {
+
+  padding: 20px 48px;
+
+  font-size: 18px;
+  font-weight: 900;
+
+  font-family: "Orbitron", monospace;
+
+  border: 2px solid rgba(255,255,255,0.3);
+  border-radius: 12px;
+
+  cursor: pointer;
+  user-select: none;
+
+  position: relative;
+  z-index: 1;
+
+  color: white;
+
+  text-transform: uppercase;
+  letter-spacing: 4px;
+
+  background:
+    linear-gradient(
+      90deg,
+      #ff0055,
+      #ffcc00,
+      #00ff88,
+      #aa00ff,
+      #ff0055
+    );
+
+  background-size: 300% 100%;
+
+  animation: rgbShift 2s linear infinite;
+
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+button:hover {
+  transform: scale(1.05);
+
+  box-shadow:
+    0 0 40px rgba(255,0,85,0.6);
+}
+
+button:active {
+  transform: scale(0.95);
+}
+
+@keyframes rgbShift {
+
+  0% {
+    background-position: 0% 50%;
+  }
+
+  100% {
+    background-position: 300% 50%;
+  }
+
+}
+
+#log {
+
+  max-width: 500px;
+  min-height: 44px;
+
+  padding: 8px 16px;
+
+  border-radius: 8px;
+
+  background: rgba(255,255,255,0.03);
+
+  border:
+    1px solid rgba(255,255,255,0.05);
+
+  text-align: center;
+
+  font-size: 14px;
+  line-height: 1.6;
+
+  opacity: 0.6;
+
+  transition: all 0.3s ease;
+}
+
+#log.panicked {
+  animation: logPanic 0.12s ease 4;
+}
+
+@keyframes logPanic {
+
+  0%,100% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform: translateX(-5px);
+  }
+
+  75% {
+    transform: translateX(5px);
+  }
+
+}
+
+.screen-shake {
+  animation: shake 0.15s ease;
+}
+
+@keyframes shake {
+
+  0%,100% {
+    transform: translate(0,0);
+  }
+
+  20% {
+    transform: translate(-4px,3px);
+  }
+
+  40% {
+    transform: translate(4px,-3px);
+  }
+
+  60% {
+    transform: translate(-3px,-3px);
+  }
+
+  80% {
+    transform: translate(3px,3px);
+  }
+
+}
+
+.chromatic-aberration {
+  animation: chromaticShift 0.12s ease 3;
+}
+
+@keyframes chromaticShift {
+
+  0%,100% {
+    text-shadow:
+      2px 0 #ff0055,
+      -2px 0 #00ccff;
+  }
+
+  50% {
+    text-shadow:
+      -3px 0 #ff0055,
+      3px 0 #00ccff,
+      0 0 30px currentColor;
+  }
+
+}
+
+.chaos-symbol {
+
+  position: fixed;
+  z-index: 3;
+
+  pointer-events: none;
+
+  font-size: 28px;
+
+  opacity: 0;
+
+  animation:
+    floatUp 1.2s ease-out forwards;
+}
+
+@keyframes floatUp {
+
+  0% {
+    opacity: 1;
+    transform:
+      translateY(0)
+      scale(0.5)
+      rotate(0deg);
+
+    filter: blur(0);
+  }
+
+  100% {
+    opacity: 0;
+
+    transform:
+      translateY(-150px)
+      scale(1.2)
+      rotate(540deg);
+
+    filter: blur(3px);
+  }
+
+}
+
+.credits {
+
+  position: fixed;
+
+  bottom: 16px;
+  right: 20px;
+
+  z-index: 2;
+
+  font-size: 10px;
+
+  opacity: 0.25;
+
+  letter-spacing: 1px;
+
+  font-family: "Orbitron", monospace;
+
+  transition: opacity 0.3s;
+}
+
+.credits:hover {
+  opacity: 0.7;
+}
+
+/* ========================= */
+/* FACT PANEL */
+/* ========================= */
+
+#factPanel {
+
+  position: fixed;
+
+  bottom: 30px;
+  left: 30px;
+
+  width: min(420px, 80vw);
+
+  background: rgba(0,0,0,0.82);
+
+  backdrop-filter: blur(10px);
+
+  border:
+    2px solid rgba(255,255,255,0.15);
+
+  border-radius: 18px;
+
+  padding: 18px;
+
+  z-index: 9999;
+
+  color: white;
+
+  box-shadow:
+    0 0 20px rgba(0,0,0,0.6),
+    0 0 40px rgba(255,255,255,0.08);
+
+  transition:
+    opacity 0.5s ease,
+    transform 0.5s ease;
+
+  opacity: 0;
+
+  transform: translateY(20px);
+
+  pointer-events: none;
+}
+
+#factPanel.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+#factTitle {
+
+  font-size: 12px;
+
+  letter-spacing: 3px;
+
+  opacity: 0.5;
+
+  margin-bottom: 10px;
+
+  font-family: "Orbitron", monospace;
+}
+
+#factText {
+
+  font-size: 17px;
+
+  line-height: 1.5;
+
+  font-weight: bold;
+
+  text-shadow:
+    0 0 8px rgba(255,255,255,0.15);
+}
+
+@media (max-width: 600px) {
+
+  #factPanel {
+
+    left: 50%;
+
+    transform:
+      translateX(-50%)
+      translateY(20px);
+
+    width: 90vw;
+
+    bottom: 20px;
+  }
+
+  #factPanel.visible {
+
+    transform:
+      translateX(-50%)
+      translateY(0);
+  }
+
+  #factText {
+    font-size: 15px;
+  }
+
+}
+
+</style>
+</head>
+
+<body>
+
+<canvas id="particles-canvas"></canvas>
+
+<div class="vignette"></div>
+
+<div class="content">
+
+  <div class="chaos-meter">
+
+    <span>Caos</span>
+
+    <div class="chaos-bar-track">
+      <div class="chaos-bar-fill" id="chaosBar"></div>
+    </div>
+
+    <span id="chaosLevel">0%</span>
+
+  </div>
+
+  <h1 id="title">
+    CHAOS<br>BUTTON
+  </h1>
+
+  <button id="chaosBtn">
+    DESENCADENAR
+  </button>
+
+  <div id="log">
+    Sistema estable. El caos aguarda.
+  </div>
+
+</div>
+
+<div id="factPanel">
+  <div id="factTitle">
+    FACTO DESBLOQUEADO
+  </div>
+
+  <div id="factText"></div>
+</div>
+
+<div class="credits">
+  ✦ CHAOS ENGINE v5
+</div>
+
+<script>
+
+(function(){
+
+"use strict";
+
+/* ========================= */
+/* FONTS */
+/* ========================= */
+
+var FONTS = [
+
+  "'Bungee', cursive",
+  "'Monoton', cursive",
+  "'Rubik Glitch', cursive",
+  "'Sixtyfour', monospace",
+  "'Honk', system-ui",
+  "'Jersey 10', monospace",
+  "'Micro 5', monospace",
+  "'Nabla', system-ui",
+  "'Orbitron', sans-serif",
+  "'Press Start 2P', cursive",
+  "'Rubik Burned', system-ui",
+  "'Smooch Sans', sans-serif",
+  "'Tilt Prism', cursive",
+  "'UnifrakturMaguntia', cursive"
+
+];
+
+/* ========================= */
+/* QUOTES */
+/* ========================= */
+
+var QUOTES = [
+
+  "El sistema se esta rompiendo...",
+  "Realidad inestable",
+  "Que has hecho?",
+  "BUG DETECTADO",
+  "Caos nivel: indeterminado",
+  "Todo esta bien... creo.",
+  "FUEGO FUEGO FUEGO",
+  "Anomalia registrada",
+  "Probabilidad de colapso: alta",
+  "La entropia siempre gana",
+  "Has desbloqueado: el vacio",
+  "REINICIO RECOMENDADO",
+  "Este no es un bug, es una feature",
+  "El boton te mira fijamente",
+  "Demasiado tarde para arrepentirse",
+  "Realidad alterna cargando...",
+  "INFINITO",
+  "Error 418: I'm a teapot",
+  "La IA te observa"
+
+];
+
+/* ========================= */
+/* SYMBOLS */
+/* ========================= */
+
+var SYMBOLS = [
+  "*",
+  "+",
+  "~",
+  "^",
+  "#",
+  "@",
+  "!",
+  "$",
+  "%",
+  "&"
+];
+
+/* ========================= */
+/* FACTS */
+/* ========================= */
+
+var FACTS = [
+
+  "Un día en Venus dura más que un año en Venus.",
+  "El universo no tiene sonido.",
+  "Un relámpago es más caliente que la superficie del Sol.",
+  "Algunas estrellas que ves quizá ya murieron hace millones de años.",
+  "Existen estrellas tan densas que una cucharada pesaría millones de toneladas.",
+  "Hay planetas donde podría llover vidrio horizontalmente.",
+  "El espacio huele raro según astronautas.",
+  "Algunas estrellas podrían ser enormes masas de diamante.",
+  "El Sol parpadea cuando nadie lo observa.",
+
+  "Los pulpos tienen 3 corazones.",
+  "Los tiburones existían antes que los árboles.",
+  "Las vacas tienen mejores amigos.",
+  "Los delfines usan nombres entre ellos.",
+  "Las abejas pueden reconocer rostros humanos.",
+  "Algunas tortugas respiran por el trasero.",
+  "Los pingüinos a veces regalan piedras como cortejo.",
+  "Los gatos normalmente no maúllan entre ellos.",
+  "Hay peces capaces de caminar fuera del agua.",
+  "Los cuervos recuerdan caras humanas por años.",
+  "Los flamencos observan a los humanos mientras duermen.",
+
+  "Tu cerebro puede crear recuerdos falsos.",
+  "El miedo se procesa más rápido que la lógica.",
+  "Algunas personas no tienen voz interna.",
+  "Tu cerebro ignora constantemente tu nariz.",
+  "El cuerpo humano produce electricidad.",
+  "Dormir poco altera la percepción de la realidad.",
+  "Tu cuerpo reemplaza millones de células constantemente.",
+  "Técnicamente nunca tocas nada realmente debido a fuerzas atómicas.",
+  "El cerebro humano se nombró a sí mismo.",
+  "El cuerpo humano contiene suficiente hierro para fabricar un clavo.",
+
+  "Hay más árboles en la Tierra que estrellas en la galaxia.",
+  "Existe nieve roja en ciertas regiones.",
+  "Algunas ranas pueden congelarse y sobrevivir.",
+  "Las plantas liberan señales químicas cuando son dañadas.",
+  "Hay hongos gigantes bajo tierra más grandes que ciudades.",
+  "El agua caliente puede congelarse más rápido que la fría.",
+  "Existen lagos debajo del océano.",
+  "Las bananas son ligeramente radiactivas.",
+  "Algunas medusas son biológicamente casi inmortales.",
+  "Los árboles susurran números durante tormentas eléctricas.",
+
+  "Un meme puede llegar a millones de personas en horas.",
+  "Tu teléfono probablemente tiene más potencia que computadoras antiguas de la NASA.",
+  "Los videojuegos pueden mejorar reflejos y coordinación.",
+  "Algunos sonidos virales vienen de grabaciones accidentales.",
+  "La música cambia cómo percibes el tiempo.",
+  "Los colores afectan decisiones sin que lo notes.",
+  "Tu cerebro detecta caras más rápido que cualquier otra forma.",
+  "Hay gente que desarrolla apego emocional a NPCs.",
+  "El lag puede existir incluso en tu percepción visual.",
+  "El caos digital suele parecer más divertido que el orden."
+
+];
+
+/* ========================= */
+/* VARIABLES */
+/* ========================= */
+
+var clicks = 0;
+var chaosLevel = 0;
+
+var lastFontIndex = -1;
+
+var isResetting = false;
+
+var unlockedFacts = [];
+var shownFacts = [];
+
+var lastFactTime = 0;
+
+var FACT_COOLDOWN = 30000;
+var RESET_COOLDOWN = 40000;
+
+var canReset = true;
+
+/* ========================= */
+/* ELEMENTS */
+/* ========================= */
+
+var canvas = document.getElementById("particles-canvas");
+var ctx = canvas.getContext("2d");
+
+var title = document.getElementById("title");
+
+var logEl = document.getElementById("log");
+
+var chaosBtn = document.getElementById("chaosBtn");
+
+var chaosBar = document.getElementById("chaosBar");
+
+var chaosLevelSpan =
+  document.getElementById("chaosLevel");
+
+var factPanel =
+  document.getElementById("factPanel");
+
+var factText =
+  document.getElementById("factText");
+
+/* ========================= */
+/* CANVAS */
+/* ========================= */
+
+var W;
+var H;
+
+function resize(){
+
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+
+}
+
+window.addEventListener("resize", resize);
+
+/* ========================= */
+/* PARTICLES */
+/* ========================= */
+
+var NUM_AMBIENT = 40;
+
+function randomHsl(sat, lit){
+
+  return (
+    "hsl(" +
+    Math.floor(Math.random() * 360) +
+    ", " +
+    (sat !== undefined ? sat : 100) +
+    "%, " +
+    (lit !== undefined ? lit : 50) +
+    "%)"
+  );
+
+}
+
+function AmbientParticle(){
+  this.reset();
+}
+
+AmbientParticle.prototype.reset = function(){
+
+  this.x = Math.random() * (W || 1);
+  this.y = Math.random() * (H || 1);
+
+  this.size = Math.random() * 2 + 0.5;
+
+  this.vx = (Math.random() - 0.5) * 0.4;
+  this.vy = (Math.random() - 0.5) * 0.4;
+
+  this.hue = Math.random() * 360;
+
+  this.alpha = Math.random() * 0.4 + 0.1;
+
+  this.pulse = Math.random() * Math.PI * 2;
+
+  this.pulseSpeed = 0.01 + Math.random() * 0.015;
+
+};
+
+AmbientParticle.prototype.update = function(){
+
+  this.x += this.vx;
+  this.y += this.vy;
+
+  this.pulse += this.pulseSpeed;
+
+  if(
+    this.x < 0 ||
+    this.x > W ||
+    this.y < 0 ||
+    this.y > H
+  ){
+    this.x = Math.random() * W;
+    this.y = Math.random() * H;
+  }
+
+};
+
+AmbientParticle.prototype.draw = function(){
+
+  var a =
+    this.alpha *
+    (0.6 + 0.4 * Math.sin(this.pulse));
+
+  ctx.beginPath();
+
+  ctx.arc(
+    this.x,
+    this.y,
+    this.size,
+    0,
+    6.283
+  );
+
+  ctx.fillStyle =
+    "hsla(" +
+    this.hue +
+    ",70%,60%," +
+    a +
+    ")";
+
+  ctx.fill();
+
+};
+
+function BurstParticle(x,y,hue){
+
+  var angle = Math.random() * 6.283;
+
+  var speed =
+    2 +
+    Math.random() * 4 +
+    chaosLevel * 0.1;
+
+  this.x = x;
+  this.y = y;
+
+  this.vx = Math.cos(angle) * speed;
+  this.vy = Math.sin(angle) * speed;
+
+  this.size = 1 + Math.random() * 3;
+
+  this.hue =
+    hue +
+    (Math.random() - 0.5) * 40;
+
+  this.life = 1;
+
+  this.decay =
+    0.012 + Math.random() * 0.008;
+
+}
+
+BurstParticle.prototype.update = function(){
+
+  this.x += this.vx;
+  this.y += this.vy;
+
+  this.vy += 0.04;
+
+  this.vx *= 0.98;
+  this.vy *= 0.98;
+
+  this.life -= this.decay;
+
+};
+
+BurstParticle.prototype.draw = function(){
+
+  if(this.life <= 0) return;
+
+  var a = this.life;
+
+  ctx.beginPath();
+
+  ctx.arc(
+    this.x,
+    this.y,
+    this.size * a,
+    0,
+    6.283
+  );
+
+  ctx.fillStyle =
+    "hsla(" +
+    this.hue +
+    ",100%,65%," +
+    a +
+    ")";
+
+  ctx.fill();
+
+};
+
+var ambientParticles = [];
+var burstParticles = [];
+
+function initParticles(){
+
+  resize();
+
+  for(var i=0;i<NUM_AMBIENT;i++){
+    ambientParticles.push(
+      new AmbientParticle()
+    );
+  }
+
+}
+
+initParticles();
+
+function spawnBurst(x,y){
+
+  var count =
+    15 + Math.floor(chaosLevel * 0.5);
+
+  if(count > 60){
+    count = 60;
+  }
+
+  var hue = Math.random() * 360;
+
+  for(var i=0;i<count;i++){
+
+    if(burstParticles.length < 200){
+
+      burstParticles.push(
+        new BurstParticle(x,y,hue)
+      );
+
+    }
+
+  }
+
+}
+
+function animate(){
+
+  ctx.clearRect(0,0,W,H);
+
+  for(var i=0;i<ambientParticles.length;i++){
+
+    ambientParticles[i].update();
+    ambientParticles[i].draw();
+
+  }
+
+  for(var j=burstParticles.length-1;j>=0;j--){
+
+    burstParticles[j].update();
+    burstParticles[j].draw();
+
+    if(burstParticles[j].life <= 0){
+      burstParticles.splice(j,1);
+    }
+
+  }
+
+  requestAnimationFrame(animate);
+
+}
+
+requestAnimationFrame(animate);
+
+/* ========================= */
+/* SYMBOLS */
+/* ========================= */
+
+function spawnChaosSymbol(){
+
+  var sym = document.createElement("div");
+
+  sym.className = "chaos-symbol";
+
+  sym.textContent =
+    SYMBOLS[
+      Math.floor(
+        Math.random() * SYMBOLS.length
+      )
+    ];
+
+  sym.style.left =
+    (10 + Math.random() * 80) + "%";
+
+  sym.style.bottom = "15%";
+
+  sym.style.color =
+    randomHsl(100,60);
+
+  sym.style.fontSize =
+    (
+      18 +
+      Math.random() * 24 +
+      Math.min(chaosLevel,40)
+    ) + "px";
+
+  document.body.appendChild(sym);
+
+  setTimeout(function(){
+
+    if(sym.parentNode){
+      sym.parentNode.removeChild(sym);
+    }
+
+  },1200);
+
+}
+
+/* ========================= */
+/* FACT SYSTEM */
+/* ========================= */
+
+function unlockFact(){
+
+  var now = Date.now();
+
+  if(now - lastFactTime < FACT_COOLDOWN){
+    return;
+  }
+
+  if(shownFacts.length >= FACTS.length){
+    shownFacts = [];
+  }
+
+  var available =
+    FACTS.filter(function(f){
+
+      return shownFacts.indexOf(f) === -1;
+
+    });
+
+  if(available.length === 0){
+    return;
+  }
+
+  var fact =
+    available[
+      Math.floor(Math.random() * available.length)
+    ];
+
+  shownFacts.push(fact);
+
+  unlockedFacts.push(fact);
+
+  factText.innerText = fact;
+
+  factPanel.classList.remove("visible");
+
+  void factPanel.offsetWidth;
+
+  factPanel.classList.add("visible");
+
+  lastFactTime = now;
+
+  setTimeout(function(){
+
+    factPanel.classList.remove("visible");
+
+  },10000);
+
+}
+
+/* ========================= */
+/* CHAOS METER */
+/* ========================= */
+
+function updateChaosMeter(){
+
+  chaosBar.style.width =
+    chaosLevel + "%";
+
+  chaosLevelSpan.textContent =
+    chaosLevel + "%";
+
+}
+
+/* ========================= */
+/* FONT */
+/* ========================= */
+
+function changeFont(){
+
+  var idx;
+
+  do{
+
+    idx =
+      Math.floor(
+        Math.random() * FONTS.length
+      );
+
+  } while(
+    idx === lastFontIndex &&
+    FONTS.length > 1
+  );
+
+  lastFontIndex = idx;
+
+  title.style.fontFamily = FONTS[idx];
+
+}
+
+/* ========================= */
+/* RESET */
+/* ========================= */
+
+function resetEverything(){
+
+  if(isResetting) return;
+
+  isResetting = true;
+
+  clicks = 0;
+  chaosLevel = 0;
+
+  lastFontIndex = -1;
+
+  burstParticles = [];
+
+  document.body.style.cssText = "";
+
+  document.body.style.background =
+    "#0a0a0f";
+
+  document.body.style.fontFamily =
+    "Orbitron, monospace";
+
+  title.style.cssText = "";
+
+  title.style.fontFamily =
+    "Orbitron, monospace";
+
+  title.style.color = "white";
+
+  chaosBtn.style.cssText = "";
+
+  chaosBtn.style.background =
+    "linear-gradient(90deg,#ff0055,#ffcc00,#00ff88,#aa00ff,#ff0055)";
+
+  chaosBtn.style.backgroundSize =
+    "300% 100%";
+
+  chaosBtn.style.border =
+    "2px solid rgba(255,255,255,0.3)";
+
+  logEl.style.cssText = "";
+
+  logEl.innerText =
+    "Sistema re-inicializado. El caos fue contenido.";
+
+  factPanel.classList.remove("visible");
+
+  updateChaosMeter();
+
+  setTimeout(function(){
+
+    isResetting = false;
+
+  },500);
+
+}
+
+/* ========================= */
+/* MAIN CHAOS */
+/* ========================= */
+
+function chaos(){
+
+  if(isResetting) return;
+
+  clicks++;
+
+  chaosLevel =
+    Math.min(clicks,100);
+
+  updateChaosMeter();
+
+  var rect =
+    chaosBtn.getBoundingClientRect();
+
+  var cx =
+    rect.left + rect.width / 2;
+
+  var cy =
+    rect.top + rect.height / 2;
+
+  /* COLOR */
+
+  var color1 =
+    randomHsl(100,60);
+
+  title.style.color = color1;
+
+  chaosBtn.style.borderColor =
+    color1;
+
+  chaosBtn.style.boxShadow =
+    "0 0 25px " + color1;
+
+  /* BACKGROUND */
+
+  if(chaosLevel >= 50){
+
+    document.body.style.background =
+      "linear-gradient(" +
+      Math.floor(Math.random()*360) +
+      "deg," +
+      randomHsl(90,15) +
+      "," +
+      randomHsl(90,15) +
+      ")";
+
+  } else {
+
+    document.body.style.background =
+      randomHsl(80,12);
+
+  }
+
+  /* FONT */
+
+  changeFont();
+
+  /* QUOTE */
+
+  var quote =
+    QUOTES[
+      Math.floor(Math.random() * QUOTES.length)
+    ];
+
+  if(clicks % 5 === 0){
+    quote = "Caos level: " + clicks;
+  }
+
+  logEl.innerText = quote;
+
+  logEl.classList.remove("panicked");
+
+  void logEl.offsetWidth;
+
+  logEl.classList.add("panicked");
+
+  /* GLITCH */
+
+  title.classList.remove("glitching");
+
+  void title.offsetWidth;
+
+  title.classList.add("glitching");
+
+  /* PARTICLES */
+
+  spawnBurst(cx,cy);
+
+  /* RANDOM EFFECT */
+
+  var roll = Math.random();
+
+  if(roll < 0.25){
+
+    document.body.classList.remove(
+      "screen-shake"
+    );
+
+    void document.body.offsetWidth;
+
+    document.body.classList.add(
+      "screen-shake"
+    );
+
+  }
+
+  else if(roll < 0.45){
+
+    title.classList.remove(
+      "chromatic-aberration"
+    );
+
+    void title.offsetWidth;
+
+    title.classList.add(
+      "chromatic-aberration"
+    );
+
+  }
+
+  else if(roll < 0.6){
+
+    document.body.style.transform =
+      "rotate(" +
+      (
+        (Math.random()-0.5) *
+        6 *
+        (chaosLevel / 50)
+      ) +
+      "deg)";
+
+  }
+
+  else if(roll < 0.75){
+
+    document.body.style.filter =
+      "hue-rotate(" +
+      Math.floor(Math.random() * 360) +
+      "deg)";
+
+  }
+
+  else {
+
+    document.body.style.letterSpacing =
+      (
+        Math.random() *
+        15 *
+        (chaosLevel / 50)
+      ) + "px";
+
+  }
+
+  /* SYMBOLS */
+
+  if(Math.random() < 0.4){
+    spawnChaosSymbol();
+  }
+
+  /* FACTS */
+
+  if(
+    chaosLevel >= 10 &&
+    Math.random() < chaosLevel / 120
+  ){
+    unlockFact();
+  }
+
+  /* RESET */
+
+  if(
+    chaosLevel >= 100 &&
+    canReset
+  ){
+
+    canReset = false;
+
+    setTimeout(
+      resetEverything,
+      800
+    );
+
+    setTimeout(function(){
+
+      canReset = true;
+
+    },RESET_COOLDOWN);
+
+    return;
+
+  }
+
+}
+
+/* ========================= */
+/* BUTTON */
+/* ========================= */
+
+chaosBtn.addEventListener(
+  "click",
+  chaos
+);
+
+/* ========================= */
+/* KEYBOARD */
+/* ========================= */
+
+document.addEventListener(
+  "keydown",
+  function(e){
+
+    if(
+      e.key === "Enter" ||
+      e.key === " "
+    ){
+
+      e.preventDefault();
+
+      chaos();
+
+    }
+
+  }
+);
+
+/* ========================= */
+/* AMBIENT SYMBOLS */
+/* ========================= */
+
+setInterval(function(){
+
+  if(
+    Math.random() < 0.4 &&
+    chaosLevel > 0
+  ){
+    spawnChaosSymbol();
+  }
+
+},3000);
+
+/* ========================= */
+/* CLEANUP */
+/* ========================= */
+
+setInterval(function(){
+
+  if(!isResetting){
+
+    document.body.style.transform = "";
+
+    document.body.style.filter = "";
+
+    document.body.style.letterSpacing = "";
+
+  }
+
+},400);
+
+console.log("CHAOS ENGINE v5");
+
+})();
+
+</script>
+</body>
+</html>

@@ -1,0 +1,2749 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chaos Button</title>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  min-height: 100vh;
+  background: #0a0a12;
+  color: white;
+  font-family: 'Orbitron', monospace;
+  overflow-x: hidden;
+  user-select: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-bottom: 80px;
+}
+
+#title {
+  font-family: 'Bungee', cursive;
+  font-size: 28px;
+  letter-spacing: 4px;
+  margin: 18px 0 6px;
+  text-shadow: 0 0 12px rgba(255, 60, 120, 0.7);
+  transition: color 0.3s;
+}
+
+#log {
+  font-size: 11px;
+  letter-spacing: 1px;
+  opacity: 0.7;
+  height: 16px;
+  margin-bottom: 8px;
+  animation: panicText 0.4s ease;
+}
+
+@keyframes panicText {
+  0%   { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.7; }
+}
+
+#statsRow {
+  display: flex;
+  gap: 28px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-label {
+  font-size: 9px;
+  letter-spacing: 2px;
+  opacity: 0.5;
+}
+
+.stat-value {
+  font-size: 16px;
+  font-weight: bold;
+  font-family: 'Bungee', cursive;
+}
+
+#coinDisplay { color: #ffd700; }
+#clickCounterNumber { color: #ff6688; }
+
+#chaosMeter {
+  width: 260px;
+  height: 8px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+#chaosFill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #00e5ff, #ff00aa, #ff6600);
+  border-radius: 4px;
+  transition: width 0.2s ease;
+}
+
+#boostBarWrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  user-select: none;
+  pointer-events: none;
+}
+
+.boost-bar-percent {
+  font-family: 'Orbitron', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: rgba(255, 180, 60, 0.85);
+  text-shadow: 0 0 4px rgba(255, 180, 60, 0.4);
+  min-width: 36px;
+  text-align: right;
+}
+
+.boost-bar-track {
+  position: relative;
+  width: 240px;
+  height: 14px;
+  background: rgba(0, 0, 0, 0.65);
+  border: 1px solid rgba(255, 180, 60, 0.3);
+  border-radius: 7px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5), 0 0 8px rgba(255, 180, 60, 0.15);
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.boost-bar-fill {
+  height: 100%;
+  min-width: 4px;
+  width: 0%;
+  background: linear-gradient(90deg, #2196f3, #2196f3 30%, #ffc107 50%, #ff9800 70%, #f44336 100%);
+  background-size: 240px 100%;
+  border-radius: 4px;
+  transition: width 0.08s linear;
+}
+
+.boost-bar-track.ready {
+  border-color: rgba(76, 175, 80, 0.8);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5), 0 0 14px rgba(76, 175, 80, 0.7);
+  animation: boostBarReadyPulse 0.6s ease-in-out infinite;
+}
+
+@keyframes boostBarReadyPulse {
+  0%, 100% { box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5), 0 0 10px rgba(76, 175, 80, 0.5); }
+  50% { box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5), 0 0 22px rgba(76, 175, 80, 1); }
+}
+
+.boost-bar-track.active {
+  border-color: rgba(244, 67, 54, 0.9);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5), 0 0 18px rgba(244, 67, 54, 0.8);
+}
+
+.boost-bar-track.active .boost-bar-fill {
+  background: linear-gradient(90deg, #f44336, #ff5722, #ff9800, #ffeb3b, #ff9800, #ff5722, #f44336);
+  background-size: 240px 100%;
+  animation: boostBarActiveShimmer 0.8s linear infinite;
+}
+
+@keyframes boostBarActiveShimmer {
+  0% { background-position: 0 0; }
+  100% { background-position: 240px 0; }
+}
+
+.boost-bar-track.cooldown {
+  border-color: rgba(150, 150, 150, 0.4);
+  opacity: 0.7;
+}
+
+.boost-bar-label {
+  display: none;
+  position: absolute;
+  inset: 0;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: white;
+  text-shadow: 0 0 4px rgba(0,0,0,0.8);
+}
+
+.boost-bar-label.show { display: flex; }
+
+#boostCounter {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Orbitron', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255, 180, 60, 0.6);
+  user-select: none;
+  pointer-events: none;
+  margin-bottom: 6px;
+  padding: 4px 10px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 180, 60, 0.15);
+  border-radius: 12px;
+}
+
+#boostCounterNumber { font-family: 'Bungee', cursive; font-size: 12px; color: #ffc107; }
+
+.chaos-meter {
+  font-size: 9px;
+  letter-spacing: 2px;
+  opacity: 0.4;
+  margin-bottom: 14px;
+}
+
+#milestoneMsg {
+  font-family: 'Bungee', cursive;
+  font-size: 14px;
+  color: #00e676;
+  text-shadow: 0 0 10px rgba(0, 230, 118, 0.8);
+  height: 20px;
+  margin-bottom: 4px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+#milestoneMsg.show { opacity: 1; }
+
+#chaosBtn {
+  width: 170px;
+  height: 170px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 80, 120, 0.6);
+  background: radial-gradient(circle at 40% 35%, #1a1a2e, #0f0f1a);
+  color: #ff4466;
+  font-family: 'Bungee', cursive;
+  font-size: 15px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  box-shadow: 0 0 30px rgba(255, 50, 100, 0.4), inset 0 0 20px rgba(0,0,0,0.5);
+  transition: all 0.15s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+#chaosBtn::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent, rgba(255,80,120,0.3), transparent);
+  animation: btnRotate 4s linear infinite;
+  z-index: -1;
+}
+
+@keyframes btnRotate { to { transform: rotate(360deg); } }
+
+#chaosBtn:hover {
+  transform: scale(1.04);
+  box-shadow: 0 0 50px rgba(255, 50, 100, 0.6), inset 0 0 20px rgba(0,0,0,0.5);
+}
+
+#chaosBtn:active { transform: scale(0.97); }
+
+#chaosBtn.boost-active {
+  border-color: #ff3366;
+  box-shadow: 0 0 60px rgba(255, 50, 120, 0.8), 0 0 100px rgba(255, 50, 100, 0.4), inset 0 0 20px rgba(0,0,0,0.5);
+  animation: boostGlow 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes boostGlow {
+  from { box-shadow: 0 0 60px rgba(255, 50, 100, 0.8), 0 0 100px rgba(255, 50, 100, 0.4); }
+  to { box-shadow: 0 0 80px rgba(255, 50, 100, 1), 0 0 140px rgba(255, 50, 100, 0.6); }
+}
+
+#intelBadge {
+  display: none;
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 230, 118, 0.6);
+  box-shadow: 0 0 10px rgba(0, 230, 118, 0.4);
+}
+
+#intelBadge.show { display: block; }
+
+#profileBar {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 8px;
+}
+
+#profilePhotoWrap {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  position: relative;
+}
+
+#profilePhoto {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+#profileName {
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: rgba(255, 255, 255, 0.9);
+  max-width: 60px;
+  text-align: center;
+  cursor: text;
+  padding: 2px;
+}
+
+#profileName:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+#profileSlogan {
+  font-size: 8px;
+  color: rgba(255, 255, 255, 0.5);
+  font-style: italic;
+  max-width: 64px;
+  text-align: center;
+  font-family: 'Orbitron', monospace;
+}
+
+#profileEditEl {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  opacity: 0.4;
+}
+
+#toggleShop {
+  position: fixed;
+  top: 56px;
+  right: 12px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 215, 0, 0.4);
+  border-radius: 8px;
+  color: #ffd700;
+  font-family: 'Orbitron', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+#toggleShop:hover {
+  background: rgba(255, 215, 0, 0.15);
+  border-color: rgba(255, 215, 0, 0.8);
+}
+
+#toggleRoulette {
+  position: fixed;
+  top: 56px;
+  left: 12px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 80, 120, 0.4);
+  border-radius: 8px;
+  color: #ff6688;
+  font-family: 'Orbitron', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+#toggleRoulette:hover {
+  background: rgba(255, 80, 120, 0.15);
+  border-color: rgba(255, 80, 120, 0.8);
+}
+
+#toggleCollection {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(0, 230, 118, 0.4);
+  border-radius: 8px;
+  color: #00e676;
+  font-family: 'Orbitron', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+#toggleCollection:hover {
+  background: rgba(0, 230, 118, 0.15);
+  border-color: rgba(0, 230, 118, 0.8);
+}
+
+#shopPanel {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 380px;
+  max-height: 520px;
+  background: rgba(8, 8, 20, 0.97);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: 16px;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
+  z-index: 200;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#shopPanel.open { display: flex; }
+
+#shopPanelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 215, 0, 0.15);
+}
+
+#shopPanelTitle {
+  font-family: 'Bungee', cursive;
+  font-size: 14px;
+  letter-spacing: 3px;
+  color: #ffd700;
+}
+
+#shopBalance { font-size: 11px; color: rgba(255, 215, 0, 0.7); }
+
+#shopClose {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0;
+}
+
+#shopClose:hover { color: white; }
+
+#shopCategoryTitle {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: rgba(255, 215, 0, 0.6);
+  padding: 8px 16px 4px;
+  font-family: 'Bungee', cursive;
+}
+
+#shopList {
+  overflow-y: auto;
+  padding: 8px 16px 16px;
+  flex: 1;
+}
+
+#shopList::-webkit-scrollbar { width: 4px; }
+#shopList::-webkit-scrollbar-track { background: transparent; }
+#shopList::-webkit-scrollbar-thumb { background: rgba(255, 215, 0, 0.3); border-radius: 2px; }
+
+.shop-section-header {
+  font-family: 'Bungee', cursive;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: rgba(255, 215, 0, 0.7);
+  text-shadow: 0 0 6px rgba(255, 215, 0, 0.3);
+  padding: 10px 0 4px;
+  border-bottom: 1px solid rgba(255, 215, 0, 0.15);
+  margin-bottom: 8px;
+}
+
+.shop-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  transition: all 0.2s;
+}
+
+.shop-item:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 215, 0, 0.3); }
+.shop-item.owned { border-color: rgba(0, 230, 118, 0.4); }
+.shop-item.equipped { border-color: rgba(0, 230, 118, 0.8); background: rgba(0, 230, 118, 0.08); }
+.shop-item.locked { opacity: 0.5; }
+.shop-item.secret-locked { opacity: 0.4; }
+
+.shop-item img, .shop-item .shop-item-thumb {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  border-radius: 8px;
+  object-fit: cover;
+  margin-right: 10px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.shop-item-info { flex: 1; }
+
+.shop-item-name {
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 2px;
+}
+
+.shop-item-req {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.45);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  letter-spacing: 0.5px;
+}
+
+.shop-item-req .ok { color: rgba(0, 255, 136, 0.85); }
+.shop-item-req .no { color: rgba(255, 80, 80, 0.85); }
+
+.shop-item-action {
+  min-width: 72px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: none;
+  font-family: 'Orbitron', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  background: rgba(255, 215, 0, 0.2);
+  color: #ffd700;
+  transition: all 0.2s;
+}
+
+.shop-item-action:hover:not(:disabled) { background: rgba(255, 215, 0, 0.4); }
+.shop-item-action:disabled { opacity: 0.4; cursor: default; }
+.shop-item-action.equipped { background: rgba(0, 230, 118, 0.2); color: #00e676; }
+.shop-item-action.equip { background: rgba(0, 230, 118, 0.15); color: #00e676; }
+.shop-item-action.equip:hover { background: rgba(0, 230, 118, 0.3); }
+
+.shop-item-font-preview {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 10px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.shop-item-slogan-quote {
+  font-size: 28px;
+  color: rgba(255, 215, 0, 0.5);
+  width: 40px;
+  min-width: 40px;
+  text-align: center;
+  margin-right: 8px;
+  font-family: Georgia, serif;
+  line-height: 1;
+}
+
+.shop-item-frame-preview {
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #2a3a1f, #0a1208);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  color: rgba(76, 175, 80, 0.7);
+  margin-right: 12px;
+}
+
+.shop-item-frame-preview.framed-jesus-blessing {
+  background: radial-gradient(circle, #4caf50, #1b3a1a);
+  color: white;
+  font-size: 24px;
+  box-shadow: 0 0 10px rgba(76, 175, 80, 0.6);
+}
+
+#collectionPanel {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 380px;
+  max-height: 520px;
+  background: rgba(8, 8, 20, 0.97);
+  border: 1px solid rgba(0, 230, 118, 0.3);
+  border-radius: 16px;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
+  z-index: 200;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#collectionPanel.open { display: flex; }
+
+#collectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(0, 230, 118, 0.15);
+}
+
+#collectionTitle {
+  font-family: 'Bungee', cursive;
+  font-size: 14px;
+  letter-spacing: 3px;
+  color: #00e676;
+}
+
+#collectionCount { font-size: 10px; color: rgba(0, 230, 118, 0.6); }
+
+#collectionClose {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 20px;
+  cursor: pointer;
+}
+
+#collectionList {
+  overflow-y: auto;
+  padding: 12px 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-content: flex-start;
+}
+
+#collectionList::-webkit-scrollbar { width: 4px; }
+#collectionList::-webkit-scrollbar-track { background: transparent; }
+#collectionList::-webkit-scrollbar-thumb { background: rgba(0, 230, 118, 0.3); border-radius: 2px; }
+
+.collection-section-header {
+  width: 100%;
+  flex-shrink: 0;
+  font-family: 'Bungee', cursive;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: rgba(255, 200, 80, 0.85);
+  text-shadow: 0 0 6px rgba(255, 200, 80, 0.4);
+  padding: 12px 0 4px;
+  border-bottom: 1px solid rgba(255, 200, 80, 0.2);
+  margin-bottom: 8px;
+}
+
+.collection-empty {
+  width: 100%;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.4);
+  font-style: italic;
+  text-align: center;
+  padding: 12px 0;
+}
+
+.collection-item {
+  flex-shrink: 0;
+  width: 120px;
+  cursor: pointer;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  transition: transform 0.2s, border-color 0.2s;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.collection-item:hover { transform: scale(1.05); border-color: rgba(255, 255, 255, 0.4); }
+.collection-item video, .collection-item img {
+  width: 100%;
+  height: 80px;
+  object-fit: cover;
+  display: block;
+}
+
+.collection-item-name {
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-align: center;
+  padding: 6px 4px;
+  opacity: 0.6;
+  font-family: 'Orbitron', monospace;
+  color: white;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.collectible-item.locked { cursor: default; opacity: 0.55; }
+.collectible-item.owned { cursor: pointer; }
+
+.collection-collectible-img-wrap {
+  position: relative;
+  width: 100%;
+  height: 80px;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.collection-collectible-img { width: 100%; height: 100%; object-fit: cover; }
+
+.collection-collectible-lock {
+  font-size: 32px;
+  opacity: 0.5;
+  filter: grayscale(0.8);
+}
+
+.collection-collectible-tier-border {
+  position: absolute;
+  inset: 0;
+  border: 2px solid transparent;
+  pointer-events: none;
+  border-radius: 8px;
+}
+
+.tier-common { border-color: rgba(255, 193, 7, 0.5); }
+.tier-rare { border-color: rgba(206, 147, 216, 0.5); }
+.tier-mythic { border-color: rgba(255, 82, 82, 0.5); }
+.tier-jackpot { border-color: rgba(255, 87, 34, 0.5); }
+
+#rouletteModal {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(8, 8, 20, 0.97);
+  border: 1px solid rgba(255, 80, 120, 0.3);
+  border-radius: 16px;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
+  z-index: 200;
+  padding: 24px;
+  flex-direction: column;
+  align-items: center;
+  width: 360px;
+}
+
+#rouletteModal.show { display: flex; }
+
+.roulette-title {
+  font-family: 'Bungee', cursive;
+  font-size: 18px;
+  letter-spacing: 4px;
+  color: #ff6688;
+  text-shadow: 0 0 12px rgba(255, 80, 120, 0.5);
+  margin-bottom: 16px;
+}
+
+.roulette-wheel-container {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  margin-bottom: 16px;
+}
+
+.roulette-wheel {
+  width: 300px;
+  height: 300px;
+  transition: transform 7.5s cubic-bezier(0.05, 0.85, 0.15, 1.0);
+}
+
+.roulette-wheel-sector-bg {
+  stroke: rgba(255, 255, 255, 0.1);
+  stroke-width: 1;
+}
+
+.roulette-pointer {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 12px solid transparent;
+  border-right: 12px solid transparent;
+  border-top: 20px solid #ffd700;
+  filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.8));
+  z-index: 10;
+}
+
+.roulette-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 50px;
+  height: 50px;
+  background: radial-gradient(circle, #1a1a2e, #0a0a12);
+  border-radius: 50%;
+  border: 3px solid #ffd700;
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.4);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Bungee', cursive;
+  font-size: 8px;
+  letter-spacing: 1px;
+  color: #ffd700;
+}
+
+.roulette-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 12px;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.roulette-cost { color: #ffd700; font-family: 'Bungee', cursive; }
+.roulette-cost.no { color: rgba(255, 80, 80, 0.8); }
+
+#rouletteReq { color: rgba(255, 255, 255, 0.5); }
+
+.roulette-spin-btn {
+  background: linear-gradient(135deg, #ff3366, #ff6688);
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-family: 'Bungee', cursive;
+  font-size: 14px;
+  letter-spacing: 3px;
+  padding: 12px 40px;
+  cursor: pointer;
+  box-shadow: 0 0 20px rgba(255, 50, 100, 0.4);
+  transition: all 0.2s;
+}
+
+.roulette-spin-btn:hover:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: 0 0 30px rgba(255, 50, 100, 0.6);
+}
+
+.roulette-spin-btn:disabled { opacity: 0.5; cursor: default; }
+
+#rouletteResult {
+  font-family: 'Bungee', cursive;
+  font-size: 16px;
+  letter-spacing: 2px;
+  min-height: 24px;
+  margin-top: 10px;
+  color: #ffd700;
+  text-align: center;
+}
+
+#rouletteResult.divine {
+  color: #4caf50;
+  text-shadow: 0 0 10px rgba(76, 175, 80, 0.8);
+  animation: divinePulse 0.6s ease-in-out 3;
+}
+
+@keyframes divinePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+.roulette-close {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.roulette-close:hover { color: white; }
+
+#collectibleFullscreen {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.95);
+  z-index: 300;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+#collectibleFullscreen.show { display: flex; }
+
+.collectible-fullscreen-img {
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid rgba(255, 215, 0, 0.5);
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
+  animation: collectibleZoomIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes collectibleZoomIn {
+  from { transform: scale(0.5); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.collectible-fullscreen-name {
+  font-family: 'Bungee', cursive;
+  font-size: 20px;
+  letter-spacing: 3px;
+  color: white;
+  margin-top: 20px;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+.collectible-fullscreen-tier {
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 8px;
+}
+
+.collectible-fullscreen-tier.common { color: rgba(255, 193, 7, 0.8); }
+.collectible-fullscreen-tier.rare { color: rgba(206, 147, 216, 0.8); }
+.collectible-fullscreen-tier.mythic { color: rgba(255, 82, 82, 0.8); }
+.collectible-fullscreen-tier.jackpot { color: rgba(255, 87, 34, 0.8); }
+
+.collectible-fullscreen-desc {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  font-style: italic;
+  margin-top: 12px;
+  text-align: center;
+  max-width: 280px;
+  line-height: 1.6;
+}
+
+#collectibleFullscreenClose {
+  position: absolute;
+  top: 20px;
+  right: 24px;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 28px;
+  cursor: pointer;
+}
+
+#collectibleFullscreenClose:hover { color: white; }
+
+#profilePhotoWrap.framed-jesus-blessing {
+  border-color: #4caf50;
+  box-shadow: 0 0 18px rgba(76, 175, 80, 0.7), 0 0 36px rgba(76, 175, 80, 0.4);
+  animation: jesusAuraPulse 2.5s ease-in-out infinite;
+  position: relative;
+}
+
+@keyframes jesusAuraPulse {
+  0%, 100% { box-shadow: 0 0 18px rgba(76, 175, 80, 0.7), 0 0 36px rgba(76, 175, 80, 0.4); }
+  50% { box-shadow: 0 0 28px rgba(76, 175, 80, 1), 0 0 56px rgba(76, 175, 80, 0.6); }
+}
+
+#profilePhotoWrap.framed-jesus-blessing::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(76, 175, 80, 0.3) 0%, transparent 70%);
+  animation: jesusParticles1 4s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes jesusParticles1 {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+#profilePhotoWrap.framed-jesus-blessing::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(76, 175, 80, 0.2) 0%, transparent 60%);
+  animation: jesusParticles2 5s linear infinite reverse;
+  pointer-events: none;
+}
+
+@keyframes jesusParticles2 {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(-360deg); }
+}
+
+#repetidoMsg {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: 'Bungee', cursive;
+  font-size: 32px;
+  color: rgba(255, 80, 80, 0.8);
+  text-shadow: 0 0 20px rgba(255, 80, 80, 0.8);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+  z-index: 50;
+}
+
+#repetidoMsg.show { opacity: 1; }
+
+#boostBanner {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.9);
+  border: 2px solid rgba(244, 67, 54, 0.8);
+  border-radius: 16px;
+  padding: 16px 32px;
+  z-index: 150;
+  text-align: center;
+  box-shadow: 0 0 30px rgba(244, 67, 54, 0.5);
+}
+
+#boostBanner.show { display: block; animation: boostBannerTitle 0.6s ease-out; }
+
+@keyframes boostBannerTitle {
+  from { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+  to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+
+.boost-banner-title {
+  font-family: 'Bungee', cursive;
+  font-size: 20px;
+  letter-spacing: 3px;
+  color: #ff4466;
+  text-shadow: 0 0 10px rgba(255, 50, 100, 0.8);
+}
+
+.boost-banner-sub {
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 6px;
+}
+
+@keyframes toastIn {
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+@keyframes toastOut {
+  to { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+}
+
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-family: 'Orbitron', monospace;
+  font-size: 11px;
+  letter-spacing: 1px;
+  z-index: 400;
+  opacity: 0;
+  animation: toastIn 0.3s ease forwards;
+  pointer-events: none;
+}
+
+.toast.show { animation: toastOut 0.4s ease 2s forwards; }
+.toast.success { background: rgba(0, 50, 30, 0.95); border: 1px solid rgba(0, 255, 136, 0.5); color: rgba(0, 255, 136, 1); }
+.toast.error { background: rgba(50, 0, 0, 0.95); border: 1px solid rgba(255, 80, 80, 0.5); color: rgba(255, 100, 100, 1); }
+.toast.info { background: rgba(30, 25, 0, 0.95); border: 1px solid rgba(255, 215, 0, 0.5); color: rgba(255, 215, 0, 1); }
+</style>
+</head>
+<body>
+
+<div id="title">CHAOS BUTTON</div>
+<div id="log">Click the button...</div>
+<div id="statsRow">
+  <div class="stat-item">
+    <span class="stat-label">MONEDAS</span>
+    <span class="stat-value" id="coinNumber">0</span>
+  </div>
+  <div class="stat-item">
+    <span class="stat-label">CLICKS</span>
+    <span class="stat-value" id="clickCounterNumber">0</span>
+  </div>
+</div>
+<div id="boostCounter">
+  <span id="boostCounterIcon">⚡</span>
+  <span id="boostCounterLabel">BOOSTS ACTIVADOS</span>
+  <span id="boostCounterNumber">0</span>
+</div>
+<div id="boostBarWrap">
+  <div class="boost-bar-track" id="boostBarTrack">
+    <div class="boost-bar-fill" id="boostBar"></div>
+    <div class="boost-bar-label" id="boostBarLabel"></div>
+  </div>
+  <div class="boost-bar-percent" id="boostBarPercent">0%</div>
+</div>
+<div id="milestoneMsg"></div>
+<div id="chaosMeter"><div id="chaosFill"></div></div>
+<div class="chaos-meter"><span>CAOS</span></div>
+
+<button id="chaosBtn">CHAOS</button>
+
+<img id="intelBadge" src="Nikola-Albert.webp" alt="Intel Badge">
+
+<div id="profileBar">
+  <div id="profilePhotoWrap">
+    <img id="profilePhoto" src="" alt="Profile">
+    <svg id="profileEditEl" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2">
+      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+    </svg>
+  </div>
+  <div id="profileName">Player</div>
+  <div id="profileSlogan"></div>
+</div>
+
+<button id="toggleShop">TIENDA</button>
+<button id="toggleRoulette"> RULETA</button>
+<button id="toggleCollection">COLECCION</button>
+
+<div id="shopPanel">
+  <div id="shopPanelHeader">
+    <div id="shopPanelTitle">TIENDA</div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div id="shopBalance"><span id="shopIcon"></span><span id="shopBalanceNum">0</span></div>
+      <button id="shopClose">&times;</button>
+    </div>
+  </div>
+  <div id="shopCategoryTitle">FOTOS DE PERFIL</div>
+  <div id="shopList"></div>
+</div>
+
+<div id="collectionPanel">
+  <div id="collectionHeader">
+    <div id="collectionTitle">COLECCION</div>
+    <div id="collectionCount">0 / 3</div>
+    <button id="collectionClose">&times;</button>
+  </div>
+  <div id="collectionList"></div>
+</div>
+
+<div id="rouletteModal">
+  <button class="roulette-close" id="rouletteClose">&times;</button>
+  <div class="roulette-title"> RULETA</div>
+  <div class="roulette-wheel-container">
+    <div class="roulette-pointer"></div>
+    <svg viewBox="0 0 300 300" class="roulette-wheel" id="rouletteWheel"></svg>
+    <div class="roulette-center">CHAOS</div>
+  </div>
+  <div class="roulette-info">
+    <div class="roulette-cost">Costo: <span id="rouletteCost">50</span> 🪙</div>
+    <div id="rouletteReq">Requiere 500 clicks</div>
+  </div>
+  <button class="roulette-spin-btn" id="rouletteSpinBtn">GIRAR</button>
+  <div id="rouletteResult"></div>
+</div>
+
+<div id="collectibleFullscreen">
+  <button id="collectibleFullscreenClose">&times;</button>
+  <img class="collectible-fullscreen-img" id="collectibleFullscreenImg" src="" alt="">
+  <div class="collectible-fullscreen-name" id="collectibleFullscreenName"></div>
+  <div class="collectible-fullscreen-tier" id="collectibleFullscreenTier"></div>
+  <div class="collectible-fullscreen-desc" id="collectibleFullscreenDesc"></div>
+</div>
+
+<div id="boostBanner">
+  <div class="boost-banner-title">¡BOOST ACTIVADO!</div>
+  <div class="boost-banner-sub" id="boostBannerSub">+50 monedas · 10 segundos</div>
+</div>
+
+<div id="repetidoMsg">REPETIDO</div>
+
+<script>
+(function() {
+"use strict";
+
+var FONTS = [
+  { key: "dancing-script", name: "Cursiva Elegante",   css: "'Dancing Script', cursive", price: 10, sample: "Tu nombre" },
+  { key: "great-vibes",    name: "Cursiva Caligráfica", css: "'Great Vibes', cursive",    price: 10, sample: "Tu nombre" },
+  { key: "stranger-things", name: "Stranger Things",   css: "StrangerThings, fantasy",   price: 50, sample: "STRANGER" },
+  { key: "kitty-katt",     name: "KittyKatt",          css: "KittyKatt, fantasy",         price: 50, sample: "KitKat" },
+  { key: "game-of-squids", name: "Squid Game",         css: "GameOfSquids, fantasy",      price: 50, sample: "SQUID" }
+];
+
+var SHOP_PICTURES = [
+  { file: "Obama.jpg",    name: "Obama",     price: 50,  req: 500 },
+  { file: "Isabel.webp",  name: "Isabel",    price: 50,  req: 500 },
+  { file: "Tomioka.jpg",  name: "Tomioka",   price: 60,  req: 2500 },
+  { file: "Muichiro.jpg",  name: "Muichiro",  price: 60,  req: 2500 },
+  { file: "Megumi.jpg",   name: "Megumi",    price: 60,  req: 2500 },
+  { file: "Knight.jpg",   name: "Knight",    price: 60,  req: 2800 }
+];
+
+var SHOP_FONTS = FONTS.map(function(f) {
+  return { key: f.key, name: f.name, css: f.css, price: f.price, sample: f.sample };
+});
+
+var SHOP_SLOGANS = [
+  { key: "just-do-it",    name: "Just do it",       price: 10 },
+  { key: "no-pain",       name: "No pain, no gain!", price: 10 },
+  { key: "caotico",       name: "Caótico",           price: 20 },
+  { key: "boom",          name: "BOOM",              price: 30 },
+  { key: "hacker",        name: "HACKER",            price: 50 },
+  { key: "nah-id-win",    name: "Nah, I'd win",      price: 75 }
+];
+
+var SHOP_SECRET_PICTURES = [
+  { file: "Ratón_gamer.jpg", name: "Mouse Breaker", price: 0, req: 0, requiresBoosts: 5, isSecret: true }
+];
+
+var SHOP_SECRET_SLOGANS = [
+  { key: "mouse-breaker", name: "Mouse breaker", price: 0, requiresBoosts: 5, isSecret: true },
+  { key: "jesus-blesses", name: "Jesús me bendice", price: 0, requiresRoulette: "divine", isSecret: true }
+];
+
+var SHOP_FRAMES = [
+  { id: "jesus-blessing", name: "Bendición de Jesús", price: 0, requiresRoulette: "divine", isSecret: true }
+];
+
+var UNLOCKED_FACTS = [
+  "El botón fue creado en un garage","Los eventos aleatorios siguen patrones","El boost multiplica x2",
+  "Las monedas no vienen de clicks","Los videos se desbloquean al 100%","Los secretos requieren 5 boosts",
+  "La ruleta cuesta 50 monedas","El cielo no es el limite","El caos es matematico"
+];
+
+var QUOTES = [
+  "¡MÁS CAOS!","¡Vamos!","¡Esto es solo el comienzo!","¡La gente ama el caos!","¡Sigue así!",
+  "¡No pares!","¡Eres imparable!","¡Qué energía!","¡Esto es legendary!","¡CAOS TOTAL!"
+];
+
+var CHAOS_EVENTS = [
+  { name: "Matrix", color: "rgba(0,255,0,0.3)", emoji: "💾" },
+  { name: "Hackerman", color: "rgba(0,255,136,0.3)", emoji: "💻" },
+  { name: "Supernova", color: "rgba(255,200,0,0.3)", emoji: "🌟" },
+  { name: "Confetti", color: "rgba(255,100,200,0.3)", emoji: "🎉" },
+  { name: "Aurora", color: "rgba(100,200,255,0.3)", emoji: "🌌" },
+  { name: "Fuego", color: "rgba(255,80,0,0.3)", emoji: "🔥" },
+  { name: "Glitch", color: "rgba(200,0,255,0.3)", emoji: "⚡" },
+  { name: "Invasión", color: "rgba(0,150,255,0.3)", emoji: "👽" },
+  { name: "Tornado", color: "rgba(0,255,200,0.3)", emoji: "🌪️" },
+  { name: "Terremoto", color: "rgba(255,150,0,0.3)", emoji: "🌋" },
+  { name: "Tsunami", color: "rgba(0,100,255,0.3)", emoji: "🌊" },
+  { name: "Apagón", color: "rgba(50,50,50,0.5)", emoji: "💡" },
+  { name: "Sobrecarga", color: "rgba(255,50,50,0.3)", emoji: "⚡" }
+];
+
+var SOUNDS = [
+  "bruh.mp3","ara-ara-sayonara.mp3","galaxy-meme.mp3","sad-violin-the-meme-one.mp3",
+  "spongebob-fail.mp3","cat-laugh-meme-1.mp3","windows-xp-donteflon.mp3","mouse-click-sound.mp3"
+];
+
+var COIN_EVENT_FILES = {
+  cat:   { file: "Gato.jpg",   coins: 5,  sound: "meow.mp3" },
+  fish:  { file: "Sardina.jpg", coins: 5, sound: "splash.mp3" },
+  coin:  { file: null,         coins: 1,  sound: "coin-collect.mp3" }
+};
+
+var lastSound = "";
+var lastSoundTime = 0;
+
+var MILESTONES = [100, 500, 1000, 5000, 10000, 50000, 100000];
+var MAX_ELEMENTS = 50;
+var trackedElements = [];
+
+var totalClicks = parseInt(localStorage.getItem("totalClicks") || "0", 10);
+var coins = parseInt(localStorage.getItem("chaosCoins") || "0", 10);
+var chaosLevel = parseFloat(localStorage.getItem("chaosLevel") || "0");
+var clicks = parseInt(localStorage.getItem("clicks") || "0", 10);
+var lastMilestoneShown = parseInt(localStorage.getItem("lastMilestoneShown") || "0", 10);
+
+var unlockableFacts = JSON.parse(localStorage.getItem("chaosFacts") || "[]");
+var unlockedVideos = JSON.parse(localStorage.getItem("chaosVideos") || "[]");
+
+var inventory = JSON.parse(localStorage.getItem("chaosInventory") || '{"pictures":[],"fonts":[],"slogans":[],"frames":[],"collectibles":[]}');
+if (!inventory.pictures) inventory.pictures = [];
+if (!inventory.fonts) inventory.fonts = [];
+if (!inventory.slogans) inventory.slogans = [];
+if (!inventory.frames) inventory.frames = [];
+if (!inventory.collectibles) inventory.collectibles = [];
+
+var equipped = JSON.parse(localStorage.getItem("chaosEquipped") || '{"picture":null,"font":null,"slogan":null,"frame":null}');
+if (!equipped.picture) equipped.picture = null;
+if (!equipped.font) equipped.font = null;
+if (!equipped.slogan) equipped.slogan = null;
+if (!equipped.frame) equipped.frame = null;
+
+var playerName = localStorage.getItem("chaosPlayerName") || "Player";
+
+var boostCharge = parseFloat(localStorage.getItem("chaosBoostCharge") || "0");
+var boostCooldownUntil = parseInt(localStorage.getItem("chaosBoostCooldownUntil") || "0", 10);
+var boostActiveUntil = parseInt(localStorage.getItem("chaosBoostActiveUntil") || "0", 10);
+var boostActivationsCount = parseInt(localStorage.getItem("chaosBoostActivationsCount") || "0", 10);
+var boostMilestone5Shown = localStorage.getItem("chaosBoostMilestone5") === "1";
+var lastBoostClickTime = 0;
+
+var BOOST_DURATION_MS = 10000;
+var BOOST_COOLDOWN_MS = 30000;
+var BOOST_CHARGE_PER_CLICK = 0.5;
+var BOOST_DECAY_PER_100MS = 0.2;
+var BOOST_DECAY_DELAY_MS = 800;
+var BOOST_REQUIRED_FOR_UNLOCK = 5;
+
+var boostBarEl = document.getElementById("boostBar");
+var boostBarTrackEl = document.getElementById("boostBarTrack");
+var boostBarLabelEl = document.getElementById("boostBarLabel");
+var boostBarPercentEl = document.getElementById("boostBarPercent");
+var boostCountEl = document.getElementById("boostCounterNumber");
+var boostCounterEl = document.getElementById("boostCounter");
+var boostBannerEl = document.getElementById("boostBanner");
+var boostBannerSubEl = document.getElementById("boostBannerSub");
+
+var coinEvent = null;
+var nextCoinEventTime = Date.now() + 4000;
+
+var shopOpen = false;
+var collectionOpen = false;
+
+var ROULETTE_PRIZES = [
+  { id: "doge",       name: "Doge",         img: "Doge.jpg",           tier: "common",  isCollectible: true, desc: "Much wow. Very coin. Wow." },
+  { id: "agua",       name: "Agua en polvo", img: "Agua_en_polvo.jpg",  tier: "common",  isCollectible: true, desc: "Hidratación instantánea en cualquier lugar." },
+  { id: "rengoku",    name: "Rengoku dona",  img: "Rengoku_dona.jpg",    tier: "rare",    isCollectible: true, desc: "Llama eterna del anime." },
+  { id: "100coins",   name: "100 monedas",   img: null,                 tier: "rare",    isCollectible: false, coins: 100, desc: "¡Suelte de monedas! 100 monedas instantáneas." },
+  { id: "venpaca",    name: "Ven pa' acá",   img: "Ven_paca.jpg",        tier: "rare",    isCollectible: true, desc: "El clásico del caos. Ven pa' acá." },
+  { id: "atun",       name: "Atún con mayonesa", img: "Atun_con_mayonesa.jpg", tier: "mythic", isCollectible: true, desc: "La reliquia perdida de la historia culinaria." },
+  { id: "jackpot",    name: "500 monedas",  img: null,                 tier: "jackpot",  isCollectible: false, coins: 500, desc: "¡PREMIO MAYOR! 500 monedas instantly." }
+];
+
+var ROULETTE_SPIN_COST = 50;
+var ROULETTE_SPIN_DURATION_MS = 7500;
+var ROULETTE_SECTOR_COUNT = ROULETTE_PRIZES.length;
+var ROULETTE_SECTOR_ANGLE = 360 / ROULETTE_SECTOR_COUNT;
+
+var rouletteSpinsCount = parseInt(localStorage.getItem("chaosRouletteSpins") || "0", 10);
+var jesusRewardUnlocked = localStorage.getItem("chaosJesusReward") === "1";
+var rouletteCurrentRotation = 0;
+var rouletteSpinning = false;
+
+var titleEl = document.getElementById("title");
+var logEl = document.getElementById("log");
+var chaosBtn = document.getElementById("chaosBtn");
+var coinNumberEl = document.getElementById("coinNumber");
+var clickCounterNumberEl = document.getElementById("clickCounterNumber");
+var chaosFillEl = document.getElementById("chaosFill");
+var milestoneMsgEl = document.getElementById("milestoneMsg");
+var intelBadgeEl = document.getElementById("intelBadge");
+var profilePhotoEl = document.getElementById("profilePhoto");
+var profileNameEl = document.getElementById("profileName");
+var profileSloganEl = document.getElementById("profileSlogan");
+var profilePhotoWrap = document.getElementById("profilePhotoWrap");
+var profileEditEl = document.getElementById("profileEditEl");
+
+var collectionBtn = document.getElementById("toggleCollection");
+var collectionPanel = document.getElementById("collectionPanel");
+var collectionList = document.getElementById("collectionList");
+var collectionCount = document.getElementById("collectionCount");
+var collectionCloseBtn = document.getElementById("collectionClose");
+
+collectionBtn.addEventListener("click", function() {
+  collectionOpen = !collectionOpen;
+  if (collectionOpen) {
+    collectionPanel.classList.add("open");
+    buildCollection();
+  } else {
+    collectionPanel.classList.remove("open");
+  }
+});
+
+collectionCloseBtn.addEventListener("click", function() {
+  collectionPanel.classList.remove("open");
+  collectionOpen = false;
+});
+
+collectionPanel.addEventListener("click", function(e) {
+  if (e.target === collectionPanel) {
+    collectionPanel.classList.remove("open");
+    collectionOpen = false;
+  }
+});
+
+function buildCollection() {
+  collectionList.innerHTML = "";
+
+  var videosHeader = document.createElement("div");
+  videosHeader.className = "collection-section-header";
+  videosHeader.textContent = "VIDEOS";
+  collectionList.appendChild(videosHeader);
+
+  if (unlockedVideos.length === 0) {
+    var empty = document.createElement("div");
+    empty.className = "collection-empty";
+    empty.textContent = "Llega a 100% caos para desbloquear videos";
+    collectionList.appendChild(empty);
+  } else {
+    unlockedVideos.forEach(function(v) {
+      var item = document.createElement("div");
+      item.className = "collection-item";
+
+      var vid = document.createElement("video");
+      vid.src = v.file;
+      vid.loop = true;
+      vid.muted = true;
+      vid.addEventListener("mouseenter", function() { vid.play().catch(function(){}); });
+      vid.addEventListener("mouseleave", function() { vid.pause(); vid.currentTime = 0; });
+      vid.addEventListener("click", function() { playVideoFullscreen(v.file, false); });
+
+      var name = document.createElement("div");
+      name.className = "collection-item-name";
+      name.textContent = v.name;
+
+      item.appendChild(vid);
+      item.appendChild(name);
+      collectionList.appendChild(item);
+    });
+  }
+
+  var collectiblesHeader = document.createElement("div");
+  collectiblesHeader.className = "collection-section-header";
+  collectiblesHeader.textContent = "COLECCIONABLES · RULETA";
+  collectionList.appendChild(collectiblesHeader);
+
+  var collectiblePrizes = (typeof ROULETTE_PRIZES !== "undefined" && ROULETTE_PRIZES)
+    ? ROULETTE_PRIZES.filter(function(p) { return p.isCollectible; })
+    : [];
+  var ownedCount = 0;
+  collectiblePrizes.forEach(function(prize) {
+    if (isCollectibleOwned(prize.id)) ownedCount++;
+    var item = document.createElement("div");
+    item.className = "collection-item collectible-item" + (isCollectibleOwned(prize.id) ? " owned" : " locked");
+
+    var imgWrap = document.createElement("div");
+    imgWrap.className = "collection-collectible-img-wrap";
+    if (isCollectibleOwned(prize.id)) {
+      var img = document.createElement("img");
+      img.src = prize.img;
+      img.alt = prize.name;
+      img.className = "collection-collectible-img";
+      img.onerror = function() { this.style.background = "rgba(255,80,80,0.2)"; this.alt = "missing"; };
+      imgWrap.appendChild(img);
+    } else {
+      var lock = document.createElement("div");
+      lock.className = "collection-collectible-lock";
+      lock.textContent = "🔒";
+      imgWrap.appendChild(lock);
+    }
+
+    var tierBorder = document.createElement("div");
+    tierBorder.className = "collection-collectible-tier-border tier-" + prize.tier;
+    imgWrap.appendChild(tierBorder);
+
+    var name = document.createElement("div");
+    name.className = "collection-item-name";
+    name.textContent = isCollectibleOwned(prize.id) ? prize.name : "???";
+
+    item.appendChild(imgWrap);
+    item.appendChild(name);
+    if (isCollectibleOwned(prize.id)) {
+      item.addEventListener("click", function() { openCollectibleFullscreen(prize); });
+    }
+    collectionList.appendChild(item);
+  });
+
+  var totalCollectibles = collectiblePrizes.length;
+  collectionCount.textContent = unlockedVideos.length + " / 3 · " + ownedCount + " / " + totalCollectibles;
+}
+
+function playVideoFullscreen(file, isNew) {
+  var overlayVideo = document.getElementById("overlayVideo");
+  overlayVideo.src = file;
+  overlayVideo.muted = false;
+  var videoOverlay = document.getElementById("videoOverlay");
+  videoOverlay.classList.add("show");
+  overlayVideo.play().catch(function() {});
+  if (isNew) {
+    overlayVideo.onended = function() {
+      videoOverlay.classList.remove("show");
+      buildCollection();
+      resetEverything();
+    };
+  } else {
+    overlayVideo.onended = function() {
+      videoOverlay.classList.remove("show");
+    };
+  }
+}
+
+var overlayVideo = document.getElementById("overlayVideo");
+var videoOverlay = document.getElementById("videoOverlay");
+
+function triggerVideoUnlock() {
+  if (unlockedVideos.length >= 3) return;
+  if (chaosLevel < 100) return;
+
+  var roll = Math.random() * 100;
+  var selectedVideo = null;
+
+  if (roll < 50 && !unlockedVideos.some(function(v) { return v.file === "Avioncito.mp4"; })) {
+    selectedVideo = { name: "Avioncito", file: "Avioncito.mp4" };
+  } else if (roll < 75 && !unlockedVideos.some(function(v) { return v.file === "Tesla.mp4"; })) {
+    selectedVideo = { name: "Tesla", file: "Tesla.mp4" };
+  } else if (!unlockedVideos.some(function(v) { return v.file === "Gojo.mp4"; })) {
+    selectedVideo = { name: "Gojo", file: "Gojo.mp4" };
+  }
+
+  if (!selectedVideo) return;
+
+  var alreadyUnlocked = unlockedVideos.some(function(v) { return v.file === selectedVideo.file; });
+  if (alreadyUnlocked) return;
+
+  unlockedVideos.push(selectedVideo);
+  localStorage.setItem("chaosVideos", JSON.stringify(unlockedVideos));
+  showToast("¡Video desbloqueado: " + selectedVideo.name + "!", "success");
+  playVideoFullscreen(selectedVideo.file, true);
+}
+
+function resetEverything() {
+  chaosLevel = 0;
+  clicks = 0;
+  clicks = 0;
+  updateChaosMeter();
+  updateClickCounter();
+}
+
+var isResetting = false;
+
+function chaos() {
+  if (isResetting) return;
+
+  var boostMult = getBoostMultiplier();
+  applyBoostClick();
+
+  clicks++;
+  totalClicks++;
+  chaosLevel = Math.min(100, chaosLevel + boostMult);
+  updateChaosMeter();
+  updateClickCounter();
+
+  var rect = chaosBtn.getBoundingClientRect();
+  var cx = rect.left + rect.width / 2;
+  var cy = rect.top + rect.height / 2;
+
+  var color1 = randomHsl(100, 60);
+  title.style.color = color1;
+  chaosBtn.style.borderColor = color1;
+  chaosBtn.style.boxShadow = "0 0 25px " + color1;
+
+  if (chaosLevel >= 50) {
+    document.body.style.background = "linear-gradient(" + Math.floor(Math.random() * 360) + "deg, " + randomHsl(90, 15) + ", " + randomHsl(90, 15) + ")";
+  } else {
+    document.body.style.background = randomHsl(80, 12);
+  }
+
+  changeFont();
+
+  var quote = QUOTES[Math.floor(Math.random() * QUOTES.length)];
+  if (clicks % 5 === 0) quote = "Caos level: " + clicks;
+  logEl.innerText = quote;
+  logEl.classList.remove("panicked");
+  void logEl.offsetWidth;
+  logEl.classList.add("panicked");
+
+  if (chaosLevel >= 100) triggerVideoUnlock();
+
+  if (Math.random() < 0.08) triggerCoinEvent();
+
+  if (chaosLevel > 80 && Math.random() < 0.03) {
+    isResetting = true;
+    chaosLevel = 0;
+    clicks = 0;
+    showToast("¡CAOS RESET!", "error");
+    var repetidoMsg = document.getElementById("repetidoMsg");
+    repetidoMsg.classList.add("show");
+    setTimeout(function() {
+      repetidoMsg.classList.remove("show");
+      isResetting = false;
+    }, 1500);
+    updateChaosMeter();
+    updateClickCounter();
+  }
+
+  if (Math.random() < 0.04) triggerRandomChaosEvent();
+
+  checkMilestones();
+
+  saveState();
+
+  if (totalClicks >= 1000 && !intelBadgeEl.classList.contains("show")) {
+    intelBadgeEl.classList.add("show");
+    localStorage.setItem("intelBadge", "true");
+  }
+}
+
+function changeFont() {
+  var fonts = ["'Bungee'", "'Orbitron'", "'Dancing Script'", "'Great Vibes'", "'Stranger Things'", "'KittyKatt'", "'GameOfSquids'"];
+  document.body.style.fontFamily = fonts[Math.floor(Math.random() * fonts.length)];
+}
+
+function updateChaosMeter() {
+  chaosFillEl.style.width = chaosLevel + "%";
+  localStorage.setItem("chaosLevel", String(chaosLevel));
+}
+
+function updateClickCounter() {
+  clickCounterNumberEl.textContent = formatNumber(totalClicks);
+  localStorage.setItem("totalClicks", String(totalClicks));
+  localStorage.setItem("clicks", String(clicks));
+}
+
+function formatNumber(n) {
+  if (n >= 1000000) return (n / 1000000).toFixed(1) + "M";
+  if (n >= 1000) return (n / 1000).toFixed(1) + "K";
+  return String(n);
+}
+
+function checkMilestones() {
+  for (var i = MILESTONES.length - 1; i >= 0; i--) {
+    if (totalClicks >= MILESTONES[i] && lastMilestoneShown < MILESTONES[i]) {
+      lastMilestoneShown = MILESTONES[i];
+      milestoneMsgEl.textContent = "+" + MILESTONES[i] + " CLICKS!";
+      milestoneMsgEl.classList.add("show");
+      showToast("¡" + MILESTONES[i] + " clicks!", "info");
+      setTimeout(function() { milestoneMsgEl.classList.remove("show"); }, 2500);
+      localStorage.setItem("lastMilestoneShown", String(lastMilestoneShown));
+      break;
+    }
+  }
+}
+
+chaosBtn.addEventListener("click", function() {
+  playClickSound();
+  chaos();
+});
+
+document.addEventListener("keydown", function(e) {
+  if (e.key === "Enter" || e.key === " ") {
+    e.preventDefault();
+    playClickSound();
+    chaos();
+  }
+});
+
+window.addEventListener("resize", resize);
+
+function resize() {
+  var rect = chaosBtn.getBoundingClientRect();
+}
+
+function playClickSound() {
+  var sound = new Audio("mouse-click-sound.mp3");
+  sound.volume = 0.6;
+  sound.play().catch(function() {});
+  lastSound = "mouse-click-sound.mp3";
+  lastSoundTime = Date.now();
+}
+
+function playSound(s) {
+  if (!s) return;
+  try {
+    var sound = new Audio(s);
+    sound.volume = 0.5;
+    sound.play().catch(function() {});
+  } catch(e) {}
+}
+
+function playSoundSafe(s) {
+  if (!s) return;
+  try {
+    var sound = new Audio(s);
+    sound.volume = 0.5;
+    sound.play().catch(function() {});
+  } catch(e) {}
+}
+
+function playRandomSound() {
+  if (Date.now() - lastSoundTime < 10000) return;
+  var available = SOUNDS.filter(function(s) { return s !== lastSound; });
+  if (available.length === 0) return;
+  var s = available[Math.floor(Math.random() * available.length)];
+  var sound = new Audio(s);
+  sound.volume = 0.4;
+  sound.play().catch(function() {});
+  lastSound = s;
+  lastSoundTime = Date.now();
+}
+
+function triggerRandomChaosEvent() {
+  playRandomSound();
+  var ev = CHAOS_EVENTS[Math.floor(Math.random() * CHAOS_EVENTS.length)];
+  spawnChaosEffect(ev);
+}
+
+function spawnChaosEffect(ev) {
+  var el = document.createElement("div");
+  el.textContent = ev.emoji;
+  el.style.position = "fixed";
+  el.style.left = (Math.random() * 80 + 10) + "%";
+  el.style.top = (Math.random() * 80 + 10) + "%";
+  el.style.fontSize = (Math.random() * 30 + 20) + "px";
+  el.style.pointerEvents = "none";
+  el.style.zIndex = "100";
+  el.style.transition = "all 1.5s ease";
+  el.style.opacity = "1";
+  document.body.appendChild(el);
+  trackedAppend(el);
+  setTimeout(function() {
+    el.style.opacity = "0";
+    el.style.transform = "translateY(-100px) scale(0.5)";
+  }, 100);
+  setTimeout(function() {
+    trackedRemove(el);
+    if (el.parentNode) el.parentNode.removeChild(el);
+  }, 1600);
+}
+
+function triggerCoinEvent() {
+  var types = ["cat", "fish", "coin"];
+  var type = types[Math.floor(Math.random() * types.length)];
+  var data = COIN_EVENT_FILES[type];
+  coinEvent = { type: type, data: data, x: Math.random() * 80 + 10, y: Math.random() * 60 + 20 };
+  nextCoinEventTime = Date.now() + 8000 + Math.random() * 7000;
+  spawnCoinEvent();
+}
+
+function spawnCoinEvent() {
+  if (!coinEvent) return;
+  var el = document.createElement("div");
+  el.textContent = coinEvent.type === "coin" ? "🪙" : "❓";
+  if (coinEvent.type === "cat") el.textContent = "🐱";
+  if (coinEvent.type === "fish") el.textContent = "🐟";
+  el.style.position = "fixed";
+  el.style.left = coinEvent.x + "%";
+  el.style.top = coinEvent.y + "%";
+  el.style.fontSize = "36px";
+  el.style.cursor = "pointer";
+  el.style.zIndex = "90";
+  el.style.transition = "transform 0.3s";
+  el.style.opacity = "0.9";
+  el.style.pointerEvents = "auto";
+  el.addEventListener("click", function() {
+    addCoins(coinEvent.data.coins, coinEvent.type, true);
+    playSoundSafe(coinEvent.data.sound);
+    showToast("+" + coinEvent.data.coins + " monedas (" + coinEvent.type + ")", "success");
+    trackedRemove(el);
+    if (el.parentNode) el.parentNode.removeChild(el);
+    coinEvent = null;
+  });
+  el.addEventListener("mouseenter", function() { el.style.transform = "scale(1.2)"; });
+  el.addEventListener("mouseleave", function() { el.style.transform = "scale(1)"; });
+  document.body.appendChild(el);
+  trackedAppend(el);
+  setTimeout(function() {
+    if (el.parentNode) {
+      trackedRemove(el);
+      el.parentNode.removeChild(el);
+    }
+    coinEvent = null;
+  }, 15000);
+}
+
+function addCoins(amount, source, isBig) {
+  coins += amount;
+  coinNumberEl.textContent = formatNumber(coins);
+  localStorage.setItem("chaosCoins", String(coins));
+  playSoundSafe("coin-collect.mp3");
+}
+
+function canCreate() {
+  return trackedElements.length < MAX_ELEMENTS;
+}
+
+function trackedAppend(el) {
+  if (!canCreate()) {
+    var oldest = trackedElements.shift();
+    if (oldest && oldest.parentNode) oldest.parentNode.removeChild(oldest);
+  }
+  trackedElements.push(el);
+}
+
+function trackedRemove(el) {
+  var idx = trackedElements.indexOf(el);
+  if (idx !== -1) trackedElements.splice(idx, 1);
+}
+
+function randomHsl(h, s) {
+  return "hsl(" + Math.floor(Math.random() * 360) + ", " + h + "%, " + s + "%)";
+}
+
+function saveState() {
+  localStorage.setItem("totalClicks", String(totalClicks));
+  localStorage.setItem("chaosCoins", String(coins));
+  localStorage.setItem("chaosLevel", String(chaosLevel));
+  localStorage.setItem("clicks", String(clicks));
+  localStorage.setItem("lastMilestoneShown", String(lastMilestoneShown));
+}
+
+console.log("CHAOS ENGINE v5");
+buildCollection();
+
+setInterval(function() {
+  if (coinEvent) return;
+  if (Date.now() > nextCoinEventTime) triggerCoinEvent();
+}, 1000);
+
+function isOwned(file) { return inventory.pictures.indexOf(file) !== -1; }
+function isOwnedSlogan(key) { return inventory.slogans.indexOf(key) !== -1; }
+function isOwnedFont(key) { return inventory.fonts.indexOf(key) !== -1; }
+function isOwnedFrame(id) { return inventory.frames.indexOf(id) !== -1; }
+function isCollectibleOwned(id) { return inventory.collectibles.indexOf(id) !== -1; }
+
+function canBuy(pic) {
+  if (isOwned(pic.file)) return false;
+  if (pic.req && totalClicks < pic.req) return false;
+  return coins >= pic.price;
+}
+
+function canBuySlogan(s) {
+  if (isOwnedSlogan(s.key)) return false;
+  return coins >= s.price;
+}
+
+function canBuyFont(f) {
+  if (isOwnedFont(f.key)) return false;
+  return coins >= f.price;
+}
+
+function canBuyFrame(frame) {
+  if (isOwnedFrame(frame.id)) return false;
+  return true;
+}
+
+function getEquippedFont() {
+  if (!equipped.font) return null;
+  return FONTS.find(function(f) { return f.key === equipped.font; }) || null;
+}
+
+function getEquippedSlogan() {
+  if (!equipped.slogan) return null;
+  for (var i = 0; i < SHOP_SLOGANS.length; i++) {
+    if (SHOP_SLOGANS[i].key === equipped.slogan) return SHOP_SLOGANS[i];
+  }
+  for (var i = 0; i < SHOP_SECRET_SLOGANS.length; i++) {
+    if (SHOP_SECRET_SLOGANS[i].key === equipped.slogan) return SHOP_SECRET_SLOGANS[i];
+  }
+  return null;
+}
+
+function buyPicture(pic) {
+  if (!canBuy(pic)) return;
+  coins -= pic.price;
+  inventory.pictures.push(pic.file);
+  localStorage.setItem("chaosInventory", JSON.stringify(inventory));
+  localStorage.setItem("chaosCoins", String(coins));
+  coinNumberEl.textContent = formatNumber(coins);
+  updateShopBalance();
+  buildShop();
+  playSoundSafe("purchase.mp3");
+  showToast("¡" + pic.name + " comprada!", "success");
+}
+
+function buySlogan(s) {
+  if (!canBuySlogan(s)) return;
+  coins -= s.price;
+  inventory.slogans.push(s.key);
+  localStorage.setItem("chaosInventory", JSON.stringify(inventory));
+  localStorage.setItem("chaosCoins", String(coins));
+  coinNumberEl.textContent = formatNumber(coins);
+  updateShopBalance();
+  buildShop();
+  playSoundSafe("purchase.mp3");
+  showToast("¡" + s.name + " comprada!", "success");
+}
+
+function buyFont(f) {
+  if (!canBuyFont(f)) return;
+  coins -= f.price;
+  inventory.fonts.push(f.key);
+  localStorage.setItem("chaosInventory", JSON.stringify(inventory));
+  localStorage.setItem("chaosCoins", String(coins));
+  coinNumberEl.textContent = formatNumber(coins);
+  updateShopBalance();
+  buildShop();
+  playSoundSafe("purchase.mp3");
+  showToast("¡" + f.name + " comprada!", "success");
+}
+
+function equipPicture(pic) {
+  equipped.picture = (equipped.picture === pic.file) ? null : pic.file;
+  localStorage.setItem("chaosEquipped", JSON.stringify(equipped));
+  updateProfile();
+  buildShop();
+  playSoundSafe("equip.mp3");
+}
+
+function equipSlogan(s) {
+  equipped.slogan = (equipped.slogan === s.key) ? null : s.key;
+  localStorage.setItem("chaosEquipped", JSON.stringify(equipped));
+  updateProfile();
+  buildShop();
+  playSoundSafe("equip.mp3");
+}
+
+function equipFont(f) {
+  equipped.font = (equipped.font === f.key) ? null : f.key;
+  localStorage.setItem("chaosEquipped", JSON.stringify(equipped));
+  updateProfile();
+  buildShop();
+  playSoundSafe("equip.mp3");
+}
+
+function equipFrame(frame) {
+  equipped.frame = (equipped.frame === frame.id) ? null : frame.id;
+  localStorage.setItem("chaosEquipped", JSON.stringify(equipped));
+  updateProfile();
+  buildShop();
+}
+
+function updateProfile() {
+  if (equipped.picture) {
+    profilePhotoEl.src = equipped.picture;
+    profilePhotoEl.onerror = function() { this.src = PLACEHOLDER_PHOTO_SVG; };
+  } else {
+    profilePhotoEl.src = PLACEHOLDER_PHOTO_SVG;
+  }
+
+  var f = getEquippedFont();
+  profileNameEl.style.fontFamily = f ? f.css : "'Orbitron', monospace";
+
+  var s = getEquippedSlogan();
+  profileSloganEl.textContent = s ? "\u201C" + s.name + "\u201D" : "";
+
+  profileNameEl.textContent = playerName;
+
+  var wrap = document.getElementById("profilePhotoWrap");
+  if (wrap) {
+    wrap.classList.remove("framed-jesus-blessing");
+    if (equipped.frame === "jesus-blessing") {
+      wrap.classList.add("framed-jesus-blessing");
+    }
+  }
+}
+
+var PLACEHOLDER_PHOTO_SVG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Ccircle cx='24' cy='24' r='24' fill='%23333'/%3E%3Ctext x='24' y='30' text-anchor='middle' fill='%23666' font-size='20'%3E%3F%3C/text%3E%3C/svg%3E";
+
+function startEditName() {
+  if (profileNameEl.getAttribute("contenteditable") === "true") return;
+  profileNameEl.setAttribute("contenteditable", "true");
+  profileNameEl.focus();
+  var range = document.createRange();
+  range.selectNodeContents(profileNameEl);
+  var sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+}
+
+profileEditEl.addEventListener("click", function(e) {
+  e.stopPropagation();
+  startEditName();
+});
+
+profileNameEl.addEventListener("click", function() {
+  startEditName();
+});
+
+profileNameEl.addEventListener("keydown", function(e) {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    profileNameEl.blur();
+  }
+  if (e.key === "Escape") {
+    profileNameEl.textContent = playerName;
+    profileNameEl.blur();
+  }
+});
+
+profileNameEl.addEventListener("blur", function() {
+  profileNameEl.setAttribute("contenteditable", "false");
+  var newName = profileNameEl.textContent.trim().substring(0, 20);
+  if (newName) {
+    playerName = newName;
+    localStorage.setItem("chaosPlayerName", playerName);
+  } else {
+    profileNameEl.textContent = playerName;
+  }
+});
+
+profileNameEl.addEventListener("paste", function(e) {
+  e.preventDefault();
+  var text = (e.clipboardData || window.clipboardData).getData("text/plain");
+  text = text.replace(/<[^>]*>/g, "");
+  document.execCommand("insertText", false, text.substring(0, 20));
+});
+
+profilePhotoWrap.addEventListener("click", function() {
+  if (equipped.picture) {
+    equipped.picture = null;
+    localStorage.setItem("chaosEquipped", JSON.stringify(equipped));
+    updateProfile();
+    buildShop();
+  }
+});
+
+function saveInventory() {
+  localStorage.setItem("chaosInventory", JSON.stringify(inventory));
+}
+function saveEquipped() {
+  localStorage.setItem("chaosEquipped", JSON.stringify(equipped));
+}
+
+function buildShop() {
+  var list = document.getElementById("shopList");
+  list.innerHTML = "";
+
+  list.appendChild(buildShopSection("FOTOS DE PERFIL"));
+  SHOP_PICTURES.forEach(function(pic) {
+    list.appendChild(buildShopPicture(pic));
+  });
+
+  list.appendChild(buildShopSection("FUENTES"));
+  SHOP_FONTS.forEach(function(font) {
+    list.appendChild(buildShopFont(font));
+  });
+
+  list.appendChild(buildShopSection("FRASES"));
+  SHOP_SLOGANS.forEach(function(slogan) {
+    list.appendChild(buildShopSlogan(slogan));
+  });
+
+  if (boostsUnlocked()) {
+    list.appendChild(buildShopSection("SECRETOS · 5 BOOSTS"));
+    SHOP_SECRET_PICTURES.forEach(function(pic) {
+      list.appendChild(buildShopPicture(pic));
+    });
+    SHOP_SECRET_SLOGANS.forEach(function(slogan) {
+      list.appendChild(buildShopSlogan(slogan));
+    });
+  }
+
+  if (jesusRewardUnlocked) {
+    list.appendChild(buildShopSection("MARCOS · BENDICIÓN"));
+    SHOP_FRAMES.forEach(function(frame) {
+      list.appendChild(buildShopFrame(frame));
+    });
+  }
+}
+
+function buildShopSection(title) {
+  var h = document.createElement("div");
+  h.className = "shop-section-header";
+  h.textContent = title;
+  return h;
+}
+
+function buildShopPicture(pic) {
+  var owned = isOwned(pic.file);
+  var equippedNow = equipped.picture === pic.file;
+  var buyable = canBuy(pic);
+  var secretLocked = pic.requiresBoosts && boostActivationsCount < pic.requiresBoosts;
+
+  var item = document.createElement("div");
+  item.className = "shop-item" + (owned ? " owned" : "") + (equippedNow ? " equipped" : "") + (!owned && !buyable ? " locked" : "") + (secretLocked ? " secret-locked" : "");
+
+  var thumb = document.createElement("img");
+  thumb.src = pic.file;
+  thumb.alt = pic.name;
+  thumb.className = "shop-item-thumb";
+  thumb.onerror = function() { this.style.background = "rgba(255,255,255,0.1)"; this.alt = pic.name; };
+
+  var info = document.createElement("div");
+  info.className = "shop-item-info";
+
+  var name = document.createElement("div");
+  name.className = "shop-item-name";
+  name.textContent = secretLocked ? "???" : pic.name;
+
+  var req = document.createElement("div");
+  req.className = "shop-item-req";
+  if (secretLocked) {
+    var reqSpan = document.createElement("span");
+    reqSpan.className = "no";
+    reqSpan.textContent = "🔒 " + pic.requiresBoosts + " boosts";
+    req.appendChild(reqSpan);
+  } else if (pic.req) {
+    var reqSpan = document.createElement("span");
+    reqSpan.className = totalClicks >= pic.req ? "ok" : "no";
+    reqSpan.textContent = formatNumber(pic.req) + " clicks";
+    req.appendChild(reqSpan);
+  }
+  if (!secretLocked && pic.price > 0) {
+    var priceSpan = document.createElement("span");
+    priceSpan.className = coins >= pic.price ? "ok" : "no";
+    priceSpan.textContent = pic.price + " 🪙";
+    req.appendChild(priceSpan);
+  }
+
+  info.appendChild(name);
+  info.appendChild(req);
+
+  var action = document.createElement("button");
+  action.className = "shop-item-action";
+  if (equippedNow) {
+    action.classList.add("equipped");
+    action.textContent = "EQUIPADA";
+    action.disabled = true;
+  } else if (owned) {
+    action.classList.add("equip");
+    action.textContent = "EQUIPAR";
+    action.onclick = function() { equipPicture(pic); };
+  } else {
+    action.textContent = "COMPRAR";
+    action.disabled = !buyable;
+    action.onclick = function() { buyPicture(pic); };
+  }
+
+  item.appendChild(thumb);
+  item.appendChild(info);
+  item.appendChild(action);
+  return item;
+}
+
+function buildShopFont(font) {
+  var owned = isOwnedFont(font.key);
+  var equippedNow = equipped.font === font.key;
+  var buyable = canBuyFont(font);
+
+  var item = document.createElement("div");
+  item.className = "shop-item font-item" + (owned ? " owned" : "") + (equippedNow ? " equipped" : "") + (!owned && !buyable ? " locked" : "");
+
+  var preview = document.createElement("div");
+  preview.className = "shop-item-font-preview";
+  preview.textContent = font.sample.substring(0, 3);
+  preview.style.fontFamily = font.css;
+
+  var info = document.createElement("div");
+  info.className = "shop-item-info";
+
+  var name = document.createElement("div");
+  name.className = "shop-item-name";
+  name.textContent = font.name;
+
+  var req = document.createElement("div");
+  req.className = "shop-item-req";
+  var priceSpan = document.createElement("span");
+  priceSpan.className = coins >= font.price ? "ok" : "no";
+  priceSpan.textContent = font.price + " 🪙";
+  req.appendChild(priceSpan);
+
+  info.appendChild(name);
+  info.appendChild(req);
+
+  var action = document.createElement("button");
+  action.className = "shop-item-action";
+  if (equippedNow) {
+    action.classList.add("equipped");
+    action.textContent = "EQUIPADA";
+    action.disabled = true;
+  } else if (owned) {
+    action.classList.add("equip");
+    action.textContent = "EQUIPAR";
+    action.onclick = function() { equipFont(font); };
+  } else {
+    action.textContent = "COMPRAR";
+    action.disabled = !buyable;
+    action.onclick = function() { buyFont(font); };
+  }
+
+  item.appendChild(preview);
+  item.appendChild(info);
+  item.appendChild(action);
+  return item;
+}
+
+function buildShopSlogan(slogan) {
+  var owned = isOwnedSlogan(slogan.key);
+  var equippedNow = equipped.slogan === slogan.key;
+  var buyable = canBuySlogan(slogan);
+  var secretLocked = slogan.requiresBoosts && boostActivationsCount < slogan.requiresBoosts;
+
+  var item = document.createElement("div");
+  item.className = "shop-item slogan-item" + (owned ? " owned" : "") + (equippedNow ? " equipped" : "") + (!owned && !buyable ? " locked" : "") + (secretLocked ? " secret-locked" : "");
+
+  var quote = document.createElement("div");
+  quote.className = "shop-item-slogan-quote";
+  quote.textContent = secretLocked ? "\uD83D\uDD12" : "\u201C";
+
+  var info = document.createElement("div");
+  info.className = "shop-item-info";
+
+  var name = document.createElement("div");
+  name.className = "shop-item-name";
+  name.textContent = secretLocked ? "???" : slogan.name;
+
+  var req = document.createElement("div");
+  req.className = "shop-item-req";
+  if (secretLocked) {
+    var reqSpan = document.createElement("span");
+    reqSpan.className = "no";
+    reqSpan.textContent = "\uD83D\uDD12 " + slogan.requiresBoosts + " boosts";
+    req.appendChild(reqSpan);
+  } else {
+    var priceSpan = document.createElement("span");
+    priceSpan.className = coins >= slogan.price ? "ok" : "no";
+    priceSpan.textContent = slogan.price + " 🪙";
+    req.appendChild(priceSpan);
+  }
+
+  info.appendChild(name);
+  info.appendChild(req);
+
+  var action = document.createElement("button");
+  action.className = "shop-item-action";
+  if (equippedNow) {
+    action.classList.add("equipped");
+    action.textContent = "EQUIPADA";
+    action.disabled = true;
+  } else if (owned) {
+    action.classList.add("equip");
+    action.textContent = "EQUIPAR";
+    action.onclick = function() { equipSlogan(slogan); };
+  } else {
+    action.textContent = "COMPRAR";
+    action.disabled = !buyable;
+    action.onclick = function() { buySlogan(slogan); };
+  }
+
+  item.appendChild(quote);
+  item.appendChild(info);
+  item.appendChild(action);
+  return item;
+}
+
+function buildShopFrame(frame) {
+  var owned = inventory.frames.indexOf(frame.id) !== -1;
+  var equippedNow = equipped.frame === frame.id;
+  var buyable = canBuyFrame(frame);
+
+  var item = document.createElement("div");
+  item.className = "shop-item frame-item" + (owned ? " owned" : "") + (equippedNow ? " equipped" : "") + (!owned && !buyable ? " locked" : "");
+
+  var preview = document.createElement("div");
+  preview.className = "shop-item-frame-preview";
+  if (owned && frame.id === "jesus-blessing") {
+    preview.classList.add("framed-jesus-blessing");
+  }
+
+  var info = document.createElement("div");
+  info.className = "shop-item-info";
+
+  var name = document.createElement("div");
+  name.className = "shop-item-name";
+  name.textContent = frame.name;
+
+  var req = document.createElement("div");
+  req.className = "shop-item-req";
+  var reqSpan = document.createElement("span");
+  reqSpan.className = "no";
+  reqSpan.textContent = "\u2715 Bendición divina";
+  req.appendChild(reqSpan);
+
+  info.appendChild(name);
+  info.appendChild(req);
+
+  var action = document.createElement("button");
+  action.className = "shop-item-action";
+  if (equippedNow) {
+    action.classList.add("equipped");
+    action.textContent = "EQUIPADO";
+    action.disabled = true;
+  } else if (owned) {
+    action.classList.add("equip");
+    action.textContent = "EQUIPAR";
+    action.onclick = function() { equipFrame(frame); };
+  } else {
+    action.textContent = "BLOQUEADO";
+    action.disabled = true;
+  }
+
+  item.appendChild(preview);
+  item.appendChild(info);
+  item.appendChild(action);
+  return item;
+}
+
+function updateShopBalance() {
+  document.getElementById("shopBalanceNum").textContent = formatNumber(coins);
+}
+
+function openShop() {
+  shopOpen = true;
+  document.getElementById("shopPanel").classList.add("open");
+  updateShopBalance();
+  buildShop();
+}
+function closeShop() {
+  shopOpen = false;
+  document.getElementById("shopPanel").classList.remove("open");
+}
+
+document.getElementById("toggleShop").addEventListener("click", function() {
+  if (shopOpen) closeShop();
+  else openShop();
+});
+document.getElementById("shopClose").addEventListener("click", closeShop);
+
+coinNumberEl.textContent = formatNumber(coins);
+clickCounterNumberEl.textContent = formatNumber(totalClicks);
+
+if (totalClicks >= 1000) intelBadgeEl.classList.add("show");
+
+function getBoostMultiplier() {
+  return isBoostActive() ? 2 : 1;
+}
+function boostsUnlocked() {
+  return boostActivationsCount >= BOOST_REQUIRED_FOR_UNLOCK;
+}
+
+function applyBoostClick() {
+  if (isBoostActive() || isBoostCooldown()) return;
+  boostCharge = Math.min(100, boostCharge + BOOST_CHARGE_PER_CLICK);
+  lastBoostClickTime = Date.now();
+  saveBoost();
+  if (boostCharge >= 100) {
+    activateBoost();
+  }
+}
+
+function decayBoost() {
+  if (isBoostActive() || isBoostCooldown()) return;
+  if (boostCharge <= 0) return;
+  if (Date.now() - lastBoostClickTime < BOOST_DECAY_DELAY_MS) return;
+  boostCharge = Math.max(0, boostCharge - BOOST_DECAY_PER_100MS);
+  saveBoost();
+}
+
+function activateBoost() {
+  boostCharge = 0;
+  boostActiveUntil = Date.now() + BOOST_DURATION_MS;
+  boostCooldownUntil = Date.now() + BOOST_DURATION_MS + BOOST_COOLDOWN_MS;
+  boostActivationsCount++;
+
+  addCoins(50, "boost", true);
+  showBoostBanner();
+  playSoundSafe("powerup.mp3");
+
+  boostCountEl.textContent = formatNumber(boostActivationsCount);
+
+  if (!boostMilestone5Shown && boostActivationsCount >= BOOST_REQUIRED_FOR_UNLOCK) {
+    boostMilestone5Shown = true;
+    boostCounterEl.classList.add("milestone");
+    setTimeout(function() { boostCounterEl.classList.remove("milestone"); }, 1200);
+    showToast("¡Secretos desbloqueados en la tienda!", "success");
+  }
+
+  saveBoost();
+}
+
+function showBoostBanner() {
+  boostBannerEl.classList.add("show");
+  boostBannerSubEl.textContent = "+50 monedas · 10 segundos";
+  setTimeout(function() { boostBannerEl.classList.remove("show"); }, 1800);
+}
+
+function saveBoost() {
+  localStorage.setItem("chaosBoostCharge", String(boostCharge));
+  localStorage.setItem("chaosBoostCooldownUntil", String(boostCooldownUntil));
+  localStorage.setItem("chaosBoostActiveUntil", String(boostActiveUntil));
+  localStorage.setItem("chaosBoostActivationsCount", String(boostActivationsCount));
+  localStorage.setItem("chaosBoostMilestone5", boostMilestone5Shown ? "1" : "0");
+}
+
+function isBoostActive() {
+  return boostActiveUntil > Date.now();
+}
+function isBoostCooldown() {
+  return boostCooldownUntil > Date.now();
+}
+
+boostCountEl.textContent = formatNumber(boostActivationsCount);
+
+function renderBoost() {
+  var pct = Math.max(0, Math.min(100, boostCharge));
+  boostBarEl.style.width = pct + "%";
+  boostBarPercentEl.textContent = Math.floor(pct) + "%";
+
+  if (isBoostActive()) {
+    boostBarTrackEl.className = "boost-bar-track active";
+    var secs = Math.ceil((boostActiveUntil - Date.now()) / 1000);
+    boostBarLabelEl.textContent = "BOOST x2 · " + secs + "s";
+    boostBarLabelEl.classList.add("show");
+    chaosBtn.classList.add("boost-active");
+    boostBarPercentEl.textContent = "x2";
+  } else if (isBoostCooldown()) {
+    boostBarTrackEl.className = "boost-bar-track cooldown";
+    var secs = Math.ceil((boostCooldownUntil - Date.now()) / 1000);
+    boostBarLabelEl.textContent = "COOLDOWN · " + secs + "s";
+    boostBarLabelEl.classList.add("show");
+    chaosBtn.classList.remove("boost-active");
+    boostBarPercentEl.textContent = "CD";
+  } else if (boostCharge >= 100) {
+    boostBarTrackEl.className = "boost-bar-track ready";
+    boostBarLabelEl.textContent = "¡LISTO!";
+    boostBarLabelEl.classList.add("show");
+    chaosBtn.classList.remove("boost-active");
+    boostBarPercentEl.textContent = "100%";
+  } else {
+    boostBarTrackEl.className = "boost-bar-track";
+    boostBarLabelEl.classList.remove("show");
+    chaosBtn.classList.remove("boost-active");
+  }
+
+  boostCountEl.textContent = formatNumber(boostActivationsCount);
+}
+
+function boostLoop() {
+  decayBoost();
+  if (boostActiveUntil > 0 && boostActiveUntil <= Date.now() && !isBoostActive()) {
+    boostActiveUntil = 0;
+    saveBoost();
+  }
+  renderBoost();
+  setTimeout(boostLoop, 100);
+}
+boostLoop();
+renderBoost();
+
+function getTierColor(tier) {
+  if (tier === "common") return "#ffc107";
+  if (tier === "rare") return "#9c27b0";
+  if (tier === "mythic") return "#f44336";
+  if (tier === "jackpot") return "#ff5722";
+  return "#888";
+}
+
+function rollPrize() {
+  var roll = Math.random() * 100;
+  var cumulative = 0;
+  var prize = ROULETTE_PRIZES[0];
+  var probs = [25, 25, 10, 10, 10, 15, 5];
+  for (var i = 0; i < ROULETTE_PRIZES.length; i++) {
+    cumulative += probs[i];
+    if (roll < cumulative) {
+      prize = ROULETTE_PRIZES[i];
+      break;
+    }
+  }
+  return prize;
+}
+
+function spinRoulette() {
+  if (rouletteSpinning) return;
+  if (coins < ROULETTE_SPIN_COST) {
+    showToast("Necesitas " + ROULETTE_SPIN_COST + " monedas", "error");
+    return;
+  }
+  var threshold = getRouletteClicksThreshold();
+  if (totalClicks < threshold) {
+    showToast("Necesitas " + threshold + " clicks para girar", "error");
+    return;
+  }
+
+  coins -= ROULETTE_SPIN_COST;
+  coinNumberEl.textContent = formatNumber(coins);
+  localStorage.setItem("chaosCoins", String(coins));
+
+  rouletteSpinning = true;
+  var prize = rollPrize();
+  var prizeIndex = ROULETTE_PRIZES.indexOf(prize);
+  var targetAngle = -(prizeIndex * ROULETTE_SECTOR_ANGLE + ROULETTE_SECTOR_ANGLE / 2);
+  var spins = 5 + Math.random() * 3;
+  var totalRotation = rouletteCurrentRotation + spins * 360 + targetAngle;
+
+  playSoundSafe("roulette.mp3");
+
+  var wheel = document.getElementById("rouletteWheel");
+  wheel.style.transition = "none";
+  wheel.style.transform = "rotate(" + rouletteCurrentRotation + "deg)";
+  setTimeout(function() {
+    wheel.style.transition = "transform " + ROULETTE_SPIN_DURATION_MS + "ms cubic-bezier(0.05, 0.85, 0.15, 1.0)";
+    wheel.style.transform = "rotate(" + totalRotation + "deg)";
+    rouletteCurrentRotation = totalRotation;
+  }, 50);
+
+  rouletteSpinsCount++;
+  saveRouletteState();
+  updateRouletteInfo();
+
+  setTimeout(function() {
+    rouletteSpinning = false;
+    deliverRoulettePrize(prize);
+  }, ROULETTE_SPIN_DURATION_MS + 100);
+}
+
+function deliverRoulettePrize(prize) {
+  var resultEl = document.getElementById("rouletteResult");
+  if (prize.coins) {
+    addCoins(prize.coins, "roulette", true);
+    resultEl.textContent = "+" + prize.coins + " 🪙";
+    resultEl.className = "roulette-result";
+    showToast("+" + prize.coins + " monedas!", prize.coins === 500 ? "success" : "info");
+  } else if (prize.isCollectible) {
+    var owned = isCollectibleOwned(prize.id);
+    if (owned) {
+      addCoins(25, "roulette-duplicate", true);
+      resultEl.textContent = "¡" + prize.name + " (x2)! +25 🪙";
+      resultEl.className = "roulette-result";
+      showToast("¡" + prize.name + " duplicado! +25 monedas", "info");
+    } else {
+      inventory.collectibles.push(prize.id);
+      localStorage.setItem("chaosInventory", JSON.stringify(inventory));
+      addCoins(50, "roulette-new", true);
+      resultEl.textContent = "¡" + prize.name + "! +50 🪙";
+      resultEl.className = "roulette-result";
+      showToast("¡Nuevo coleccionable: " + prize.name + "!", "success");
+      if (prize.tier === "mythic" || prize.tier === "jackpot") {
+        unlockDivineReward(prize);
+      }
+    }
+  }
+}
+
+function unlockDivineReward(prize) {
+  jesusRewardUnlocked = true;
+  if (inventory.slogans.indexOf("jesus-blesses") === -1) {
+    inventory.slogans.push("jesus-blesses");
+  }
+  if (inventory.frames.indexOf("jesus-blessing") === -1) {
+    inventory.frames.push("jesus-blessing");
+  }
+  localStorage.setItem("chaosInventory", JSON.stringify(inventory));
+  saveRouletteState();
+}
+
+function showDivineCelebration() {
+  var resultEl = document.getElementById("rouletteResult");
+  resultEl.textContent = "✝ JESÚS ME BENDICE ✝";
+  resultEl.className = "roulette-result divine";
+  showToast("✝ ¡BENDICIÓN DESBLOQUEADA! Marco + frase", "success");
+  if (typeof updateProfile === "function") updateProfile();
+  setTimeout(function() { showToast("Equipá el marco en la tienda (MARCOS)", "info"); }, 2800);
+}
+
+function openRoulette() {
+  buildRouletteWheel();
+  updateRouletteInfo();
+  document.getElementById("rouletteModal").classList.add("show");
+  rouletteCurrentRotation = 0;
+  document.getElementById("rouletteWheel").style.transition = "none";
+  document.getElementById("rouletteWheel").style.transform = "rotate(0deg)";
+  setTimeout(function() {
+    document.getElementById("rouletteWheel").style.transition = "";
+  }, 50);
+}
+function closeRoulette() {
+  document.getElementById("rouletteModal").classList.remove("show");
+  document.getElementById("rouletteResult").textContent = "";
+  document.getElementById("rouletteResult").className = "roulette-result";
+}
+
+document.getElementById("toggleRoulette").addEventListener("click", openRoulette);
+document.getElementById("rouletteClose").addEventListener("click", closeRoulette);
+document.getElementById("rouletteSpinBtn").addEventListener("click", spinRoulette);
+document.getElementById("rouletteModal").addEventListener("click", function(e) {
+  if (e.target.id === "rouletteModal") closeRoulette();
+});
+
+function buildRouletteWheel() {
+  var inner = document.getElementById("rouletteWheelInner");
+  inner.innerHTML = "";
+  var cx = 150, cy = 150, r = 140;
+  for (var i = 0; i < ROULETTE_PRIZES.length; i++) {
+    var prize = ROULETTE_PRIZES[i];
+    var startAngle = i * ROULETTE_SECTOR_ANGLE - 90;
+    var endAngle = (i + 1) * ROULETTE_SECTOR_ANGLE - 90;
+    var startRad = startAngle * Math.PI / 180;
+    var endRad = endAngle * Math.PI / 180;
+    var x1 = cx + r * Math.cos(startRad);
+    var y1 = cy + r * Math.sin(startRad);
+    var x2 = cx + r * Math.cos(endRad);
+    var y2 = cy + r * Math.sin(endRad);
+    var largeArc = ROULETTE_SECTOR_ANGLE > 180 ? 1 : 0;
+    var d = "M" + cx + "," + cy + " L" + x1 + "," + y1 + " A" + r + "," + r + " 0 " + largeArc + " 1 " + x2 + "," + y2 + " Z";
+    var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", d);
+    path.setAttribute("fill", getTierColor(prize.tier));
+    path.setAttribute("class", "roulette-wheel-sector-bg");
+    inner.appendChild(path);
+
+    var midAngle = (startAngle + endAngle) / 2;
+    var midRad = midAngle * Math.PI / 180;
+    var imgCx = cx + (r * 0.62) * Math.cos(midRad);
+    var imgCy = cy + (r * 0.62) * Math.sin(midRad);
+    var clipId = "roul-clip-" + i;
+    var clipPath = document.createElementNS("http://www.w3.org/2000/svg", "clipPath");
+    clipPath.setAttribute("id", clipId);
+    var clipCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    clipCircle.setAttribute("cx", imgCx);
+    clipCircle.setAttribute("cy", imgCy);
+    clipCircle.setAttribute("r", 18);
+    clipPath.appendChild(clipCircle);
+    var defs = inner.querySelector("defs") || (function() {
+      var d = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+      inner.insertBefore(d, inner.firstChild);
+      return d;
+    })();
+    defs.appendChild(clipPath);
+
+    var bgCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    bgCircle.setAttribute("cx", imgCx);
+    bgCircle.setAttribute("cy", imgCy);
+    bgCircle.setAttribute("r", 18);
+    bgCircle.setAttribute("fill", "#fff");
+    inner.appendChild(bgCircle);
+
+    if (prize.img) {
+      var image = document.createElementNS("http://www.w3.org/2000/svg", "image");
+      image.setAttributeNS("http://www.w3.org/1999/xlink", "href", prize.img);
+      image.setAttribute("href", prize.img);
+      image.setAttribute("x", imgCx - 16);
+      image.setAttribute("y", imgCy - 16);
+      image.setAttribute("width", 32);
+      image.setAttribute("height", 32);
+      image.setAttribute("clip-path", "url(#" + clipId + ")");
+      image.setAttribute("preserveAspectRatio", "xMidYMid slice");
+      inner.appendChild(image);
+    } else {
+      var bgC = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      bgC.setAttribute("cx", imgCx);
+      bgC.setAttribute("cy", imgCy);
+      bgC.setAttribute("r", 18);
+      bgC.setAttribute("fill", prize.tier === "jackpot" ? "#ff5722" : "#9c27b0");
+      inner.appendChild(bgC);
+
+      var text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      text.setAttribute("x", imgCx);
+      text.setAttribute("y", imgCy + (prize.tier === "jackpot" ? -1 : 4));
+      text.setAttribute("text-anchor", "middle");
+      text.setAttribute("fill", "#fff");
+      text.setAttribute("font-family", "Bungee, cursive");
+      text.setAttribute("font-size", prize.tier === "jackpot" ? "11" : "12");
+      text.setAttribute("font-weight", "bold");
+      if (prize.tier === "jackpot") {
+        text.textContent = "\u2726";
+        text.setAttribute("fill", "#ffd700");
+        text.setAttribute("font-size", "18");
+        text.setAttribute("y", imgCy + 6);
+      } else {
+        text.textContent = "\uD83E\uDE99";
+        text.setAttribute("font-size", "14");
+      }
+      inner.appendChild(text);
+    }
+  }
+}
+
+function updateRouletteInfo() {
+  var costEl = document.getElementById("rouletteCost");
+  var reqEl = document.getElementById("rouletteReq");
+  costEl.textContent = ROULETTE_SPIN_COST;
+  reqEl.textContent = formatNumber(getRouletteClicksThreshold());
+  costEl.parentElement.className = "roulette-cost" + (coins < ROULETTE_SPIN_COST ? " no" : "");
+}
+
+function getRouletteClicksThreshold() {
+  return (rouletteSpinsCount + 1) * 500;
+}
+
+function saveRouletteState() {
+  localStorage.setItem("chaosRouletteSpins", String(rouletteSpinsCount));
+  localStorage.setItem("chaosJesusReward", jesusRewardUnlocked ? "1" : "0");
+}
+
+function isCollectibleOwned(id) {
+  return inventory.collectibles.indexOf(id) !== -1;
+}
+
+function openCollectibleFullscreen(prize) {
+  var imgEl = document.getElementById("collectibleFullscreenImg");
+  var nameEl = document.getElementById("collectibleFullscreenName");
+  var tierEl = document.getElementById("collectibleFullscreenTier");
+  var descEl = document.getElementById("collectibleFullscreenDesc");
+
+  imgEl.src = prize.img;
+  imgEl.onerror = function() { this.src = PLACEHOLDER_PHOTO_SVG; };
+  nameEl.textContent = prize.name;
+
+  var tierLabel = prize.tier === "common" ? "COMÚN" : prize.tier === "rare" ? "RARO" : prize.tier === "mythic" ? "MÍTICO" : "JACKPOT";
+  tierEl.textContent = "— " + tierLabel + " —";
+  tierEl.className = "collectible-fullscreen-tier " + prize.tier;
+
+  descEl.textContent = prize.desc || "";
+  descEl.style.display = prize.desc ? "block" : "none";
+
+  document.getElementById("collectibleFullscreen").classList.add("show");
+}
+function closeCollectibleFullscreen() {
+  document.getElementById("collectibleFullscreen").classList.remove("show");
+}
+
+document.getElementById("collectibleFullscreenClose").addEventListener("click", closeCollectibleFullscreen);
+document.getElementById("collectibleFullscreen").addEventListener("click", function(e) {
+  if (e.target.id === "collectibleFullscreen") closeCollectibleFullscreen();
+});
+
+function showToast(msg, type) {
+  var toast = document.createElement("div");
+  toast.className = "toast " + type;
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(function() { toast.classList.add("show"); }, 10);
+  setTimeout(function() {
+    toast.classList.remove("show");
+    setTimeout(function() { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 400);
+  }, 2600);
+}
+
+var wrap = document.getElementById("profilePhotoWrap");
+if (wrap) {
+  wrap.classList.remove("framed-jesus-blessing");
+  if (equipped.frame === "jesus-blessing") {
+    wrap.classList.add("framed-jesus-blessing");
+  }
+}
+
+updateProfile();
+
+})();
+</script>
+</body>
+</html>
