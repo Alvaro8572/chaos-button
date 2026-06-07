@@ -370,10 +370,26 @@
 }
 #collectionList {
   display: flex;
-  gap: 16px;
-  overflow-x: auto;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  overflow-x: hidden;
   flex: 1;
-  align-items: flex-start;
+  align-items: stretch;
+  padding-right: 4px;
+}
+.collection-videos-row,
+.collection-collectibles-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  width: 100%;
+}
+.collection-empty-row {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.4);
+  font-style: italic;
+  padding: 6px 0;
 }
 .collection-item {
   flex-shrink: 0;
@@ -2346,7 +2362,7 @@
   <div id="boostCounter">
     <span id="boostCounterIcon">⚡</span>
     <span id="boostCounterLabel">BOOSTS ACTIVADOS</span>
-    <span id="boostCounterNumber">NaNM</span>
+    <span id="boostCounterNumber">0</span>
   </div>
   <div id="statsRow">
     <div id="coinDisplay" class="">
@@ -2363,7 +2379,7 @@
       <div class="boost-bar-fill" id="boostBar"></div>
       <div class="boost-bar-label" id="boostBarLabel"></div>
     </div>
-    <div class="boost-bar-percent" id="boostBarPercent">NaN%</div>
+    <div class="boost-bar-percent" id="boostBarPercent">0%</div>
   </div>
   <div class="chaos-meter">
     <span>Caos</span>
@@ -3033,11 +3049,15 @@ function buildCollection() {
   videosHeader.textContent = "VIDEOS";
   collectionList.appendChild(videosHeader);
 
+  var videosRow = document.createElement("div");
+  videosRow.className = "collection-videos-row";
+  collectionList.appendChild(videosRow);
+
   if (unlockedVideos.length === 0) {
     var empty = document.createElement("div");
-    empty.className = "collection-empty";
+    empty.className = "collection-empty-row";
     empty.textContent = "Llega a 100% caos para desbloquear videos";
-    collectionList.appendChild(empty);
+    videosRow.appendChild(empty);
   } else {
     unlockedVideos.forEach(function(v, i) {
       var item = document.createElement("div");
@@ -3059,7 +3079,7 @@ function buildCollection() {
 
       item.appendChild(vid);
       item.appendChild(name);
-      collectionList.appendChild(item);
+      videosRow.appendChild(item);
     });
   }
 
@@ -3067,6 +3087,10 @@ function buildCollection() {
   collectiblesHeader.className = "collection-section-header";
   collectiblesHeader.textContent = "COLECCIONABLES · RULETA";
   collectionList.appendChild(collectiblesHeader);
+
+  var collectiblesRow = document.createElement("div");
+  collectiblesRow.className = "collection-collectibles-row";
+  collectionList.appendChild(collectiblesRow);
 
   var collectiblePrizes = (typeof ROULETTE_PRIZES !== "undefined" && ROULETTE_PRIZES)
     ? ROULETTE_PRIZES.filter(function(p) { return p.isCollectible; })
@@ -3109,7 +3133,7 @@ function buildCollection() {
     if (isCollectibleOwned(prize.id)) {
       item.addEventListener("click", function() { openCollectibleFullscreen(prize); });
     }
-    collectionList.appendChild(item);
+    collectiblesRow.appendChild(item);
   });
 
   var totalCollectibles = collectiblePrizes.length;
@@ -3855,7 +3879,6 @@ setInterval(function() {
 }, 400);
 
 console.log("CHAOS ENGINE v5");
-buildCollection();
 
 /* ========================= */
 /* SHOP SYSTEM (Fase 4) */
@@ -4648,9 +4671,13 @@ updateProfile();
 /* ========================= */
 
 var boostCharge = parseFloat(localStorage.getItem("chaosBoostCharge") || "0");
+if (!isFinite(boostCharge) || isNaN(boostCharge)) boostCharge = 0;
 var boostCooldownUntil = parseInt(localStorage.getItem("chaosBoostCooldownUntil") || "0", 10);
+if (!isFinite(boostCooldownUntil) || isNaN(boostCooldownUntil)) boostCooldownUntil = 0;
 var boostActiveUntil = parseInt(localStorage.getItem("chaosBoostActiveUntil") || "0", 10);
+if (!isFinite(boostActiveUntil) || isNaN(boostActiveUntil)) boostActiveUntil = 0;
 var boostActivationsCount = parseInt(localStorage.getItem("chaosBoostActivationsCount") || "0", 10);
+if (!isFinite(boostActivationsCount) || isNaN(boostActivationsCount)) boostActivationsCount = 0;
 var boostMilestone5Shown = localStorage.getItem("chaosBoostMilestone5") === "1";
 var lastBoostClickTime = 0;
 
@@ -5125,6 +5152,8 @@ document.getElementById("collectibleFullscreen").addEventListener("click", funct
     }
   }
 })();
+
+buildCollection();
 
 })();
 </script>
