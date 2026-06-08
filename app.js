@@ -2277,7 +2277,7 @@ function activateBoost() {
   boostCooldownUntil = Date.now() + BOOST_DURATION_MS + BOOST_COOLDOWN_MS;
   boostActivationsCount += 1;
 
-  addCoins(50, "boost", true);
+  addCoins(25, "boost", true);
   showBoostBanner();
   playSoundSafe("assets/sounds/powerup.mp3");
 
@@ -2298,7 +2298,7 @@ function activateBoost() {
 }
 
 function showBoostBanner() {
-  boostBannerSubEl.textContent = "+50 monedas · 10 segundos";
+  boostBannerSubEl.textContent = "+25 monedas · 10 segundos";
   boostBannerEl.classList.add("show");
   setTimeout(function() { boostBannerEl.classList.remove("show"); }, 1800);
 }
