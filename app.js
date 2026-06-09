@@ -69,6 +69,7 @@ var VIDEOS = [
 ];
 
 var unlockedVideos = JSON.parse(localStorage.getItem("chaosVideos") || "[]");
+var jesusRewardUnlocked = localStorage.getItem("chaosJesusReward") === "1";
 var collectionOpen = false;
 
 var videoOverlay = document.getElementById("videoOverlay");
@@ -1450,11 +1451,11 @@ function isAchievementUnlocked(id) {
 }
 
 function unlockAchievement(id) {
-  if (isAchievementUnlocked(id)) return false;
   var ach = ACHIEVEMENTS.find(function(a) { return a.id === id; });
   if (!ach) return false;
-  achievementsUnlocked.push(id);
-  localStorage.setItem("chaosAchievements", JSON.stringify(achievementsUnlocked));
+  var wasUnlocked = isAchievementUnlocked(id);
+
+  // Always apply reward (even if already unlocked) to fix missing rewards
   if (ach.reward && ach.reward.type === "picture" && inventory.pictures.indexOf(ach.reward.file) === -1) {
     inventory.pictures.push(ach.reward.file);
     saveInventory();
@@ -1463,6 +1464,15 @@ function unlockAchievement(id) {
     inventory.frames.push(ach.reward.id);
     saveInventory();
   }
+  if (ach.reward && ach.reward.type === "slogan" && inventory.slogans.indexOf(ach.reward.id) === -1) {
+    inventory.slogans.push(ach.reward.id);
+    saveInventory();
+  }
+
+  if (wasUnlocked) return false;
+
+  achievementsUnlocked.push(id);
+  localStorage.setItem("chaosAchievements", JSON.stringify(achievementsUnlocked));
   showAchievementNotification(ach);
   if (ach.tier === "bronze") playSoundSafe("assets/sounds/powerup.mp3");
   else if (ach.tier === "silver") playSoundSafe("assets/sounds/equip.mp3");
@@ -1504,13 +1514,38 @@ function showAchievementNotification(ach) {
 }
 
 function checkAchievement(id) {
-  if (isAchievementUnlocked(id)) return;
+  if (isAchievementUnlocked(id)) {
+    // Already unlocked, but still apply reward (in case it was missing)
+    applyAchievementReward(id);
+    return;
+  }
   unlockAchievement(id);
+}
+
+function applyAchievementReward(id) {
+  var ach = ACHIEVEMENTS.find(function(a) { return a.id === id; });
+  if (!ach || !ach.reward) return;
+  if (ach.reward.type === "picture" && inventory.pictures.indexOf(ach.reward.file) === -1) {
+    inventory.pictures.push(ach.reward.file);
+    saveInventory();
+  }
+  if (ach.reward.type === "frame" && inventory.frames.indexOf(ach.reward.id) === -1) {
+    inventory.frames.push(ach.reward.id);
+    saveInventory();
+  }
+  if (ach.reward.type === "slogan" && inventory.slogans.indexOf(ach.reward.id) === -1) {
+    inventory.slogans.push(ach.reward.id);
+    saveInventory();
+  }
 }
 
 function checkAchievements() {
   ACHIEVEMENTS.forEach(function(ach) {
-    if (isAchievementUnlocked(ach.id)) return;
+    if (isAchievementUnlocked(ach.id)) {
+      // Already unlocked, but still apply reward (in case it was missing)
+      applyAchievementReward(ach.id);
+      return;
+    }
     var unlocked = false;
     switch (ach.id) {
       case "first_step":   unlocked = totalClicks >= 100; break;
@@ -2630,7 +2665,6 @@ var ROULETTE_SECTOR_COUNT = ROULETTE_PRIZES.length;
 var ROULETTE_SECTOR_ANGLE = 360 / ROULETTE_SECTOR_COUNT;
 
 var rouletteSpinsCount = parseInt(localStorage.getItem("chaosRouletteSpins") || "0", 10);
-var jesusRewardUnlocked = localStorage.getItem("chaosJesusReward") === "1";
 var rouletteCurrentRotation = 0;
 var rouletteSpinning = false;
 
@@ -2863,6 +2897,9 @@ function deliverRoulettePrize(prize) {
 
 function unlockDivineReward(prize) {
   jesusRewardUnlocked = true;
+  if (inventory.pictures.indexOf("assets/images/Jesus_Payne.jpg") === -1) {
+    inventory.pictures.push("assets/images/Jesus_Payne.jpg");
+  }
   if (inventory.slogans.indexOf("jesus-blesses") === -1) {
     inventory.slogans.push("jesus-blesses");
   }
@@ -2870,6 +2907,7 @@ function unlockDivineReward(prize) {
     inventory.frames.push("jesus-blessing");
   }
   saveRouletteState();
+  saveInventory();
 }
 
 function showDivineCelebration() {
@@ -3038,6 +3076,18 @@ window.__chaosDebug = {
     if (typeof jesusRewardUnlocked !== "undefined") {
       jesusRewardUnlocked = true;
       localStorage.setItem("chaosJesusReward", "1");
+      if (typeof inventory !== "undefined") {
+        if (inventory.pictures.indexOf("assets/images/Jesus_Payne.jpg") === -1) {
+          inventory.pictures.push("assets/images/Jesus_Payne.jpg");
+        }
+        if (inventory.slogans.indexOf("jesus-blesses") === -1) {
+          inventory.slogans.push("jesus-blesses");
+        }
+        if (inventory.frames.indexOf("jesus-blessing") === -1) {
+          inventory.frames.push("jesus-blessing");
+        }
+        if (typeof saveInventory === "function") saveInventory();
+      }
     }
     if (typeof checkAchievements === "function") checkAchievements();
     console.log("✓ Everything granted! Reload to see all effects.");
