@@ -108,6 +108,8 @@
 
 <button id="toggleCollection">COLECCION</button>
 
+<button id="toggleAchievements">LOGROS</button>
+
 <div id="collectionPanel" class="">
   <div id="collectionPanelHeader">
     <div id="collectionPanelTitle">COLECCION</div>
@@ -140,14 +142,6 @@
   <div id="factText"></div>
 </div>
 
-<div id="intelBadge" class="show">
-  <img class="intel-img" src="assets/images/Nikola-Albert.webp" alt="Intellectual">
-  <div class="intel-text">
-    <span class="intel-title">INTELECTUAL</span>
-    <span class="intel-sub">Desbloquea todos los hechos</span>
-  </div>
-</div>
-
 <div id="videoOverlay">
   <div id="videoOverlayContent">
     <div id="videoNewText">¡FELICIDADES, NUEVO VIDEO DESBLOQUEADO!</div>
@@ -161,6 +155,26 @@
 </div>
 
 <div id="repetidoMsg">REPETIDO</div>
+
+<div id="achievementsPanel" class="">
+  <div id="achievementsHeader">
+    <div id="achievementsTitle">LOGROS</div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div id="achievementsCount">0 / 25</div>
+      <button id="achievementsClose">&times;</button>
+    </div>
+  </div>
+  <div id="achievementsList"></div>
+</div>
+
+<div id="achievementNotification" class="">
+  <img id="achievementNotifImg" src="" alt="">
+  <div id="achievementNotifInfo">
+    <div id="achievementNotifTier">🥉</div>
+    <div id="achievementNotifName"></div>
+    <div id="achievementNotifDesc"></div>
+  </div>
+</div>
 
 <script src="app.js" defer></script>
 

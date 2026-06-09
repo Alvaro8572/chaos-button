@@ -188,11 +188,6 @@ var shownFacts = [];
 var lastFactTime = 0;
 var FACT_COOLDOWN = 5000;
 var sidebarOpen = false;
-var intelBadgeUnlocked = localStorage.getItem("intelBadge") === "true";
-if (intelBadgeUnlocked) {
-  document.getElementById("intelBadge").classList.add("show");
-}
-
 /* ========================= */
 /* CLICK COUNTER (Fase 0.1) */
 /* ========================= */
@@ -676,6 +671,7 @@ function triggerVideoUnlock() {
     unlockedVideos.push(selectedVideo);
     localStorage.setItem("chaosVideos", JSON.stringify(unlockedVideos));
     playVideoFullscreen(selectedVideo.file, true);
+    checkAchievements();
   }
 }
 
@@ -714,32 +710,11 @@ function unlockFact() {
 
   lastFactTime = now;
 
-  // Check if all facts unlocked
-  if (unlockedFacts.length >= FACTS.length - 1 && !intelBadgeUnlocked) {
-    showIntelBadge();
-  }
+  checkAchievements();
 
   setTimeout(function() {
     factPanel.classList.remove("visible");
   }, 10000);
-}
-
-function showIntelBadge() {
-  intelBadgeUnlocked = true;
-  localStorage.setItem("intelBadge", "true");
-  var badge = document.getElementById("intelBadge");
-  badge.classList.add("show");
-  setTimeout(function() {
-    badge.classList.add("glow");
-    setTimeout(function() { badge.classList.remove("glow"); }, 1000);
-  }, 600);
-}
-
-function glowIntelBadge() {
-  var badge = document.getElementById("intelBadge");
-  if (!intelBadgeUnlocked) return;
-  badge.classList.add("glow");
-  setTimeout(function() { badge.classList.remove("glow"); }, 800);
 }
 
 // ===== CORE FUNCTIONS =====
@@ -1305,7 +1280,6 @@ function chaos() {
   // Random event
   if (Math.random() < 0.15) {
     triggerRandomEvent();
-    glowIntelBadge();
   }
 
   // Coin event (1.2% per click + timer)
@@ -1316,7 +1290,6 @@ function chaos() {
   // Random sound (can play over other sounds except click)
   if (Math.random() < 0.2) {
     playRandomSound();
-    if (intelBadgeUnlocked) glowIntelBadge();
   }
 
   // Symbols
@@ -1329,7 +1302,12 @@ function chaos() {
 
   // 100% reset - always happens at 100
   if (chaosLevel >= 100) {
+    if (chaosLevel === 100) {
+      chaosReachedHundredCount++;
+      localStorage.setItem("chaosReachedHundredCount", String(chaosReachedHundredCount));
+    }
     triggerVideoUnlock();
+    checkAchievements();
     return;
   }
 
@@ -1337,6 +1315,8 @@ function chaos() {
   if (chaosLevel > 80 && Math.random() < 0.03) {
     setTimeout(resetEverything, 1000);
   }
+
+  checkAchievements();
 }
 
 // Button click
@@ -1412,6 +1392,279 @@ var SHOP_SECRET_SLOGANS = [
 var SHOP_FRAMES = [
   { id: "jesus-blessing", name: "Bendición de Jesús", price: 0, requiresRoulette: "divine", isSecret: true }
 ];
+
+/* ========================= */
+/* ACHIEVEMENTS SYSTEM */
+/* ========================= */
+
+var ACHIEVEMENTS = [
+  // BRONCE (5)
+  { id: "first_step",   tier: "bronze", name: "First Step",          desc: "Alcanzá 100 clicks",                  category: "clicks",  reward: null },
+  { id: "clickeador",   tier: "bronze", name: "Clickeador",          desc: "Alcanzá 500 clicks",                  category: "clicks",  reward: null },
+  { id: "foto_inicial", tier: "bronze", name: "Foto Inicial",        desc: "Comprá tu primera foto de perfil",    category: "fotos",   reward: null },
+  { id: "frase_marcada",tier: "bronze", name: "Frase Marcada",       desc: "Equipá tu primera frase",             category: "frases",  reward: null },
+  { id: "coleccionista_novato", tier: "bronze", name: "Coleccionista Novato", desc: "Desbloqueá tu primer video",       category: "coleccion", reward: null },
+
+  // PLATA (5)
+  { id: "clickeador_pro",tier: "silver", name: "Clickeador Pro",      desc: "Alcanzá 5,000 clicks",                category: "clicks",  reward: null },
+  { id: "slider",       tier: "silver", name: "Slider",              desc: "Comprá 3 fotos de perfil",            category: "fotos",   reward: null },
+  { id: "first_boost",  tier: "silver", name: "First Boost",         desc: "Activá tu primer boost",              category: "clicks",  reward: null },
+  { id: "espia",        tier: "silver", name: "Espía",               desc: "Equipá 3 frases",                     category: "frases",  reward: null },
+  { id: "curador",      tier: "silver", name: "Curador",             desc: "Desbloqueá los 3 videos",            category: "coleccion", reward: null },
+
+  // ORO (15)
+  { id: "bot_frenesi",  tier: "gold",   name: "Bot Frenesí",         desc: "Alcanzá 25,000 clicks",               category: "clicks",  reward: null },
+  { id: "multitud",     tier: "gold",   name: "Multitud",            desc: "Comprá todas las 6 fotos",            category: "fotos",   reward: null },
+  { id: "mouse_breaker",tier: "gold",   name: "Mouse Breaker",       desc: "Alcanzá 50,000 clicks",               category: "clicks",  reward: { type: "picture", file: "assets/images/Ratón_gamer.jpg" } },
+  { id: "ruletero",     tier: "gold",   name: "Ruletero",            desc: "Girá la ruleta 5 veces",             category: "coleccion", reward: null },
+  { id: "loco_completo",tier: "gold",   name: "Loco Completo",       desc: "Llegá a 100% caos 3 veces",           category: "clicks",  reward: null },
+  { id: "tipografo",    tier: "gold",   name: "Tipógrafo",           desc: "Comprá todas las 5 fuentes",          category: "frases",  reward: null },
+  { id: "intelectual",  tier: "gold",   name: "Intelectual",         desc: "Desbloqueá todos los hechos",         category: "hechos",  reward: { type: "picture", file: "assets/images/Nikola-Albert.webp" } },
+  { id: "espia_pro",    tier: "gold",   name: "Espía Pro",           desc: "Equipá todas las 6 frases",           category: "frases",  reward: null },
+  { id: "riqueza",      tier: "gold",   name: "Riqueza",             desc: "Acumulá 1,000 monedas",               category: "clicks",  reward: null },
+  { id: "marmolista",   tier: "gold",   name: "Marmolista",          desc: "Activá 25 boosts",                    category: "clicks",  reward: null },
+  { id: "ruleta_maestra",tier: "gold",  name: "Ruleta Maestra",      desc: "Girá la ruleta 25 veces",             category: "coleccion", reward: null },
+  { id: "coleccionista",tier: "gold",   name: "Coleccionista",       desc: "Desbloqueá todos los logros de Colección", category: "coleccion", reward: { type: "picture", file: "assets/images/medalla_de_oro.jpg" } },
+  { id: "maratonista",  tier: "gold",   name: "Maratonista",         desc: "Activá 10 boosts",                    category: "clicks",  reward: null },
+  { id: "bendecido",    tier: "gold",   name: "Bendecido",           desc: "Recibí la bendición divina",          category: "coleccion", reward: { type: "picture", file: "assets/images/Jesus_Payne.jpg" } },
+  { id: "completista",  tier: "gold",   name: "Completista",         desc: "Desbloqueá todos los logros",         category: "clicks",  reward: { type: "frame", id: "gold-complete" } }
+];
+
+var ACHIEVEMENT_IMAGES = {
+  mouse_roto: "🥉",      // emoji cuando no hay imagen custom
+  foto_de_perfil: "🥉",  // emoji cuando no hay imagen custom
+  comilla_bronce: "🥉",
+  comilla_plata: "🥈",
+  comilla_oro: "🥇",
+  ruleta: "🥉"
+};
+
+var achievementsUnlocked = JSON.parse(localStorage.getItem("chaosAchievements") || "[]");
+if (!Array.isArray(achievementsUnlocked)) achievementsUnlocked = [];
+
+var chaosReachedHundredCount = parseInt(localStorage.getItem("chaosReachedHundredCount") || "0", 10);
+var rouletteTotalSpins = parseInt(localStorage.getItem("chaosRouletteTotalSpins") || "0", 10);
+
+function isAchievementUnlocked(id) {
+  return achievementsUnlocked.indexOf(id) !== -1;
+}
+
+function unlockAchievement(id) {
+  if (isAchievementUnlocked(id)) return false;
+  var ach = ACHIEVEMENTS.find(function(a) { return a.id === id; });
+  if (!ach) return false;
+  achievementsUnlocked.push(id);
+  localStorage.setItem("chaosAchievements", JSON.stringify(achievementsUnlocked));
+  if (ach.reward && ach.reward.type === "picture" && inventory.pictures.indexOf(ach.reward.file) === -1) {
+    inventory.pictures.push(ach.reward.file);
+    saveInventory();
+  }
+  if (ach.reward && ach.reward.type === "frame" && inventory.frames.indexOf(ach.reward.id) === -1) {
+    inventory.frames.push(ach.reward.id);
+    saveInventory();
+  }
+  showAchievementNotification(ach);
+  if (ach.tier === "bronze") playSoundSafe("assets/sounds/powerup.mp3");
+  else if (ach.tier === "silver") playSoundSafe("assets/sounds/equip.mp3");
+  else if (ach.tier === "gold") playSoundSafe("assets/sounds/purchase.mp3");
+  if (id === "completista") playSoundSafe("assets/sounds/galaxy-meme.mp3");
+  return true;
+}
+
+function showAchievementNotification(ach) {
+  var notif = document.getElementById("achievementNotification");
+  var img = document.getElementById("achievementNotifImg");
+  var tier = document.getElementById("achievementNotifTier");
+  var name = document.getElementById("achievementNotifName");
+  var desc = document.getElementById("achievementNotifDesc");
+
+  notif.className = "tier-" + ach.tier;
+  notif.classList.remove("show");
+  void notif.offsetWidth;
+
+  var imgSrc = ach.reward && ach.reward.file ? ach.reward.file : null;
+  if (imgSrc) {
+    img.src = imgSrc;
+    img.style.display = "block";
+  } else {
+    img.style.display = "none";
+  }
+
+  var tierLabel = ach.tier === "bronze" ? "🥉 BRONCE" : ach.tier === "silver" ? "🥈 PLATA" : "🥇 ORO";
+  tier.textContent = tierLabel;
+  name.textContent = ach.name;
+  desc.textContent = ach.desc;
+
+  notif.classList.add("show");
+
+  if (showAchievementNotification._timer) clearTimeout(showAchievementNotification._timer);
+  showAchievementNotification._timer = setTimeout(function() {
+    notif.classList.remove("show");
+  }, 4500);
+}
+
+function checkAchievement(id) {
+  if (isAchievementUnlocked(id)) return;
+  unlockAchievement(id);
+}
+
+function checkAchievements() {
+  ACHIEVEMENTS.forEach(function(ach) {
+    if (isAchievementUnlocked(ach.id)) return;
+    var unlocked = false;
+    switch (ach.id) {
+      case "first_step":   unlocked = totalClicks >= 100; break;
+      case "clickeador":   unlocked = totalClicks >= 500; break;
+      case "clickeador_pro":unlocked = totalClicks >= 5000; break;
+      case "bot_frenesi":  unlocked = totalClicks >= 25000; break;
+      case "mouse_breaker":unlocked = totalClicks >= 50000; break;
+      case "riqueza":      unlocked = coins >= 1000; break;
+      case "loco_completo":unlocked = chaosReachedHundredCount >= 3; break;
+      case "first_boost":  unlocked = boostActivationsCount >= 1; break;
+      case "maratonista":  unlocked = boostActivationsCount >= 10; break;
+      case "marmolista":   unlocked = boostActivationsCount >= 25; break;
+      case "foto_inicial": unlocked = inventory.pictures.length >= 1; break;
+      case "slider":       unlocked = inventory.pictures.length >= 3; break;
+      case "multitud":     unlocked = inventory.pictures.length >= 6; break;
+      case "frase_marcada":unlocked = inventory.slogans.indexOf(equipped.slogan) !== -1 && equipped.slogan !== null; break;
+      case "espia":        unlocked = inventory.slogans.length >= 3; break;
+      case "espia_pro":    unlocked = inventory.slogans.length >= 6; break;
+      case "tipografo":    unlocked = inventory.fonts.length >= 5; break;
+      case "coleccionista_novato": unlocked = unlockedVideos.length >= 1; break;
+      case "curador":      unlocked = unlockedVideos.length >= 3; break;
+      case "ruletero":     unlocked = rouletteTotalSpins >= 5; break;
+      case "ruleta_maestra":unlocked = rouletteTotalSpins >= 25; break;
+      case "intelectual":  unlocked = unlockedFacts.length >= 10; break;
+      case "bendecido":    unlocked = jesusRewardUnlocked; break;
+    }
+    if (unlocked) unlockAchievement(ach.id);
+  });
+
+  // Meta-logro: "Coleccionista" se desbloquea cuando TODOS los otros logros de la categoría "coleccion" están desbloqueados
+  if (!isAchievementUnlocked("coleccionista")) {
+    var coleccionAchievements = ACHIEVEMENTS.filter(function(a) {
+      return a.category === "coleccion" && a.id !== "coleccionista";
+    });
+    var allColeccionUnlocked = coleccionAchievements.every(function(a) {
+      return isAchievementUnlocked(a.id);
+    });
+    if (allColeccionUnlocked && coleccionAchievements.length > 0) {
+      unlockAchievement("coleccionista");
+    }
+  }
+
+  // Meta-logro: "Completista" se desbloquea cuando TODOS los demás están desbloqueados
+  if (!isAchievementUnlocked("completista")) {
+    var otherAchievements = ACHIEVEMENTS.filter(function(a) {
+      return a.id !== "completista" && a.id !== "coleccionista";
+    });
+    var allOtherUnlocked = otherAchievements.every(function(a) {
+      return isAchievementUnlocked(a.id);
+    });
+    if (allOtherUnlocked && otherAchievements.length > 0 && isAchievementUnlocked("coleccionista")) {
+      unlockAchievement("completista");
+    }
+  }
+}
+
+function buildAchievements() {
+  var list = document.getElementById("achievementsList");
+  list.innerHTML = "";
+
+  var tiers = [
+    { key: "bronze", name: "BRONCE", emoji: "🥉" },
+    { key: "silver", name: "PLATA",  emoji: "🥈" },
+    { key: "gold",   name: "ORO",    emoji: "🥇" }
+  ];
+
+  tiers.forEach(function(tier) {
+    var tierAchs = ACHIEVEMENTS.filter(function(a) { return a.tier === tier.key; });
+    var section = document.createElement("div");
+    section.className = "achievements-tier-section";
+
+    var header = document.createElement("div");
+    header.className = "achievements-tier-header tier-" + tier.key;
+    var unlockedInTier = tierAchs.filter(function(a){ return isAchievementUnlocked(a.id); }).length;
+    header.innerHTML = tier.emoji + " " + tier.name +
+      '<span class="achievements-tier-count">' + unlockedInTier + " / " + tierAchs.length + "</span>";
+    section.appendChild(header);
+
+    var grid = document.createElement("div");
+    grid.className = "achievements-grid";
+
+    tierAchs.forEach(function(ach) {
+      var card = document.createElement("div");
+      var unlocked = isAchievementUnlocked(ach.id);
+      card.className = "achievement-card tier-" + ach.tier + (unlocked ? " unlocked" : " locked");
+
+      var imgSrc = ach.reward && ach.reward.file ? ach.reward.file : null;
+      if (imgSrc) {
+        var img = document.createElement("img");
+        img.src = imgSrc;
+        img.alt = ach.name;
+        img.className = "achievement-card-img";
+        img.onerror = function() { this.style.display = "none"; };
+        card.appendChild(img);
+      } else {
+        var placeholder = document.createElement("div");
+        placeholder.className = "achievement-card-img-placeholder";
+        var emoji = tier.emoji;
+        placeholder.textContent = emoji;
+        card.appendChild(placeholder);
+      }
+
+      var name = document.createElement("div");
+      name.className = "achievement-card-name";
+      name.textContent = ach.name;
+      card.appendChild(name);
+
+      var status = document.createElement("div");
+      status.className = "achievement-card-status";
+      status.textContent = unlocked ? "✅" : "🔒";
+      card.appendChild(status);
+
+      if (ach.reward) {
+        var badge = document.createElement("div");
+        badge.className = "achievement-card-reward-badge";
+        badge.textContent = "★";
+        card.appendChild(badge);
+      }
+
+      card.title = ach.desc + (ach.reward ? " (Recompensa: " + (ach.reward.type === "picture" ? "foto" : "marco") + ")" : "");
+      grid.appendChild(card);
+    });
+
+    section.appendChild(grid);
+    list.appendChild(section);
+  });
+
+  document.getElementById("achievementsCount").textContent = achievementsUnlocked.length + " / " + ACHIEVEMENTS.length;
+}
+
+var achievementsOpen = false;
+var achievementsBtn = document.getElementById("toggleAchievements");
+var achievementsPanel = document.getElementById("achievementsPanel");
+var achievementsCloseBtn = document.getElementById("achievementsClose");
+
+achievementsBtn.addEventListener("click", function() {
+  achievementsOpen = !achievementsOpen;
+  if (achievementsOpen) {
+    achievementsPanel.classList.add("open");
+    buildAchievements();
+  } else {
+    achievementsPanel.classList.remove("open");
+  }
+});
+achievementsCloseBtn.addEventListener("click", function() {
+  achievementsPanel.classList.remove("open");
+  achievementsOpen = false;
+});
+achievementsPanel.addEventListener("click", function(e) {
+  if (e.target === achievementsPanel) {
+    achievementsPanel.classList.remove("open");
+    achievementsOpen = false;
+  }
+});
 
 var inventory = JSON.parse(localStorage.getItem("chaosInventory") || '{"pictures":[],"fonts":[],"accessories":[],"slogans":[]}');
 if (!inventory.pictures) inventory.pictures = [];
@@ -1537,6 +1790,7 @@ function buyPicture(pic) {
   showToast(pic.name + " comprado!", "success");
   playSoundSafe("assets/sounds/purchase.mp3");
   buildShop();
+  checkAchievements();
 }
 
 function equipPicture(pic) {
@@ -1547,6 +1801,7 @@ function equipPicture(pic) {
   playSoundSafe("assets/sounds/equip.mp3");
   buildShop();
   updateProfile();
+  checkAchievements();
 }
 
 function buyFont(font) {
@@ -1564,6 +1819,7 @@ function buyFont(font) {
   showToast(font.name + " comprada!", "success");
   playSoundSafe("assets/sounds/purchase.mp3");
   buildShop();
+  checkAchievements();
 }
 
 function equipFont(font) {
@@ -1574,6 +1830,7 @@ function equipFont(font) {
   playSoundSafe("assets/sounds/equip.mp3");
   buildShop();
   updateProfile();
+  checkAchievements();
 }
 
 function isOwnedSlogan(sloganKey) {
@@ -1605,6 +1862,7 @@ function buySlogan(slogan) {
   showToast("\u201C" + slogan.name + "\u201D comprada!", "success");
   playSoundSafe("assets/sounds/purchase.mp3");
   buildShop();
+  checkAchievements();
 }
 
 function equipSlogan(slogan) {
@@ -1615,6 +1873,7 @@ function equipSlogan(slogan) {
   playSoundSafe("assets/sounds/equip.mp3");
   buildShop();
   updateProfile();
+  checkAchievements();
 }
 
 function buildShopSection(title) {
@@ -2295,6 +2554,7 @@ function activateBoost() {
 
   saveBoost();
   if (typeof buildShop === "function") buildShop();
+  checkAchievements();
 }
 
 function showBoostBanner() {
@@ -2586,10 +2846,13 @@ function deliverRoulettePrize(prize) {
 
   saveInventory();
   saveRouletteState();
+  rouletteTotalSpins++;
+  localStorage.setItem("chaosRouletteTotalSpins", String(rouletteTotalSpins));
   rouletteSpinning = false;
   updateRouletteInfo();
   if (typeof buildShop === "function") buildShop();
   if (typeof buildCollection === "function") buildCollection();
+  checkAchievements();
 
   if (divineUnlocked) {
     setTimeout(function() {
@@ -2689,6 +2952,118 @@ document.getElementById("collectibleFullscreen").addEventListener("click", funct
 })();
 
 buildCollection();
+checkAchievements();
+
+/* ========================= */
+/* DEBUG HELPERS (console) */
+/* ========================= */
+
+window.__chaosDebug = {
+  giveClicks: function(n) {
+    if (typeof n !== "number") n = 99999;
+    localStorage.setItem("totalClicks", String(n));
+    localStorage.setItem("clicks", String(n));
+    totalClicks = n;
+    if (typeof updateClickCounter === "function") updateClickCounter();
+    if (typeof checkAchievements === "function") checkAchievements();
+    console.log("✓ totalClicks = " + n);
+  },
+  giveCoins: function(n) {
+    if (typeof n !== "number") n = 99999;
+    localStorage.setItem("chaosCoins", String(n));
+    coins = n;
+    if (typeof coinNumberEl !== "undefined" && coinNumberEl) {
+      coinNumberEl.textContent = formatNumber(n);
+    }
+    if (typeof checkAchievements === "function") checkAchievements();
+    console.log("✓ coins = " + n);
+  },
+  giveBoosts: function(n) {
+    if (typeof n !== "number") n = 100;
+    localStorage.setItem("chaosBoostActivationsCount", String(n));
+    boostActivationsCount = n;
+    localStorage.setItem("chaosBoostMilestone5", "1");
+    boostMilestone5Shown = true;
+    if (typeof boostCountEl !== "undefined" && boostCountEl) {
+      boostCountEl.textContent = formatNumber(n);
+    }
+    if (typeof checkAchievements === "function") checkAchievements();
+    console.log("✓ boostActivationsCount = " + n);
+  },
+  giveRouletteSpins: function(n) {
+    if (typeof n !== "number") n = 100;
+    localStorage.setItem("chaosRouletteTotalSpins", String(n));
+    localStorage.setItem("chaosRouletteSpins", String(n));
+    rouletteTotalSpins = n;
+    rouletteSpinsCount = n;
+    if (typeof checkAchievements === "function") checkAchievements();
+    console.log("✓ rouletteTotalSpins = " + n);
+  },
+  giveCollectibles: function() {
+    var collectibles = ["doge", "agua", "rengoku", "venpaca", "atun"];
+    inventory.collectibles = collectibles.slice();
+    localStorage.setItem("chaosInventory", JSON.stringify(inventory));
+    if (typeof checkAchievements === "function") checkAchievements();
+    console.log("✓ All 5 collectibles granted");
+  },
+  giveVideos: function() {
+    unlockedVideos = [
+      { name: "Avioncito", file: "assets/videos/Avioncito.mp4" },
+      { name: "Tesla Bailando", file: "assets/videos/Tesla_bailando.mp4" },
+      { name: "Gojo en Bici", file: "assets/videos/Gojo_bici.mp4" }
+    ];
+    localStorage.setItem("chaosVideos", JSON.stringify(unlockedVideos));
+    if (typeof checkAchievements === "function") checkAchievements();
+    console.log("✓ All 3 videos unlocked");
+  },
+  giveFacts: function() {
+    var FACTS_LOCAL = (typeof FACTS !== "undefined") ? FACTS : [];
+    if (FACTS_LOCAL.length === 0) {
+      console.log("✗ No FACTS array available");
+      return;
+    }
+    unlockedFacts = FACTS_LOCAL.slice();
+    localStorage.setItem("chaosFacts", JSON.stringify(unlockedFacts));
+    if (typeof checkAchievements === "function") checkAchievements();
+    console.log("✓ All " + FACTS_LOCAL.length + " facts unlocked");
+  },
+  giveAll: function() {
+    this.giveClicks(99999);
+    this.giveCoins(99999);
+    this.giveBoosts(100);
+    this.giveRouletteSpins(100);
+    this.giveCollectibles();
+    this.giveVideos();
+    this.giveFacts();
+    if (typeof jesusRewardUnlocked !== "undefined") {
+      jesusRewardUnlocked = true;
+      localStorage.setItem("chaosJesusReward", "1");
+    }
+    if (typeof checkAchievements === "function") checkAchievements();
+    console.log("✓ Everything granted! Reload to see all effects.");
+  },
+  reset: function() {
+    localStorage.clear();
+    location.reload();
+  },
+  help: function() {
+    console.log(
+      "CHAOS BUTTON DEBUG COMMANDS:\n" +
+      "  __chaosDebug.giveClicks(99999)      - Set total clicks\n" +
+      "  __chaosDebug.giveCoins(99999)       - Set coins\n" +
+      "  __chaosDebug.giveBoosts(100)        - Set boost activations\n" +
+      "  __chaosDebug.giveRouletteSpins(100) - Set roulette total spins\n" +
+      "  __chaosDebug.giveCollectibles()     - Get all 5 collectibles\n" +
+      "  __chaosDebug.giveVideos()           - Unlock all 3 videos\n" +
+      "  __chaosDebug.giveFacts()            - Unlock all facts\n" +
+      "  __chaosDebug.giveAll()              - EVERYTHING (max stats + all items)\n" +
+      "  __chaosDebug.reset()                - Clear all localStorage and reload\n" +
+      "  __chaosDebug.help()                 - Show this help"
+    );
+  }
+};
+
+console.log("💡 Debug commands available: type __chaosDebug.help()");
 
 })();
 
