@@ -3076,10 +3076,8 @@ window.__chaosDebug = {
     if (typeof jesusRewardUnlocked !== "undefined") {
       jesusRewardUnlocked = true;
       localStorage.setItem("chaosJesusReward", "1");
+      // Also add the divine-reward items (jesus-blesses slogan, jesus-blessing frame)
       if (typeof inventory !== "undefined") {
-        if (inventory.pictures.indexOf("assets/images/Jesus_Payne.jpg") === -1) {
-          inventory.pictures.push("assets/images/Jesus_Payne.jpg");
-        }
         if (inventory.slogans.indexOf("jesus-blesses") === -1) {
           inventory.slogans.push("jesus-blesses");
         }
@@ -3087,6 +3085,13 @@ window.__chaosDebug = {
           inventory.frames.push("jesus-blessing");
         }
         if (typeof saveInventory === "function") saveInventory();
+      }
+    }
+    // Apply rewards for all achievements with rewards
+    if (typeof ACHIEVEMENTS !== "undefined" && typeof applyAchievementReward === "function") {
+      var rewardAchs = ["mouse_breaker", "intelectual", "coleccionista", "bendecido", "completista"];
+      for (var i = 0; i < rewardAchs.length; i++) {
+        applyAchievementReward(rewardAchs[i]);
       }
     }
     if (typeof checkAchievements === "function") checkAchievements();
