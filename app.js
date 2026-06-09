@@ -2145,6 +2145,24 @@ function buildShop() {
       list.appendChild(buildShopFrame(frame));
     });
   }
+
+  // Achievement rewards shown in shop (if owned) - separate from regular shop
+  var rewardSections = [
+    { file: "assets/images/Rat\u00f3n_gamer.jpg", name: "Mouse Breaker", section: "MOUSE BREAKER" },
+    { file: "assets/images/Nikola-Albert.webp", name: "Intelectual", section: "INTELECTUAL" },
+    { file: "assets/images/medalla_de_oro.jpg", name: "Coleccionista", section: "COLECCIONISTA" },
+    { file: "assets/images/Jesus_Payne.jpg", name: "Bendecido", section: "BENDECIDO" }
+  ];
+  var shownSections = {};
+  rewardSections.forEach(function(r) {
+    if (inventory.pictures.indexOf(r.file) >= 0) {
+      if (!shownSections[r.section]) {
+        list.appendChild(buildShopSection("RECOMPENSA · " + r.section));
+        shownSections[r.section] = true;
+      }
+      list.appendChild(buildShopPicture({ file: r.file, name: r.name, isReward: true }));
+    }
+  });
 }
 
 function buildShopFrame(frame) {
