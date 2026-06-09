@@ -352,7 +352,7 @@ var title = document.getElementById("title");
 var logEl = document.getElementById("log");
 var chaosBtn = document.getElementById("chaosBtn");
 var chaosBar = document.getElementById("chaosBar");
-var chaos100CounterEl = document.getElementById("chaos100Counter");
+var chaos100NumberEl = document.getElementById("chaos100Number");
 var chaosLevelSpan = document.getElementById("chaosLevel");
 var factPanel = document.getElementById("factPanel");
 var factText = document.getElementById("factText");
@@ -723,8 +723,8 @@ function unlockFact() {
 function updateChaosMeter() {
   chaosBar.style.width = chaosLevel + "%";
   chaosLevelSpan.textContent = chaosLevel + "%";
-  if (chaos100CounterEl) {
-    chaos100CounterEl.textContent = "🔥 " + chaosReachedHundredCount;
+  if (chaos100NumberEl) {
+    chaos100NumberEl.textContent = chaosReachedHundredCount;
   }
 }
 
@@ -3147,10 +3147,15 @@ window.__chaosDebug = {
         saveEquipped();
       }
     }
-    // Set chaosReachedHundredCount to 3 (so Loco Completo achievement unlocks)
+    // Simulate 3 cycles of reaching 100% chaos (for Loco Completo achievement)
     if (typeof chaosReachedHundredCount !== "undefined") {
-      chaosReachedHundredCount = 3;
-      localStorage.setItem("chaosReachedHundredCount", "3");
+      // Use the giveHundred helper to increment properly
+      chaosReachedHundredCount = 0;
+      localStorage.setItem("chaosReachedHundredCount", "0");
+      for (var cyc = 0; cyc < 3; cyc++) {
+        chaosReachedHundredCount++;
+        localStorage.setItem("chaosReachedHundredCount", String(chaosReachedHundredCount));
+      }
     }
     if (typeof jesusRewardUnlocked !== "undefined") {
       jesusRewardUnlocked = true;
