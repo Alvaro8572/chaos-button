@@ -3073,6 +3073,63 @@ window.__chaosDebug = {
     this.giveCollectibles();
     this.giveVideos();
     this.giveFacts();
+    // Buy all fonts (so Tipografo achievement unlocks)
+    if (typeof SHOP_FONTS !== "undefined" && typeof inventory !== "undefined") {
+      for (var f = 0; f < SHOP_FONTS.length; f++) {
+        if (inventory.fonts.indexOf(SHOP_FONTS[f].key) === -1) {
+          inventory.fonts.push(SHOP_FONTS[f].key);
+        }
+      }
+      if (typeof saveInventory === "function") saveInventory();
+    }
+    // Buy all regular slogans
+    if (typeof SHOP_SLOGANS !== "undefined" && typeof inventory !== "undefined") {
+      for (var s = 0; s < SHOP_SLOGANS.length; s++) {
+        if (inventory.slogans.indexOf(SHOP_SLOGANS[s].key) === -1) {
+          inventory.slogans.push(SHOP_SLOGANS[s].key);
+        }
+      }
+      if (typeof saveInventory === "function") saveInventory();
+    }
+    // Buy all secret slogans (mouse-breaker, jesus-blesses)
+    if (typeof SHOP_SECRET_SLOGANS !== "undefined" && typeof inventory !== "undefined") {
+      for (var ss = 0; ss < SHOP_SECRET_SLOGANS.length; ss++) {
+        if (inventory.slogans.indexOf(SHOP_SECRET_SLOGANS[ss].key) === -1) {
+          inventory.slogans.push(SHOP_SECRET_SLOGANS[ss].key);
+        }
+      }
+      if (typeof saveInventory === "function") saveInventory();
+    }
+    // Buy all secret pictures (Ratón_gamer.jpg)
+    if (typeof SHOP_SECRET_PICTURES !== "undefined" && typeof inventory !== "undefined") {
+      for (var sp = 0; sp < SHOP_SECRET_PICTURES.length; sp++) {
+        if (inventory.pictures.indexOf(SHOP_SECRET_PICTURES[sp].file) === -1) {
+          inventory.pictures.push(SHOP_SECRET_PICTURES[sp].file);
+        }
+      }
+      if (typeof saveInventory === "function") saveInventory();
+    }
+    // Buy all regular pictures (so Multitud achievement unlocks)
+    if (typeof SHOP_PICTURES !== "undefined" && typeof inventory !== "undefined") {
+      for (var pp = 0; pp < SHOP_PICTURES.length; pp++) {
+        if (inventory.pictures.indexOf(SHOP_PICTURES[pp].file) === -1) {
+          inventory.pictures.push(SHOP_PICTURES[pp].file);
+        }
+      }
+      if (typeof saveInventory === "function") saveInventory();
+    }
+    // Equip first slogan (so Frase Marcada achievement unlocks)
+    if (typeof SHOP_SLOGANS !== "undefined" && SHOP_SLOGANS.length > 0 && typeof equipped !== "undefined" && typeof saveEquipped === "function") {
+      if (!equipped.slogan && inventory.slogans.length > 0) {
+        equipped.slogan = inventory.slogans[0];
+        saveEquipped();
+      }
+    }
+    // Set chaosReachedHundredCount to 3 (so Loco Completo achievement unlocks)
+    if (typeof chaosReachedHundredCount !== "undefined") {
+      chaosReachedHundredCount = 3;
+      localStorage.setItem("chaosReachedHundredCount", "3");
+    }
     if (typeof jesusRewardUnlocked !== "undefined") {
       jesusRewardUnlocked = true;
       localStorage.setItem("chaosJesusReward", "1");
