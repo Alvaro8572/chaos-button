@@ -352,6 +352,7 @@ var title = document.getElementById("title");
 var logEl = document.getElementById("log");
 var chaosBtn = document.getElementById("chaosBtn");
 var chaosBar = document.getElementById("chaosBar");
+var chaos100CounterEl = document.getElementById("chaos100Counter");
 var chaosLevelSpan = document.getElementById("chaosLevel");
 var factPanel = document.getElementById("factPanel");
 var factText = document.getElementById("factText");
@@ -722,6 +723,9 @@ function unlockFact() {
 function updateChaosMeter() {
   chaosBar.style.width = chaosLevel + "%";
   chaosLevelSpan.textContent = chaosLevel + "%";
+  if (chaos100CounterEl) {
+    chaos100CounterEl.textContent = "🔥 " + chaosReachedHundredCount;
+  }
 }
 
 function changeFont() {

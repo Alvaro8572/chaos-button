@@ -63,6 +63,26 @@
   }
   .chaos-meter:hover { opacity: 1; }
 
+  .chaos-100-counter {
+    font-family: "Orbitron", monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: rgba(255, 100, 50, 0.9);
+    text-shadow: 0 0 6px rgba(255, 100, 50, 0.5);
+    padding: 2px 6px;
+    border: 1px solid rgba(255, 100, 50, 0.3);
+    border-radius: 8px;
+    background: rgba(255, 100, 50, 0.08);
+    cursor: help;
+    user-select: none;
+    transition: all 0.2s;
+  }
+  .chaos-100-counter:hover {
+    background: rgba(255, 100, 50, 0.18);
+    border-color: rgba(255, 100, 50, 0.6);
+    transform: scale(1.05);
+  }
+
   .chaos-bar-track {
     width: 160px; height: 6px;
     background: rgba(255,255,255,0.1);
