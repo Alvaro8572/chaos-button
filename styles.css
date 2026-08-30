@@ -491,6 +491,48 @@
 #collectionClose:hover { opacity: 1; }
 
 /* ========================= */
+/* SOUND TOGGLE */
+/* ========================= */
+
+#soundToggle {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, transform 0.15s ease;
+  padding: 0;
+  font-family: inherit;
+}
+#soundToggle:hover {
+  background: rgba(255, 255, 255, 0.12);
+  transform: scale(1.08);
+}
+#soundToggle:active {
+  transform: scale(0.95);
+}
+#soundToggle.muted {
+  background: rgba(180, 30, 30, 0.4);
+  border-color: rgba(255, 100, 100, 0.5);
+}
+#soundIcon {
+  display: inline-block;
+  line-height: 1;
+}
+
+/* ========================= */
 /* PROFILE BAR (Fase 8) */
 /* ========================= */
 

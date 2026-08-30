@@ -92,6 +92,8 @@ function safeNumber(key, fallback, isInt) {
   return n;
 }
 
+var soundEnabled = safeJSON("chaosSoundEnabled", true);
+
 var inventory = safeJSON("chaosInventory", {"pictures":[],"fonts":[],"accessories":[],"slogans":[],"frames":[],"collectibles":[]});
 if (!inventory.pictures) inventory.pictures = [];
 if (!inventory.fonts) inventory.fonts = [];
@@ -146,6 +148,7 @@ var lastSoundTime = 0;
 var SOUND_COOLDOWN = 10000;
 
 function playRandomSound() {
+  if (!soundEnabled) return;
   var now = Date.now();
   if (now - lastSoundTime < SOUND_COOLDOWN) return;
 
@@ -172,6 +175,7 @@ function playRandomSound() {
 }
 
 function playClickSound() {
+  if (!soundEnabled) return;
   if (clickSound.readyState < 2) {
     clickSound.load();
   }
@@ -2338,6 +2342,7 @@ try {
 } catch (e) {}
 
 function playSoundSafe(file, volume) {
+  if (!soundEnabled) return;
   try {
     var s = new Audio(file);
     s.volume = volume || 0.4;
@@ -2346,6 +2351,7 @@ function playSoundSafe(file, volume) {
 }
 
 function playSplash() {
+  if (!soundEnabled) return;
   if (splashSound) {
     try {
       splashSound.currentTime = 0;
@@ -2590,6 +2596,25 @@ profileNameEl.addEventListener("paste", function(e) {
 });
 
 updateProfile();
+
+// Sound toggle wiring
+var soundToggleEl = document.getElementById("soundToggle");
+var soundIconEl = document.getElementById("soundIcon");
+function renderSoundToggle() {
+  if (!soundToggleEl || !soundIconEl) return;
+  soundIconEl.textContent = soundEnabled ? "🔊" : "🔇";
+  if (soundEnabled) soundToggleEl.classList.remove("muted");
+  else soundToggleEl.classList.add("muted");
+  soundToggleEl.title = soundEnabled ? "Sonido ON (click para silenciar)" : "Sonido OFF (click para activar)";
+}
+if (soundToggleEl) {
+  renderSoundToggle();
+  soundToggleEl.addEventListener("click", function() {
+    soundEnabled = !soundEnabled;
+    try { localStorage.setItem("chaosSoundEnabled", JSON.stringify(soundEnabled)); } catch (e) {}
+    renderSoundToggle();
+  });
+}
 
 // Render initial chaos 100 counter (fix: was showing 0 on reload)
 if (chaos100NumberEl) {
