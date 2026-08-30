@@ -496,40 +496,39 @@
 
 #soundToggle {
   position: fixed;
-  top: 20px;
-  right: 20px;
-  width: 44px;
-  height: 44px;
+  bottom: 12px;
+  left: 12px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: white;
-  font-size: 20px;
+  background: transparent;
+  border: none;
   cursor: pointer;
   z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s ease, transform 0.15s ease;
   padding: 0;
+  opacity: 0.5;
+  transition: opacity 0.2s ease, transform 0.15s ease;
   font-family: inherit;
+  filter: grayscale(0.4);
 }
 #soundToggle:hover {
-  background: rgba(255, 255, 255, 0.12);
-  transform: scale(1.08);
+  opacity: 1;
+  transform: scale(1.1);
+  filter: grayscale(0);
 }
 #soundToggle:active {
-  transform: scale(0.95);
+  transform: scale(0.92);
 }
 #soundToggle.muted {
-  background: rgba(180, 30, 30, 0.4);
-  border-color: rgba(255, 100, 100, 0.5);
+  opacity: 0.4;
 }
 #soundIcon {
   display: inline-block;
   line-height: 1;
+  font-size: 16px;
 }
 
 /* ========================= */
