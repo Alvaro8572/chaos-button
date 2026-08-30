@@ -68,7 +68,68 @@ var VIDEOS = [
   { file: "assets/videos/Gojo_bici.mp4", name: "Gojo en Bici", prob: 0.25 }
 ];
 
-var unlockedVideos = JSON.parse(localStorage.getItem("chaosVideos") || "[]");
+function safeJSON(key, fallback) {
+  try {
+    var raw = localStorage.getItem(key);
+    if (raw === null || raw === undefined || raw === "") return fallback;
+    return JSON.parse(raw);
+  } catch (e) {
+    console.warn("[chaos] corrupted localStorage key '" + key + "', resetting to fallback");
+    try { localStorage.removeItem(key); } catch (e2) {}
+    return fallback;
+  }
+}
+
+function safeNumber(key, fallback, isInt) {
+  var raw = localStorage.getItem(key);
+  if (raw === null || raw === undefined || raw === "") return fallback;
+  var n = isInt ? parseInt(raw, 10) : parseFloat(raw);
+  if (!isFinite(n) || isNaN(n)) {
+    console.warn("[chaos] corrupted number key '" + key + "', resetting to fallback");
+    try { localStorage.removeItem(key); } catch (e) {}
+    return fallback;
+  }
+  return n;
+}
+
+var inventory = safeJSON("chaosInventory", {"pictures":[],"fonts":[],"accessories":[],"slogans":[],"frames":[],"collectibles":[]});
+if (!inventory.pictures) inventory.pictures = [];
+if (!inventory.fonts) inventory.fonts = [];
+if (!inventory.accessories) inventory.accessories = [];
+if (!inventory.slogans) inventory.slogans = [];
+if (!inventory.frames) inventory.frames = [];
+if (!inventory.collectibles) inventory.collectibles = [];
+
+var equipped = safeJSON("chaosEquipped", {"picture":null,"font":null,"accessory":null,"slogan":null,"frame":null});
+if (!equipped.picture) equipped.picture = null;
+if (!equipped.slogan) equipped.slogan = null;
+if (!equipped.frame) equipped.frame = null;
+
+var shopOpen = false;
+
+var chaosTimers = { setTimeoutIds: [], intervalIds: [] };
+function chaosSetTimeout(fn, ms) {
+  var id = setTimeout(function() {
+    var idx = chaosTimers.setTimeoutIds.indexOf(id);
+    if (idx !== -1) chaosTimers.setTimeoutIds.splice(idx, 1);
+    fn();
+  }, ms);
+  chaosTimers.setTimeoutIds.push(id);
+  return id;
+}
+function chaosSetInterval(fn, ms) {
+  var id = setInterval(fn, ms);
+  chaosTimers.intervalIds.push(id);
+  return id;
+}
+function clearAllChaosTimers() {
+  chaosTimers.setTimeoutIds.forEach(function(id) { clearTimeout(id); });
+  chaosTimers.intervalIds.forEach(function(id) { clearInterval(id); });
+  chaosTimers.setTimeoutIds = [];
+  chaosTimers.intervalIds = [];
+}
+
+var unlockedVideos = safeJSON("chaosVideos", []);
 var jesusRewardUnlocked = localStorage.getItem("chaosJesusReward") === "1";
 var collectionOpen = false;
 
@@ -181,6 +242,7 @@ var FACTS = [
   "El caos digital suele parecer mas divertido que el orden."
 ];
 
+// `clicks` resets every chaos cycle; `totalClicks` is the persistent historical count.
 var clicks = 0;
 var chaosLevel = 0;
 var lastFontIndex = -1;
@@ -193,11 +255,11 @@ var sidebarOpen = false;
 /* CLICK COUNTER (Fase 0.1) */
 /* ========================= */
 
-var totalClicks = parseInt(localStorage.getItem("totalClicks") || "0", 10);
+var totalClicks = safeNumber("totalClicks", 0, true);
 var clickCounterEl = document.getElementById("clickCounter");
 var clickCounterNumber = document.getElementById("clickCounterNumber");
 var clickCounterTickTimeout = null;
-var lastMilestoneShown = parseInt(localStorage.getItem("lastMilestoneShown") || "0", 10);
+var lastMilestoneShown = safeNumber("lastMilestoneShown", 0, true);
 var MILESTONES = [100, 250, 500, 750, 1000, 2500, 5000, 7500, 10000, 25000, 50000, 100000];
 
 clickCounterNumber.textContent = formatNumber(totalClicks);
@@ -212,7 +274,7 @@ function formatNumber(n) {
 /* COIN SYSTEM (Fase 1) */
 /* ========================= */
 
-var coins = parseInt(localStorage.getItem("chaosCoins") || "0", 10);
+var coins = safeNumber("chaosCoins", 0, true);
 var coinDisplayEl = document.getElementById("coinDisplay");
 var coinNumberEl = document.getElementById("coinNumber");
 var coinTickTimeout = null;
@@ -221,10 +283,11 @@ var coinSound = null;
 coinNumberEl.textContent = formatNumber(coins);
 
 try {
-  coinSound = new Audio("assets/sounds/coin-collect.mp3");
+  coinSound = new Audio("assets/sounds/purchase.mp3");
   coinSound.volume = 0.3;
   coinSound.preload = "auto";
-} catch (e) { /* file may not exist yet, sound optional */ }
+  coinSound.addEventListener("error", function() { coinSound = null; });
+} catch (e) { coinSound = null; }
 
 function addCoins(amount, source, isBig) {
   coins += amount;
@@ -335,7 +398,21 @@ function trackedRemove(el, className) {
 }
 
 // Load saved facts from localStorage
-var unlockedFacts = JSON.parse(localStorage.getItem("chaosFacts") || "[]");
+var unlockedFacts = safeJSON("chaosFacts", []);
+// Dedup legacy data (one-time migration)
+(function() {
+  var seen = {};
+  var deduped = [];
+  for (var i = 0; i < unlockedFacts.length; i++) {
+    if (!seen[unlockedFacts[i]]) { seen[unlockedFacts[i]] = true; deduped.push(unlockedFacts[i]); }
+  }
+  if (deduped.length !== unlockedFacts.length) {
+    unlockedFacts = deduped;
+    localStorage.setItem("chaosFacts", JSON.stringify(unlockedFacts));
+  }
+})();
+var unlockedListEl = document.getElementById("unlockedList");
+if (unlockedListEl) unlockedListEl.innerHTML = "";
 if (unlockedFacts.length > 0) {
   unlockedFacts.forEach(function(fact, i) {
     var item = document.createElement("div");
@@ -678,6 +755,7 @@ function triggerVideoUnlock() {
 }
 
 function addToSidebar(fact) {
+  if (unlockedFacts.indexOf(fact) !== -1) return;
   unlockedFacts.push(fact);
   localStorage.setItem("chaosFacts", JSON.stringify(unlockedFacts));
   unlockedCount.textContent = unlockedFacts.length + " / " + FACTS.length;
@@ -721,8 +799,9 @@ function unlockFact() {
 
 // ===== CORE FUNCTIONS =====
 function updateChaosMeter() {
-  chaosBar.style.width = chaosLevel + "%";
-  chaosLevelSpan.textContent = chaosLevel + "%";
+  var displayLevel = Math.floor(chaosLevel);
+  chaosBar.style.width = chaosLevel.toFixed(2) + "%";
+  chaosLevelSpan.textContent = displayLevel + "%";
   if (chaos100NumberEl) {
     chaos100NumberEl.textContent = chaosReachedHundredCount;
   }
@@ -988,11 +1067,13 @@ var EVENTS = [
     execute: function() {
       var count = 0;
       var colors = ["white", "#0a0a0f", "white", "white", "#0a0a0f"];
-      var strobe = setInterval(function() {
+      var strobe = chaosSetInterval(function() {
         document.body.style.background = colors[count % colors.length];
         count++;
         if (count > 12) {
           clearInterval(strobe);
+          var idx = chaosTimers.intervalIds.indexOf(strobe);
+          if (idx !== -1) chaosTimers.intervalIds.splice(idx, 1);
           document.body.style.background = "";
         }
       }, 70);
@@ -1175,8 +1256,11 @@ function resetEverything() {
   if (isResetting) return;
   isResetting = true;
 
+  clearAllChaosTimers();
+
   clicks = 0;
   chaosLevel = 0;
+  hasCountedHundredThisCycle = false;
   lastFontIndex = -1;
   burstParticles = [];
 
@@ -1212,17 +1296,16 @@ logEl.style.cssText = "";
 
   updateChaosMeter();
 
-  setTimeout(function() { isResetting = false; }, 500);
+  chaosSetTimeout(function() { isResetting = false; }, 500);
 }
 
 function chaos() {
   if (isResetting) return;
 
-  var boostMult = getBoostMultiplier();
   applyBoostClick();
 
   clicks++;
-  chaosLevel = Math.min(100, chaosLevel + boostMult);
+  chaosLevel = Math.min(100, (clicks / 500) * 100);
   updateChaosMeter();
   updateClickCounter();
 
@@ -1307,9 +1390,12 @@ function chaos() {
 
   // 100% reset - always happens at 100
   if (chaosLevel >= 100) {
-    if (chaosLevel === 100) {
+    if (chaosLevel === 100 && !hasCountedHundredThisCycle) {
       chaosReachedHundredCount++;
       localStorage.setItem("chaosReachedHundredCount", String(chaosReachedHundredCount));
+      hasCountedHundredThisCycle = true;
+      if (chaos100NumberEl) chaos100NumberEl.textContent = chaosReachedHundredCount;
+      logEl.innerText = "🔥 100% caos alcanzado por " + chaosReachedHundredCount + "ª vez";
     }
     triggerVideoUnlock();
     checkAchievements();
@@ -1340,12 +1426,12 @@ document.addEventListener("keydown", function(e) {
 });
 
 // Ambient symbols
-setInterval(function() {
+chaosSetInterval(function() {
   if (Math.random() < 0.4 && chaosLevel > 0) spawnChaosSymbol();
 }, 3000);
 
 // Clear transform/filter/letterSpacing periodically
-setInterval(function() {
+chaosSetInterval(function() {
   if (!isResetting) {
     document.body.style.transform = "";
     document.body.style.filter = "";
@@ -1444,11 +1530,12 @@ var ACHIEVEMENT_IMAGES = {
   ruleta: "🥉"
 };
 
-var achievementsUnlocked = JSON.parse(localStorage.getItem("chaosAchievements") || "[]");
+var achievementsUnlocked = safeJSON("chaosAchievements", []);
 if (!Array.isArray(achievementsUnlocked)) achievementsUnlocked = [];
 
-var chaosReachedHundredCount = parseInt(localStorage.getItem("chaosReachedHundredCount") || "0", 10);
-var rouletteTotalSpins = parseInt(localStorage.getItem("chaosRouletteTotalSpins") || "0", 10);
+var chaosReachedHundredCount = safeNumber("chaosReachedHundredCount", 0, true);
+var hasCountedHundredThisCycle = false;
+var rouletteTotalSpins = safeNumber("chaosRouletteSpins", safeNumber("chaosRouletteTotalSpins", 0, true), true);
 
 function isAchievementUnlocked(id) {
   return achievementsUnlocked.indexOf(id) !== -1;
@@ -1705,21 +1792,6 @@ achievementsPanel.addEventListener("click", function(e) {
   }
 });
 
-var inventory = JSON.parse(localStorage.getItem("chaosInventory") || '{"pictures":[],"fonts":[],"accessories":[],"slogans":[]}');
-if (!inventory.pictures) inventory.pictures = [];
-if (!inventory.fonts) inventory.fonts = [];
-if (!inventory.accessories) inventory.accessories = [];
-if (!inventory.slogans) inventory.slogans = [];
-if (!inventory.frames) inventory.frames = [];
-if (!inventory.collectibles) inventory.collectibles = [];
-
-var equipped = JSON.parse(localStorage.getItem("chaosEquipped") || '{"picture":null,"font":null,"accessory":null,"slogan":null}');
-if (!equipped.picture) equipped.picture = null;
-if (!equipped.slogan) equipped.slogan = null;
-if (!equipped.frame) equipped.frame = null;
-
-var shopOpen = false;
-
 function migrateAssetPaths() {
   var migrated = false;
 
@@ -1742,11 +1814,13 @@ function migrateAssetPaths() {
     });
   }
 
+  // inventory.collectibles are IDs (e.g. "doge", "agua"), NOT paths.
+  // Migration: undo any previous buggy prepending of "assets/images/"
   if (Array.isArray(inventory.collectibles)) {
     inventory.collectibles = inventory.collectibles.map(function(id) {
-      if (typeof id === "string" && id.indexOf("assets/") !== 0) {
+      if (typeof id === "string" && id.indexOf("assets/images/") === 0) {
         migrated = true;
-        return "assets/images/" + id;
+        return id.replace(/^assets\/images\//, "");
       }
       return id;
     });
@@ -2389,7 +2463,7 @@ function spawnCoinEvent() {
   else spawnCoinButton();
 }
 
-setInterval(function() {
+chaosSetInterval(function() {
   if (!coinEvent && Date.now() >= nextCoinEventTime) {
     spawnCoinEvent();
   }
@@ -2469,7 +2543,7 @@ function startEditName() {
 function commitEditName() {
   if (profileNameEl.getAttribute("contenteditable") !== "true") return;
   profileNameEl.setAttribute("contenteditable", "false");
-  var raw = (profileNameEl.textContent || "").trim().slice(0, 20);
+  var raw = (profileNameEl.textContent || "").trim().slice(0, 15);
   if (!raw) raw = "Player";
   playerName = raw;
   localStorage.setItem("chaosPlayerName", playerName);
@@ -2517,18 +2591,19 @@ profileNameEl.addEventListener("paste", function(e) {
 
 updateProfile();
 
+// Render initial chaos 100 counter (fix: was showing 0 on reload)
+if (chaos100NumberEl) {
+  chaos100NumberEl.textContent = chaosReachedHundredCount;
+}
+
 /* ========================= */
 /* BOOST SYSTEM (Fase 2) */
 /* ========================= */
 
-var boostCharge = parseFloat(localStorage.getItem("chaosBoostCharge") || "0");
-if (!isFinite(boostCharge) || isNaN(boostCharge)) boostCharge = 0;
-var boostCooldownUntil = parseInt(localStorage.getItem("chaosBoostCooldownUntil") || "0", 10);
-if (!isFinite(boostCooldownUntil) || isNaN(boostCooldownUntil)) boostCooldownUntil = 0;
-var boostActiveUntil = parseInt(localStorage.getItem("chaosBoostActiveUntil") || "0", 10);
-if (!isFinite(boostActiveUntil) || isNaN(boostActiveUntil)) boostActiveUntil = 0;
-var boostActivationsCount = parseInt(localStorage.getItem("chaosBoostActivationsCount") || "0", 10);
-if (!isFinite(boostActivationsCount) || isNaN(boostActivationsCount)) boostActivationsCount = 0;
+var boostCharge = safeNumber("chaosBoostCharge", 0);
+var boostCooldownUntil = safeNumber("chaosBoostCooldownUntil", 0, true);
+var boostActiveUntil = safeNumber("chaosBoostActiveUntil", 0, true);
+var boostActivationsCount = safeNumber("chaosBoostActivationsCount", 0, true);
 var boostMilestone5Shown = localStorage.getItem("chaosBoostMilestone5") === "1";
 var lastBoostClickTime = 0;
 
@@ -2543,10 +2618,13 @@ var boostBannerSubEl = document.getElementById("boostBannerSub");
 
 var BOOST_DURATION_MS = 10000;
 var BOOST_COOLDOWN_MS = 30000;
-var BOOST_CHARGE_PER_CLICK = 0.5;
+var BOOST_CHARGE_PER_CLICK = 0.15;
 var BOOST_DECAY_PER_100MS = 0.2;
 var BOOST_DECAY_DELAY_MS = 800;
 var BOOST_REQUIRED_FOR_UNLOCK = 5;
+
+var lastBoostSave = 0;
+var BOOST_SAVE_THROTTLE_MS = 1000;
 
 function saveBoost() {
   localStorage.setItem("chaosBoostCharge", String(boostCharge));
@@ -2554,6 +2632,11 @@ function saveBoost() {
   localStorage.setItem("chaosBoostActiveUntil", String(boostActiveUntil));
   localStorage.setItem("chaosBoostActivationsCount", String(boostActivationsCount));
   localStorage.setItem("chaosBoostMilestone5", boostMilestone5Shown ? "1" : "0");
+  lastBoostSave = Date.now();
+}
+
+function saveBoostIfDue() {
+  if (Date.now() - lastBoostSave >= BOOST_SAVE_THROTTLE_MS) saveBoost();
 }
 
 function isBoostActive() {
@@ -2584,7 +2667,7 @@ function decayBoost() {
   if (boostCharge <= 0) return;
   if (Date.now() - lastBoostClickTime < BOOST_DECAY_DELAY_MS) return;
   boostCharge = Math.max(0, boostCharge - BOOST_DECAY_PER_100MS);
-  saveBoost();
+  saveBoostIfDue();
 }
 
 function activateBoost() {
@@ -2622,7 +2705,7 @@ function showBoostBanner() {
 
 function renderBoost() {
   var pct = Math.max(0, Math.min(100, boostCharge));
-  boostBarEl.style.width = pct + "%";
+  boostBarEl.style.width = pct.toFixed(2) + "%";
   boostBarPercentEl.textContent = Math.floor(pct) + "%";
 
   if (isBoostActive()) {
@@ -2651,7 +2734,11 @@ function renderBoost() {
     chaosBtn.classList.remove("boost-active");
   }
 
+  var beforeText = boostCountEl.textContent;
   boostCountEl.textContent = formatNumber(boostActivationsCount);
+  if (beforeText !== boostCountEl.textContent) {
+    console.log("[boost] renderBoost: " + beforeText + " → " + boostCountEl.textContent + " (localStorage=" + localStorage.getItem("chaosBoostActivationsCount") + ")");
+  }
 }
 
 function boostLoop() {
@@ -2665,6 +2752,9 @@ function boostLoop() {
 }
 boostLoop();
 renderBoost();
+// Safety net: force an extra render after the first event loop tick
+setTimeout(renderBoost, 0);
+setTimeout(renderBoost, 100);
 
 /* ========================= */
 /* ROULETTE SYSTEM (Fase 10) */
@@ -2682,11 +2772,11 @@ var ROULETTE_PRIZES = [
 
 var ROULETTE_SPIN_COST = 50;
 var ROULETTE_SPIN_DURATION_MS = 7500;
-var ROULETTE_CLICKS_PER_SPIN = 500;
+var ROULETTE_CLICKS_PER_SPIN = 2000;
 var ROULETTE_SECTOR_COUNT = ROULETTE_PRIZES.length;
 var ROULETTE_SECTOR_ANGLE = 360 / ROULETTE_SECTOR_COUNT;
 
-var rouletteSpinsCount = parseInt(localStorage.getItem("chaosRouletteSpins") || "0", 10);
+var rouletteSpinsCount = safeNumber("chaosRouletteSpins", rouletteTotalSpins, true);
 var rouletteCurrentRotation = 0;
 var rouletteSpinning = false;
 
@@ -2839,9 +2929,9 @@ function spinRoulette() {
 
   var prize = rollPrize();
   var prizeIndex = ROULETTE_PRIZES.indexOf(prize);
-  var prizeCenterAngle = prizeIndex * ROULETTE_SECTOR_ANGLE + ROULETTE_SECTOR_ANGLE / 2;
+  var midAngle = prizeIndex * ROULETTE_SECTOR_ANGLE + ROULETTE_SECTOR_ANGLE / 2 - 90;
   var spins = 5 + Math.floor(Math.random() * 3);
-  rouletteCurrentRotation = rouletteCurrentRotation + spins * 360 - prizeCenterAngle;
+  rouletteCurrentRotation = (Math.floor(rouletteCurrentRotation / 360) + spins) * 360 + (-90 - midAngle);
   var wheelEl = document.getElementById("rouletteWheel");
   wheelEl.style.transition = "transform " + ROULETTE_SPIN_DURATION_MS + "ms cubic-bezier(0.05, 0.85, 0.15, 1.0)";
   wheelEl.style.transform = "rotate(" + rouletteCurrentRotation + "deg)";
@@ -2903,7 +2993,9 @@ function deliverRoulettePrize(prize) {
   saveInventory();
   saveRouletteState();
   rouletteTotalSpins++;
-  localStorage.setItem("chaosRouletteTotalSpins", String(rouletteTotalSpins));
+  rouletteSpinsCount = rouletteTotalSpins;
+  localStorage.setItem("chaosRouletteSpins", String(rouletteTotalSpins));
+  localStorage.removeItem("chaosRouletteTotalSpins");
   rouletteSpinning = false;
   updateRouletteInfo();
   if (typeof buildShop === "function") buildShop();
@@ -3015,8 +3107,13 @@ buildCollection();
 checkAchievements();
 
 /* ========================= */
-/* DEBUG HELPERS (console) */
+/* DEBUG HELPERS (console) — gated by ?debug=1 or window.DEBUG_MODE */
 /* ========================= */
+
+var CHAOS_DEBUG_ENABLED = (typeof window !== "undefined") &&
+  (window.DEBUG_MODE === true || (window.location && /[?&]debug=1\b/.test(window.location.search)));
+
+if (CHAOS_DEBUG_ENABLED) {
 
 window.__chaosDebug = {
   giveClicks: function(n) {
@@ -3052,8 +3149,8 @@ window.__chaosDebug = {
   },
   giveRouletteSpins: function(n) {
     if (typeof n !== "number") n = 100;
-    localStorage.setItem("chaosRouletteTotalSpins", String(n));
     localStorage.setItem("chaosRouletteSpins", String(n));
+    localStorage.removeItem("chaosRouletteTotalSpins");
     rouletteTotalSpins = n;
     rouletteSpinsCount = n;
     if (typeof checkAchievements === "function") checkAchievements();
@@ -3203,6 +3300,8 @@ window.__chaosDebug = {
 };
 
 console.log("💡 Debug commands available: type __chaosDebug.help()");
+
+} // end if CHAOS_DEBUG_ENABLED
 
 })();
 
