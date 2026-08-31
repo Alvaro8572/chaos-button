@@ -3138,6 +3138,31 @@ checkAchievements();
 var CHAOS_DEBUG_ENABLED = (typeof window !== "undefined") &&
   (window.DEBUG_MODE === true || (window.location && /[?&]debug=1\b/.test(window.location.search)));
 
+// Temporary diagnostic overlay — REMOVE THIS BLOCK AFTER DEBUGGING
+(function() {
+  if (typeof document === "undefined") return;
+  var cssVersion = "v4-debug";
+  function buildOverlay() {
+    var div = document.createElement("div");
+    div.id = "chaosDebugOverlay";
+    div.style.cssText = "position:fixed;top:0;left:0;right:0;background:rgba(0,0,0,0.95);color:#0f0;font-family:monospace;font-size:11px;padding:8px;z-index:999999;border-bottom:2px solid #0f0;line-height:1.4;";
+    div.innerHTML = [
+      "DEBUG " + cssVersion,
+      "W:" + window.innerWidth + " H:" + window.innerHeight,
+      "MQ<=768:" + (window.matchMedia("(max-width: 768px)").matches ? "YES" : "NO"),
+      "MQ<=600:" + (window.matchMedia("(max-width: 600px)").matches ? "YES" : "NO"),
+      "URL:" + window.location.href.substring(0, 60)
+    ].join(" | ");
+    document.body.appendChild(div);
+    return div;
+  }
+  if (document.body) {
+    buildOverlay();
+  } else {
+    document.addEventListener("DOMContentLoaded", buildOverlay);
+  }
+})();
+
 if (CHAOS_DEBUG_ENABLED) {
 
 window.__chaosDebug = {
