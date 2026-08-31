@@ -2743,19 +2743,21 @@
     overflow-y: auto;
   }
 
-  /* profileBar: shrink and reposition on mobile — TOP-LEFT to avoid overlap with right-side toggles */
+  /* profileBar: shrink and reposition on mobile — BOTTOM-RIGHT to avoid overlap with sound toggle */
   #profileBar {
-    width: min(220px, 70vw) !important;
-    padding: 8px 10px !important;
+    width: auto !important;
+    max-width: min(220px, 65vw) !important;
+    padding: 8px 12px !important;
     gap: 8px !important;
     top: auto !important;
     bottom: 8px !important;
-    left: 40px !important;  /* offset right of the sound toggle */
-    right: auto !important;
+    left: auto !important;
+    right: 8px !important;
   }
-  #profilePhotoWrap { width: 40px !important; height: 40px !important; min-width: 40px !important; }
-  #profileName { font-size: 12px !important; }
-  #profileSlogan { font-size: 10px !important; }
+  #profilePhotoWrap { width: 44px !important; height: 44px !important; min-width: 44px !important; }
+  #profileName { font-size: 13px !important; max-width: 140px !important; }
+  #profileSlogan { font-size: 10px !important; max-width: 140px !important; }
+  #profileEdit { width: 22px !important; height: 22px !important; }
 
   /* credits: hide on mobile to avoid clash with profileBar */
   .credits { display: none !important; }
@@ -2779,15 +2781,18 @@
 
   /* Modal text adjustments */
   #factPanel {
-    width: 90vw;
-    left: 50%;
-    transform: translateX(-50%) translateY(20px);
-    bottom: 16px;
+    width: min(90vw, 360px) !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) translateY(20px) !important;
+    bottom: 80px !important;  /* above the profile bar */
+    padding: 12px !important;
   }
   #factPanel.visible {
-    transform: translateX(-50%) translateY(0);
+    transform: translateX(-50%) translateY(0) !important;
   }
-  #factText { font-size: 14px; }
+  #factTitle { font-size: 10px !important; letter-spacing: 2px !important; margin-bottom: 6px !important; }
+  #factText { font-size: 13px !important; line-height: 1.4 !important; }
 
   #videoOverlayContent {
     width: 90vw;
