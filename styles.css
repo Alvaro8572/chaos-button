@@ -2634,210 +2634,171 @@
 @keyframes toastOut { to { opacity: 0; transform: translateX(-50%) translateY(-10px); } }
 
 /* ========================= */
-/* RESPONSIVE — MOBILE FIRST  */
+/* RESPONSIVE — MOBILE ONLY  */
+/* (use max-width to NOT affect tablet/desktop) */
 /* ========================= */
 
-/* CONTENT: contain everything inside viewport on mobile */
-.content {
-  width: 100vw;
-  max-width: 100vw;
-  padding: 0 12px;
-  box-sizing: border-box;
-}
+@media (max-width: 768px) {
 
-/* chaosBtn: base styles (mobile-first) — NEVER let it overflow */
-#chaosBtn {
-  font-family: "Orbitron", monospace;
-  font-size: clamp(11px, 3.5vw, 16px);
-  letter-spacing: 1.5px;
-  padding: clamp(12px, 2.5vw, 18px) clamp(20px, 6vw, 60px);
-  border-radius: 8px;
-  cursor: pointer;
-  text-transform: uppercase;
-  font-weight: 700;
-  width: min(85vw, 320px);
-  max-width: 90vw;
-  white-space: nowrap;
-  transition: transform 0.1s ease;
-  box-sizing: border-box;
-}
-#chaosBtn:active { transform: scale(0.96); }
+  /* CONTENT: contain everything inside viewport on mobile */
+  .content {
+    width: 100vw;
+    max-width: 100vw;
+    padding: 0 12px;
+    box-sizing: border-box;
+  }
 
-/* chaos-meter: width fluid */
-.chaos-meter {
-  width: min(90vw, 320px);
-  justify-content: center;
-  flex-wrap: nowrap;
-}
-.chaos-bar-track { width: 100%; min-width: 80px; }
+  /* chaosBtn: NEVER let it overflow */
+  #chaosBtn {
+    font-family: "Orbitron", monospace;
+    font-size: clamp(11px, 3.5vw, 16px);
+    letter-spacing: 1.5px;
+    padding: clamp(12px, 2.5vw, 18px) clamp(20px, 6vw, 60px);
+    border-radius: 8px;
+    cursor: pointer;
+    text-transform: uppercase;
+    font-weight: 700;
+    width: min(85vw, 320px);
+    max-width: 90vw;
+    white-space: nowrap;
+    transition: transform 0.1s ease;
+    box-sizing: border-box;
+  }
+  #chaosBtn:active { transform: scale(0.96); }
 
-/* statsRow: stack on mobile */
-#statsRow {
-  width: min(95vw, 480px);
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-#coinDisplay, #clickCounter {
-  font-size: clamp(9px, 2.5vw, 11px);
-  padding: 4px 8px;
-}
+  /* chaos-meter: width fluid */
+  .chaos-meter {
+    width: min(90vw, 320px);
+    justify-content: center;
+    flex-wrap: nowrap;
+  }
+  .chaos-bar-track { width: 100%; min-width: 80px; }
 
-/* boostBarWrap: fluid */
-#boostBarWrap {
-  width: min(95vw, 380px);
-}
-#boostBarPercent {
-  font-size: clamp(9px, 2.5vw, 11px);
-}
+  /* statsRow: wrap on mobile */
+  #statsRow {
+    width: min(95vw, 480px);
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  #coinDisplay, #clickCounter {
+    font-size: clamp(9px, 2.5vw, 11px);
+    padding: 4px 8px;
+  }
 
-/* TOP-RIGHT TOGGLES: smaller and lower opacity on mobile so they don't dominate */
-#toggleUnlocked,
-#toggleCollection,
-#toggleAchievements,
-#toggleShop,
-#toggleRoulette {
-  font-size: 9px;
-  padding: 6px 10px;
-  letter-spacing: 1px;
-  opacity: 0.85;
-}
+  /* boostBarWrap: fluid */
+  #boostBarWrap {
+    width: min(95vw, 380px);
+  }
+  #boostBarPercent {
+    font-size: clamp(9px, 2.5vw, 11px);
+  }
 
-/* chaos100CounterWrap + boostCounter (top-left): wrap content and shrink */
-#chaos100CounterWrap {
-  font-size: 8px;
-  padding: 3px 8px;
-  letter-spacing: 1px;
-}
-#chaos100Number { font-size: 10px; }
-
-#boostCounter {
-  font-size: 9px;
-  padding: 3px 8px;
-  letter-spacing: 1px;
-}
-#boostCounterNumber { font-size: 11px; }
-
-/* Sound toggle: smaller on mobile */
-#soundToggle {
-  bottom: 8px;
-  left: 8px;
-  width: 26px;
-  height: 26px;
-}
-#soundIcon { font-size: 14px; }
-
-/* panels: full-width on mobile, edge-to-edge */
-#unlockedPanel,
-#shopPanel,
-#collectionPanel,
-#achievementsPanel {
-  width: 88vw;
-  max-width: 320px;
-  right: 6vw;
-  left: auto;
-  max-height: 70vh;
-  overflow-y: auto;
-}
-
-/* profileBar: shrink and reposition on mobile — TOP-LEFT to avoid overlap with right-side toggles */
-#profileBar {
-  width: min(220px, 70vw);
-  padding: 8px 10px;
-  gap: 8px;
-  top: auto;
-  bottom: 8px;
-  left: 40px;  /* offset right of the sound toggle */
-  right: auto;
-}
-#profilePhotoWrap { width: 40px; height: 40px; min-width: 40px; }
-#profileName { font-size: 12px; }
-#profileSlogan { font-size: 10px; }
-
-/* credits: hide on mobile to avoid clash with profileBar */
-.credits { display: none; }
-
-/* rouletteModal: full screen on mobile */
-#rouletteModal .roulette-card {
-  width: min(95vw, 400px);
-  padding: 16px;
-}
-#rouletteWheel { width: min(80vw, 280px); height: auto; }
-
-/* shopList items: smaller on mobile */
-.shop-item-img-wrap { width: 48px; height: 48px; }
-.shop-item-img { width: 48px; height: 48px; }
-
-/* achievement cards: smaller on mobile */
-.achievement-card { padding: 8px; font-size: 12px; }
-
-/* collectionItem: smaller on mobile */
-.collection-item video { width: 80px; height: 60px; }
-
-/* Modal text adjustments */
-#factPanel {
-  width: 90vw;
-  left: 50%;
-  transform: translateX(-50%) translateY(20px);
-  bottom: 16px;
-}
-#factPanel.visible {
-  transform: translateX(-50%) translateY(0);
-}
-#factText { font-size: 14px; }
-
-#videoOverlayContent {
-  width: 90vw;
-  max-width: 400px;
-}
-
-#boostBanner {
-  width: 90vw;
-  font-size: clamp(12px, 3vw, 16px);
-}
-
-#repetidoMsg { font-size: clamp(14px, 4vw, 24px); }
-
-/* Tablet (600px and up) */
-@media (min-width: 600px) {
+  /* TOP-RIGHT TOGGLES: smaller and lower opacity on mobile so they don't dominate */
   #toggleUnlocked,
   #toggleCollection,
   #toggleAchievements,
   #toggleShop,
   #toggleRoulette {
-    font-size: 10px;
-    padding: 8px 14px;
-    letter-spacing: 2px;
-    opacity: 1;
+    font-size: 9px;
+    padding: 6px 10px;
+    letter-spacing: 1px;
+    opacity: 0.85;
   }
+
+  /* chaos100CounterWrap + boostCounter (top-left): wrap content and shrink */
+  #chaos100CounterWrap {
+    font-size: 8px;
+    padding: 3px 8px;
+    letter-spacing: 1px;
+  }
+  #chaos100Number { font-size: 10px; }
+
+  #boostCounter {
+    font-size: 9px;
+    padding: 3px 8px;
+    letter-spacing: 1px;
+  }
+  #boostCounterNumber { font-size: 11px; }
+
+  /* Sound toggle: smaller on mobile */
+  #soundToggle {
+    bottom: 8px;
+    left: 8px;
+    width: 26px;
+    height: 26px;
+  }
+  #soundIcon { font-size: 14px; }
+
+  /* panels: full-width on mobile, edge-to-edge */
   #unlockedPanel,
   #shopPanel,
   #collectionPanel,
   #achievementsPanel {
-    width: 280px;
-    right: 16px;
+    width: 88vw !important;
+    max-width: 320px !important;
+    right: 6vw !important;
+    left: auto !important;
+    max-height: 70vh;
+    overflow-y: auto;
   }
-  #profileBar {
-    width: 260px;
-    bottom: 16px;
-    left: auto;
-    right: 16px;
-  }
-  #profilePhotoWrap { width: 50px; height: 50px; min-width: 50px; }
-  #profileName { font-size: 14px; }
-  .credits { display: block; }
-}
 
-/* Desktop (1024px and up) — restore full layout */
-@media (min-width: 1024px) {
+  /* profileBar: shrink and reposition on mobile — TOP-LEFT to avoid overlap with right-side toggles */
   #profileBar {
-    width: 300px;
-    top: 200px;
-    bottom: auto;
-    right: 20px;
-    left: auto;
+    width: min(220px, 70vw) !important;
+    padding: 8px 10px !important;
+    gap: 8px !important;
+    top: auto !important;
+    bottom: 8px !important;
+    left: 40px !important;  /* offset right of the sound toggle */
+    right: auto !important;
   }
-  #profilePhotoWrap { width: 60px; height: 60px; min-width: 60px; }
-  #profileName { font-size: 16px; }
+  #profilePhotoWrap { width: 40px !important; height: 40px !important; min-width: 40px !important; }
+  #profileName { font-size: 12px !important; }
+  #profileSlogan { font-size: 10px !important; }
+
+  /* credits: hide on mobile to avoid clash with profileBar */
+  .credits { display: none !important; }
+
+  /* rouletteModal: full screen on mobile */
+  #rouletteModal .roulette-card {
+    width: min(95vw, 400px) !important;
+    padding: 16px !important;
+  }
+  #rouletteWheel { width: min(80vw, 280px); height: auto; }
+
+  /* shopList items: smaller on mobile */
+  .shop-item-img-wrap { width: 48px; height: 48px; }
+  .shop-item-img { width: 48px; height: 48px; }
+
+  /* achievement cards: smaller on mobile */
+  .achievement-card { padding: 8px; font-size: 12px; }
+
+  /* collectionItem: smaller on mobile */
+  .collection-item video { width: 80px; height: 60px; }
+
+  /* Modal text adjustments */
+  #factPanel {
+    width: 90vw;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    bottom: 16px;
+  }
+  #factPanel.visible {
+    transform: translateX(-50%) translateY(0);
+  }
+  #factText { font-size: 14px; }
+
+  #videoOverlayContent {
+    width: 90vw;
+    max-width: 400px;
+  }
+
+  #boostBanner {
+    width: 90vw;
+    font-size: clamp(12px, 3vw, 16px);
+  }
+
+  #repetidoMsg { font-size: clamp(14px, 4vw, 24px); }
 }
 
