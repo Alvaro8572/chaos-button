@@ -2633,3 +2633,174 @@
 @keyframes toastIn  { to { opacity: 1; transform: translateX(-50%) translateY(0); } }
 @keyframes toastOut { to { opacity: 0; transform: translateX(-50%) translateY(-10px); } }
 
+/* ========================= */
+/* RESPONSIVE — MOBILE FIRST  */
+/* ========================= */
+
+/* chaosBtn: base styles (mobile-first) */
+#chaosBtn {
+  font-family: "Orbitron", monospace;
+  font-size: clamp(11px, 3vw, 16px);
+  letter-spacing: 2px;
+  padding: clamp(12px, 2.5vw, 18px) clamp(28px, 8vw, 60px);
+  border-radius: 8px;
+  cursor: pointer;
+  text-transform: uppercase;
+  font-weight: 700;
+  max-width: 90vw;
+  transition: transform 0.1s ease;
+}
+#chaosBtn:active { transform: scale(0.96); }
+
+/* chaos-meter: width fluid */
+.chaos-meter {
+  width: min(90vw, 320px);
+  justify-content: center;
+}
+.chaos-bar-track { width: 100%; }
+
+/* statsRow: stack on mobile */
+#statsRow {
+  width: min(95vw, 480px);
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+#coinDisplay, #clickCounter {
+  font-size: clamp(9px, 2.5vw, 11px);
+  padding: 4px 8px;
+}
+
+/* boostBarWrap: fluid */
+#boostBarWrap {
+  width: min(95vw, 380px);
+}
+#boostBarPercent {
+  font-size: clamp(9px, 2.5vw, 11px);
+}
+
+/* Sound toggle: smaller on mobile, avoid overlapping with other fixed buttons */
+#soundToggle {
+  bottom: 8px;
+  left: 8px;
+  width: 26px;
+  height: 26px;
+}
+#soundIcon { font-size: 14px; }
+
+/* toggle buttons: smaller font and padding on mobile */
+#toggleUnlocked,
+#toggleCollection,
+#toggleAchievements,
+#toggleShop,
+#toggleRoulette {
+  font-size: 9px;
+  padding: 6px 10px;
+  letter-spacing: 1.5px;
+}
+
+/* panels: full-width on mobile, edge-to-edge */
+#unlockedPanel,
+#shopPanel,
+#collectionPanel,
+#achievementsPanel {
+  width: 88vw;
+  max-width: 320px;
+  right: 6vw;
+  left: auto;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+/* profileBar: shrink and reposition on mobile */
+#profileBar {
+  width: min(220px, 70vw);
+  padding: 8px 10px;
+  gap: 8px;
+  top: auto;
+  bottom: 50px;
+  right: 8px;
+}
+#profilePhotoWrap { width: 44px; height: 44px; min-width: 44px; }
+#profileName { font-size: 12px; }
+#profileSlogan { font-size: 10px; }
+
+/* rouletteModal: full screen on mobile */
+#rouletteModal .roulette-card {
+  width: min(95vw, 400px);
+  padding: 16px;
+}
+#rouletteWheel { width: min(80vw, 280px); height: auto; }
+
+/* shopList items: smaller on mobile */
+.shop-item-img-wrap { width: 48px; height: 48px; }
+.shop-item-img { width: 48px; height: 48px; }
+
+/* achievement cards: smaller on mobile */
+.achievement-card { padding: 8px; font-size: 12px; }
+
+/* collectionItem: smaller on mobile */
+.collection-item video { width: 80px; height: 60px; }
+
+/* Modal text adjustments */
+#factPanel {
+  width: 90vw;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  bottom: 16px;
+}
+#factPanel.visible {
+  transform: translateX(-50%) translateY(0);
+}
+#factText { font-size: 14px; }
+
+#videoOverlayContent {
+  width: 90vw;
+  max-width: 400px;
+}
+
+#boostBanner {
+  width: 90vw;
+  font-size: clamp(12px, 3vw, 16px);
+}
+
+#repetidoMsg { font-size: clamp(14px, 4vw, 24px); }
+
+/* Tablet (600px and up) */
+@media (min-width: 600px) {
+  #toggleUnlocked,
+  #toggleCollection,
+  #toggleAchievements,
+  #toggleShop,
+  #toggleRoulette {
+    font-size: 10px;
+    padding: 8px 14px;
+    letter-spacing: 2px;
+  }
+  #unlockedPanel,
+  #shopPanel,
+  #collectionPanel,
+  #achievementsPanel {
+    width: 280px;
+    right: 16px;
+  }
+  #profileBar {
+    width: 260px;
+    bottom: 16px;
+  }
+  #profilePhotoWrap { width: 50px; height: 50px; min-width: 50px; }
+  #profileName { font-size: 14px; }
+}
+
+/* Desktop (1024px and up) — restore full layout */
+@media (min-width: 1024px) {
+  #profileBar {
+    width: 300px;
+    top: 200px;
+    bottom: auto;
+    right: 20px;
+  }
+  #profilePhotoWrap { width: 60px; height: 60px; min-width: 60px; }
+  #profileName { font-size: 16px; }
+}
+
