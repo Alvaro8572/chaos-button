@@ -2861,6 +2861,74 @@
   #toggleShop { top: 8px; left: 8px; right: auto; }
   #toggleRoulette { top: 38px; left: 8px; right: auto; }
 
+  /* Reserve space for toggle buttons so opened panels don't sit on top of them */
+  .content {
+    padding: 110px 8px 60px 8px;
+    box-sizing: border-box;
+  }
+
+  /* Side panels must respect toggles + safe area */
+  #unlockedPanel,
+  #shopPanel,
+  #collectionPanel,
+  #achievementsPanel {
+    top: 110px !important;
+    right: 6vw !important;
+    left: auto !important;
+    bottom: 60px !important;
+    width: 88vw !important;
+    max-width: 320px !important;
+    max-height: none !important;
+    height: auto !important;
+    border-radius: 12px;
+  }
+
+  /* Stats row must fit cleanly inside the content column */
+  #statsRow {
+    width: 100%;
+    max-width: 100%;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+  }
+  #coinDisplay, #clickCounter {
+    font-size: 9px !important;
+    padding: 3px 6px !important;
+  }
+
+  /* Chaos meter and boost bar take full width but stay centered */
+  .chaos-meter, #boostBarWrap {
+    width: 100%;
+    max-width: 100%;
+    justify-content: center;
+  }
+  .boost-bar-track {
+    width: 100%;
+    max-width: 220px;
+  }
+
+  /* Profile bar: move to bottom right, smaller, don't conflict with toggles */
+  #profileBar {
+    width: auto !important;
+    max-width: 180px !important;
+    padding: 6px 10px !important;
+    top: auto !important;
+    bottom: 8px !important;
+    left: auto !important;
+    right: 8px !important;
+  }
+  #profilePhotoWrap {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+  }
+  #profileName { font-size: 11px !important; }
+  #profileSlogan { font-size: 9px !important; }
+  #profileEdit {
+    width: 20px !important;
+    height: 20px !important;
+  }
+
   .factPanel { font-size: 12px !important; padding: 10px !important; }
 
   #boostBannerTitle { font-size: 14px !important; }
