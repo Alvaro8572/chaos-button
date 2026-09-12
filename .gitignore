@@ -5,3 +5,7 @@ package-lock.json
 .vscode/
 .DS_Store
 Thumbs.db
+
+# Impeccable skills (local installation)
+.impeccable/
+.impeccable-source/
