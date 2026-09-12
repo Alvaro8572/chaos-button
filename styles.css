@@ -2854,6 +2854,13 @@
     letter-spacing: 0.5px;
   }
 
+  /* Tighten toggle positions on small mobile (was overflowing) */
+  #toggleUnlocked { top: 8px; right: 8px; }
+  #toggleCollection { top: 38px; right: 8px; }
+  #toggleAchievements { top: 68px; right: 8px; }
+  #toggleShop { top: 8px; left: 8px; right: auto; }
+  #toggleRoulette { top: 38px; left: 8px; right: auto; }
+
   .factPanel { font-size: 12px !important; padding: 10px !important; }
 
   #boostBannerTitle { font-size: 14px !important; }
