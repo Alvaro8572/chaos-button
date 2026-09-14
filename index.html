@@ -104,7 +104,7 @@
 
 
 
-  <button id="chaosBtn">DESENCADENAR</button>
+  <button id="chaosBtn" aria-label="Desencadenar caos">DESENCADENAR</button>
 
 
 
@@ -118,7 +118,7 @@
 
 
 
-<button id="toggleUnlocked">HECHOS</button>
+<button id="toggleUnlocked" aria-label="Ver hechos desbloqueados" aria-expanded="false" aria-controls="unlockedPanel">HECHOS</button>
 
 
 
@@ -126,7 +126,7 @@
 
   <div id="unlockedPanelTitle">HECHOS DESBLOQUEADOS</div>
 
-  <div id="unlockedCount">0 / 40</div>
+  <div id="unlockedCount">0 / 47</div>
 
   <div id="unlockedList"></div>
 
@@ -134,11 +134,11 @@
 
 
 
-<button id="toggleShop">TIENDA</button>
+<button id="toggleShop" aria-label="Abrir tienda" aria-expanded="false" aria-controls="shopPanel">TIENDA</button>
 
 
 
-<button id="toggleRoulette">RULETA</button>
+<button id="toggleRoulette" aria-label="Abrir ruleta" aria-expanded="false" aria-controls="rouletteModal">RULETA</button>
 
 
 
@@ -146,7 +146,7 @@
 
   <div class="roulette-card">
 
-    <button class="roulette-close" id="rouletteClose">×</button>
+    <button class="roulette-close" id="rouletteClose" aria-label="Cerrar ruleta">×</button>
 
     <div class="roulette-title">🎰 RULETA</div>
 
@@ -172,7 +172,7 @@
 
     </div>
 
-    <button class="roulette-spin-btn" id="rouletteSpinBtn">GIRAR</button>
+    <button class="roulette-spin-btn" id="rouletteSpinBtn" aria-label="Girar la ruleta">GIRAR</button>
 
     <div class="roulette-result" id="rouletteResult"></div>
 
@@ -184,7 +184,7 @@
 
 <div id="collectibleFullscreen" class="collectible-fullscreen">
 
-  <button class="collectible-fullscreen-close" id="collectibleFullscreenClose">×</button>
+  <button class="collectible-fullscreen-close" id="collectibleFullscreenClose" aria-label="Cerrar">×</button>
 
   <div class="collectible-fullscreen-content">
 
@@ -212,7 +212,7 @@
 
       <div id="shopBalance"><span id="shopIcon"></span><span id="shopBalanceNum">0</span></div>
 
-      <button id="shopClose">×</button>
+      <button id="shopClose" aria-label="Cerrar tienda">×</button>
 
     </div>
 
@@ -226,11 +226,11 @@
 
 
 
-<button id="toggleCollection">COLECCION</button>
+<button id="toggleCollection" aria-label="Ver colección" aria-expanded="false" aria-controls="collectionPanel">COLECCION</button>
 
 
 
-<button id="toggleAchievements">LOGROS</button>
+<button id="toggleAchievements" aria-label="Ver logros" aria-expanded="false" aria-controls="achievementsPanel">LOGROS</button>
 
 
 
@@ -244,7 +244,7 @@
 
       <div id="collectionCount">0 / 3 · 0 / 5</div>
 
-      <button id="collectionClose">×</button>
+      <button id="collectionClose" aria-label="Cerrar colección">×</button>
 
     </div>
 
@@ -256,7 +256,7 @@
 
 
 
-<button id="soundToggle" title="Silenciar/Activar sonido" aria-label="Toggle sound">
+<button id="soundToggle" title="Silenciar/Activar sonido" aria-label="Silenciar o activar sonido">
 
   <span id="soundIcon">🔊</span>
 
@@ -266,7 +266,7 @@
 
 <div id="profileBar">
 
-  <button id="profileEdit" title="Editar nombre">
+  <button id="profileEdit" title="Editar nombre" aria-label="Editar nombre de perfil">
 
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
 
@@ -344,7 +344,7 @@
 
       <div id="achievementsCount">0 / 25</div>
 
-      <button id="achievementsClose">&times;</button>
+      <button id="achievementsClose" aria-label="Cerrar logros">&times;</button>
 
     </div>
 

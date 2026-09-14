@@ -21,6 +21,13 @@
   }
   *, *::before, *::after { box-sizing: border-box; }
 
+  /* Visible focus ring for keyboard users (a11y). Do not remove unless replaced with an equivalent custom ring. */
+  :focus-visible {
+    outline: 2px solid rgba(255, 215, 0, 0.9);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
   body {
     margin: 0;
     height: 100vh;
@@ -183,14 +190,17 @@
   z-index: 9999;
   color: white;
   box-shadow: 0 0 20px rgba(0,0,0,0.6), 0 0 40px rgba(255,255,255,0.08);
-  transition: opacity 0.5s ease, transform 0.5s ease;
+  transition: opacity 0.5s ease, transform 0.5s ease, visibility 0s 0.5s;
   opacity: 0;
   transform: translateY(20px);
   pointer-events: none;
+  visibility: hidden;
 }
 #factPanel.visible {
   opacity: 1;
   transform: translateY(0);
+  visibility: visible;
+  transition: opacity 0.5s ease, transform 0.5s ease, visibility 0s 0s;
 }
 #factTitle {
   font-size: 12px;
@@ -653,12 +663,7 @@
   display: none;
 }
 
-@media (max-width: 600px) {
-  #profileBar { width: 220px; padding: 10px; gap: 10px; top: 110px; }
-  #profilePhotoWrap { width: 54px; height: 54px; min-width: 54px; }
-  #profileName { font-size: 14px; }
-  #profileSlogan { font-size: 11px; }
-}
+/* Profile bar mobile styles consolidated in the 768px and 480px breakpoints below. */
 
 /* ========================= */
 /* ========================= */
@@ -1113,7 +1118,7 @@
 #clickCounterNumber {
   font-size: 11px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(255, 255, 255, 0.75);
   line-height: 1;
   display: inline-block;
   transform-origin: left center;
@@ -2852,6 +2857,7 @@
     font-size: 8px;
     padding: 5px 8px;
     letter-spacing: 0.5px;
+    z-index: 700;
   }
 
   /* Tighten toggle positions on small mobile (was overflowing) */
@@ -2867,20 +2873,40 @@
     box-sizing: border-box;
   }
 
-  /* Side panels must respect toggles + safe area */
-  #unlockedPanel,
-  #shopPanel,
-  #collectionPanel,
-  #achievementsPanel {
+  /* Side panels on mobile: anchor BELOW the toggle stack, full-width,
+     so they cover the game area but NEVER the toggles or the profile bar */
+  #unlockedPanel.open,
+  #shopPanel.open,
+  #collectionPanel.open,
+  #achievementsPanel.open {
     top: 110px !important;
-    right: 6vw !important;
-    left: auto !important;
+    left: 4vw !important;
+    right: 4vw !important;
     bottom: 60px !important;
-    width: 88vw !important;
-    max-width: 320px !important;
-    max-height: none !important;
+    width: auto !important;
+    max-width: none !important;
     height: auto !important;
+    max-height: calc(100vh - 180px) !important;
     border-radius: 12px;
+    overflow-y: auto;
+    border-left: none !important;
+    border-right: none !important;
+  }
+
+  /* closed panels: stay hidden off-canvas (transform: translateX(100%) wins) */
+  #unlockedPanel:not(.open),
+  #shopPanel:not(.open),
+  #collectionPanel:not(.open),
+  #achievementsPanel:not(.open) {
+    visibility: hidden;
+    transition: visibility 0s 0.4s;
+  }
+  #unlockedPanel.open,
+  #shopPanel.open,
+  #collectionPanel.open,
+  #achievementsPanel.open {
+    visibility: visible;
+    transition: visibility 0s 0s;
   }
 
   /* Stats row must fit cleanly inside the content column */

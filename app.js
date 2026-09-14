@@ -142,10 +142,17 @@ var repetidoMsg = document.getElementById("repetidoMsg");
 var clickSound = new Audio("assets/sounds/mouse-click-sound.mp3");
 clickSound.volume = 0.7;
 clickSound.preload = "auto";
-var soundPool = [];
 var lastSoundIndex = -1;
 var lastSoundTime = 0;
 var SOUND_COOLDOWN = 10000;
+
+// Pre-instantiated Audio objects reused per sound file (no per-click allocation)
+var soundInstances = SOUNDS.map(function(src) {
+  var a = new Audio(src);
+  a.volume = 0.5;
+  a.preload = "auto";
+  return a;
+});
 
 function playRandomSound() {
   if (!soundEnabled) return;
@@ -153,7 +160,7 @@ function playRandomSound() {
   if (now - lastSoundTime < SOUND_COOLDOWN) return;
 
   var available = [];
-  for (var i = 0; i < SOUNDS.length; i++) {
+  for (var i = 0; i < soundInstances.length; i++) {
     if (i !== lastSoundIndex) available.push(i);
   }
   if (available.length === 0) return;
@@ -162,16 +169,11 @@ function playRandomSound() {
   lastSoundIndex = idx;
   lastSoundTime = now;
 
-  var sound = new Audio(SOUNDS[idx]);
-  sound.volume = 0.5;
-  soundPool.push(sound);
-
-  sound.play().catch(function() {});
-
-  sound.onended = function() {
-    var i = soundPool.indexOf(sound);
-    if (i > -1) soundPool.splice(i, 1);
-  };
+  var sound = soundInstances[idx];
+  try {
+    sound.currentTime = 0;
+    sound.play().catch(function() {});
+  } catch (e) {}
 }
 
 function playClickSound() {
@@ -203,7 +205,7 @@ var FACTS = [
   "Algunas estrellas podrian ser enormes masas de diamante.",
   // ANIMALES
   "Los pulpos tienen 3 corazones.",
-  "Los tiburones existian antes que los arboes.",
+  "Los tiburones existian antes que los árboles.",
   "Las vacas tienen mejores amigos.",
   "Los delfines usan nombres entre ellos.",
   "Las burbujas pueden reconocer rostros humanos.",
@@ -424,7 +426,7 @@ if (unlockedFacts.length > 0) {
     item.textContent = (i + 1) + ". " + fact;
     document.getElementById("unlockedList").appendChild(item);
   });
-  document.getElementById("unlockedCount").textContent = unlockedFacts.length + " / 40";
+  document.getElementById("unlockedCount").textContent = unlockedFacts.length + " / " + FACTS.length;
 }
 
 var canvas = document.getElementById("particles-canvas");
@@ -580,8 +582,10 @@ toggleBtn.addEventListener("click", function() {
   sidebarOpen = !sidebarOpen;
   if (sidebarOpen) {
     unlockedPanel.classList.add("open");
+    toggleBtn.setAttribute("aria-expanded", "true");
   } else {
     unlockedPanel.classList.remove("open");
+    toggleBtn.setAttribute("aria-expanded", "false");
   }
 });
 
@@ -599,14 +603,17 @@ collectionBtn.addEventListener("click", function() {
   collectionOpen = !collectionOpen;
   if (collectionOpen) {
     collectionPanel.classList.add("open");
+    collectionBtn.setAttribute("aria-expanded", "true");
   } else {
     collectionPanel.classList.remove("open");
+    collectionBtn.setAttribute("aria-expanded", "false");
   }
 });
 
 collectionCloseBtn.addEventListener("click", function() {
   collectionPanel.classList.remove("open");
   collectionOpen = false;
+  collectionBtn.setAttribute("aria-expanded", "false");
 });
 
 function buildCollection() {
@@ -941,6 +948,9 @@ var EVENTS = [
     name: "GlitchTotal",
     chance: 0.09,
     execute: function() {
+      // Avoid duplicating the injected style on repeated triggers
+      var existing = document.getElementById("glitch-event-style");
+      if (existing) existing.parentNode.removeChild(existing);
       var style = document.createElement("style");
       style.id = "glitch-event-style";
       style.textContent = [
@@ -1420,14 +1430,52 @@ chaosBtn.addEventListener("click", function() {
   chaos();
 });
 
-// Keyboard shortcut
+// Keyboard shortcut: Enter/Space triggers chaos ONLY when no editable element or input has focus
 document.addEventListener("keydown", function(e) {
   if (e.key === "Enter" || e.key === " ") {
+    var t = e.target;
+    var tag = t && t.tagName ? t.tagName.toLowerCase() : "";
+    var isEditable = t && (t.isContentEditable || tag === "input" || tag === "textarea" || tag === "select");
+    if (isEditable) return;
     e.preventDefault();
     playClickSound();
     chaos();
+  } else if (e.key === "Escape") {
+    // Escape closes the topmost open overlay/panel
+    closeTopmostOverlay();
   }
 });
+
+// Close the most recently opened overlay/panel
+function closeTopmostOverlay() {
+  if (document.getElementById("collectibleFullscreen").classList.contains("show")) {
+    document.getElementById("collectibleFullscreen").classList.remove("show");
+  } else if (document.getElementById("rouletteModal").classList.contains("show")) {
+    closeRoulette();
+  } else if (document.getElementById("shopPanel").classList.contains("open")) {
+    document.getElementById("shopPanel").classList.remove("open");
+    shopOpen = false;
+    var ts = document.getElementById("toggleShop");
+    if (ts) ts.setAttribute("aria-expanded", "false");
+  } else if (document.getElementById("unlockedPanel").classList.contains("open")) {
+    document.getElementById("unlockedPanel").classList.remove("open");
+    sidebarOpen = false;
+    var tu = document.getElementById("toggleUnlocked");
+    if (tu) tu.setAttribute("aria-expanded", "false");
+  } else if (document.getElementById("achievementsPanel").classList.contains("open")) {
+    document.getElementById("achievementsPanel").classList.remove("open");
+    achievementsOpen = false;
+    var ta = document.getElementById("toggleAchievements");
+    if (ta) ta.setAttribute("aria-expanded", "false");
+  } else if (document.getElementById("collectionPanel").classList.contains("open")) {
+    document.getElementById("collectionPanel").classList.remove("open");
+    collectionOpen = false;
+    var tc = document.getElementById("toggleCollection");
+    if (tc) tc.setAttribute("aria-expanded", "false");
+  } else if (document.getElementById("factPanel").classList.contains("visible")) {
+    document.getElementById("factPanel").classList.remove("visible");
+  }
+}
 
 // Ambient symbols
 chaosSetInterval(function() {
@@ -1485,7 +1533,8 @@ var SHOP_SECRET_SLOGANS = [
 ];
 
 var SHOP_FRAMES = [
-  { id: "jesus-blessing", name: "Bendición de Jesús", price: 0, requiresRoulette: "divine", isSecret: true }
+  { id: "jesus-blessing", name: "Bendición de Jesús", price: 0, requiresRoulette: "divine", isSecret: true },
+  { id: "gold-complete",  name: "Completista",        price: 0, isReward: true }
 ];
 
 /* ========================= */
@@ -1524,15 +1573,6 @@ var ACHIEVEMENTS = [
   { id: "bendecido",    tier: "gold",   name: "Bendecido",           desc: "Recibí la bendición divina",          category: "coleccion", reward: { type: "picture", file: "assets/images/Jesus_Payne.jpg" } },
   { id: "completista",  tier: "gold",   name: "Completista",         desc: "Desbloqueá todos los logros",         category: "clicks",  reward: { type: "frame", id: "gold-complete" } }
 ];
-
-var ACHIEVEMENT_IMAGES = {
-  mouse_roto: "🥉",      // emoji cuando no hay imagen custom
-  foto_de_perfil: "🥉",  // emoji cuando no hay imagen custom
-  comilla_bronce: "🥉",
-  comilla_plata: "🥈",
-  comilla_oro: "🥇",
-  ruleta: "🥉"
-};
 
 var achievementsUnlocked = safeJSON("chaosAchievements", []);
 if (!Array.isArray(achievementsUnlocked)) achievementsUnlocked = [];
@@ -1664,7 +1704,7 @@ function checkAchievements() {
       case "curador":      unlocked = unlockedVideos.length >= 3; break;
       case "ruletero":     unlocked = rouletteTotalSpins >= 5; break;
       case "ruleta_maestra":unlocked = rouletteTotalSpins >= 25; break;
-      case "intelectual":  unlocked = unlockedFacts.length >= 10; break;
+      case "intelectual":  unlocked = unlockedFacts.length >= FACTS.length; break;
       case "bendecido":    unlocked = jesusRewardUnlocked; break;
     }
     if (unlocked) unlockAchievement(ach.id);
@@ -1780,14 +1820,17 @@ achievementsBtn.addEventListener("click", function() {
   achievementsOpen = !achievementsOpen;
   if (achievementsOpen) {
     achievementsPanel.classList.add("open");
+    achievementsBtn.setAttribute("aria-expanded", "true");
     buildAchievements();
   } else {
     achievementsPanel.classList.remove("open");
+    achievementsBtn.setAttribute("aria-expanded", "false");
   }
 });
 achievementsCloseBtn.addEventListener("click", function() {
   achievementsPanel.classList.remove("open");
   achievementsOpen = false;
+  achievementsBtn.setAttribute("aria-expanded", "false");
 });
 achievementsPanel.addEventListener("click", function(e) {
   if (e.target === achievementsPanel) {
@@ -2217,23 +2260,39 @@ function buildShop() {
     });
   }
 
-  if (jesusRewardUnlocked) {
+  var blessingFrames = SHOP_FRAMES.filter(function(f) { return f.requiresRoulette === "divine"; });
+  var rewardFrames = SHOP_FRAMES.filter(function(f) { return f.isReward && inventory.frames.indexOf(f.id) !== -1; });
+
+  if (jesusRewardUnlocked && blessingFrames.length > 0) {
     list.appendChild(buildShopSection("MARCOS · BENDICIÓN"));
-    SHOP_FRAMES.forEach(function(frame) {
+    blessingFrames.forEach(function(frame) {
+      list.appendChild(buildShopFrame(frame));
+    });
+  }
+
+  if (rewardFrames.length > 0) {
+    list.appendChild(buildShopSection("RECOMPENSA · MARCOS"));
+    rewardFrames.forEach(function(frame) {
       list.appendChild(buildShopFrame(frame));
     });
   }
 
   // Achievement rewards shown in shop (if owned) - separate from regular shop
+  // Only show rewards that are NOT already listed in regular shop sections.
   var rewardSections = [
     { file: "assets/images/Rat\u00f3n_gamer.jpg", name: "Mouse Breaker", section: "MOUSE BREAKER" },
     { file: "assets/images/Nikola-Albert.webp", name: "Intelectual", section: "INTELECTUAL" },
     { file: "assets/images/medalla_de_oro.jpg", name: "Coleccionista", section: "COLECCIONISTA" },
     { file: "assets/images/Jesus_Payne.jpg", name: "Bendecido", section: "BENDECIDO" }
   ];
+  // Build set of file paths already shown in regular shop sections
+  var alreadyShownFiles = {};
+  SHOP_PICTURES.forEach(function(p) { alreadyShownFiles[p.file] = true; });
+  SHOP_SECRET_PICTURES.forEach(function(p) { alreadyShownFiles[p.file] = true; });
+
   var shownSections = {};
   rewardSections.forEach(function(r) {
-    if (inventory.pictures.indexOf(r.file) >= 0) {
+    if (inventory.pictures.indexOf(r.file) >= 0 && !alreadyShownFiles[r.file]) {
       if (!shownSections[r.section]) {
         list.appendChild(buildShopSection("RECOMPENSA · " + r.section));
         shownSections[r.section] = true;
@@ -2268,7 +2327,13 @@ function buildShopFrame(frame) {
   req.className = "shop-item-req";
   var reqSpan = document.createElement("span");
   reqSpan.className = "no";
-  reqSpan.textContent = "\u2715 Bendición divina";
+  if (frame.requiresRoulette === "divine") {
+    reqSpan.textContent = "\u2715 Bendición divina";
+  } else if (frame.isReward) {
+    reqSpan.textContent = "\u2715 Recompensa de logro";
+  } else {
+    reqSpan.textContent = "\u2715 No disponible";
+  }
   req.appendChild(reqSpan);
 
   info.appendChild(name);
@@ -2309,12 +2374,14 @@ function updateShopBalance() {
 function openShop() {
   shopOpen = true;
   document.getElementById("shopPanel").classList.add("open");
+  document.getElementById("toggleShop").setAttribute("aria-expanded", "true");
   updateShopBalance();
   buildShop();
 }
 function closeShop() {
   shopOpen = false;
   document.getElementById("shopPanel").classList.remove("open");
+  document.getElementById("toggleShop").setAttribute("aria-expanded", "false");
 }
 
 document.getElementById("toggleShop").addEventListener("click", function() {
@@ -2347,6 +2414,11 @@ function playSoundSafe(file, volume) {
     var s = new Audio(file);
     s.volume = volume || 0.4;
     s.play().catch(function() {});
+    // Release the Audio object once playback ends so the browser can GC it.
+    s.onended = function() {
+      s.src = "";
+      s.onended = null;
+    };
   } catch (e) {}
 }
 
@@ -2592,7 +2664,13 @@ profileNameEl.addEventListener("blur", function() {
 profileNameEl.addEventListener("paste", function(e) {
   e.preventDefault();
   var text = (e.clipboardData || window.clipboardData).getData("text");
-  document.execCommand("insertText", false, text);
+  // Modern browsers: execCommand is deprecated but still works as a fallback.
+  // Prefer direct textContent manipulation when possible.
+  var selection = window.getSelection();
+  if (!selection || !selection.rangeCount) return;
+  selection.deleteFromDocument();
+  selection.getRangeAt(0).insertNode(document.createTextNode(text));
+  selection.collapseToEnd();
 });
 
 updateProfile();
@@ -2761,9 +2839,6 @@ function renderBoost() {
 
   var beforeText = boostCountEl.textContent;
   boostCountEl.textContent = formatNumber(boostActivationsCount);
-  if (beforeText !== boostCountEl.textContent) {
-    console.log("[boost] renderBoost: " + beforeText + " → " + boostCountEl.textContent + " (localStorage=" + localStorage.getItem("chaosBoostActivationsCount") + ")");
-  }
 }
 
 function boostLoop() {
