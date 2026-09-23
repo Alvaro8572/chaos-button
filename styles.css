@@ -2709,6 +2709,7 @@
     padding: 6px 10px;
     letter-spacing: 1px;
     opacity: 0.85;
+    z-index: 700;
   }
 
   /* chaos100CounterWrap + boostCounter (top-left): wrap content and shrink */
@@ -2746,6 +2747,25 @@
     left: auto !important;
     max-height: 70vh;
     overflow-y: auto;
+  }
+
+  /* Mobile fix: hidden panels must not be visible at all (was leaking asoma).
+     Use display:none for total hiding (preserved via .open). */
+  #unlockedPanel:not(.open),
+  #shopPanel:not(.open),
+  #collectionPanel:not(.open),
+  #achievementsPanel:not(.open) {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+  #unlockedPanel.open,
+  #shopPanel.open,
+  #collectionPanel.open,
+  #achievementsPanel.open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
   }
 
   /* profileBar: shrink and reposition on mobile — BOTTOM-RIGHT to avoid overlap with sound toggle */
