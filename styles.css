@@ -2749,6 +2749,20 @@
     overflow-y: auto;
   }
 
+  /* achievementsPanel needs extra overrides: it's centered (top:50% + transform)
+     on desktop, which breaks layout in mobile. Override to anchor at top. */
+  #achievementsPanel {
+    top: 110px !important;
+    bottom: 60px !important;
+    height: auto !important;
+    width: 92vw !important;
+    max-width: 360px !important;
+    left: 4vw !important;
+    right: 4vw !important;
+    transform: none !important;
+    border-radius: 12px;
+  }
+
   /* Mobile fix: hidden panels must not be visible at all (was leaking asoma).
      Use display:none for total hiding (preserved via .open). */
   #unlockedPanel:not(.open),
