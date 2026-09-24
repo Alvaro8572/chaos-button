@@ -2074,21 +2074,6 @@
   100% { transform: scale(2) translateY(-10px); opacity: 0; }
 }
 
-/* Strobe - flash con vibración de color */
-.strobe-active {
-  animation: strobeFlash 0.05s steps(2) 8, strobeVibrate 0.4s linear;
-}
-@keyframes strobeFlash {
-  0%   { background: white; }
-  100% { background: #0a0a0f; }
-}
-@keyframes strobeVibrate {
-  0%, 100% { filter: none; }
-  25%      { filter: hue-rotate(90deg) saturate(2); }
-  50%      { filter: hue-rotate(180deg) saturate(2); }
-  75%      { filter: hue-rotate(270deg) saturate(2); }
-}
-
 /* MATRIX RAIN - katakana + 1s/0s cayendo */
 .matrix-column {
   position: fixed;
@@ -2988,9 +2973,5 @@
     width: 20px !important;
     height: 20px !important;
   }
-
-  .factPanel { font-size: 12px !important; padding: 10px !important; }
-
-  #boostBannerTitle { font-size: 14px !important; }
 }
 
