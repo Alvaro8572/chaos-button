@@ -392,12 +392,6 @@ function releaseElement(className) {
   if (count > 0) elementCountCache[className] = count - 1;
 }
 
-function trackedAppend(el, className) {
-  if (!canCreate(className)) return false;
-  document.body.appendChild(el);
-  return true;
-}
-
 function trackedRemove(el, className) {
   if (el.parentNode) el.parentNode.removeChild(el);
   releaseElement(className);
@@ -1648,15 +1642,6 @@ function showAchievementNotification(ach) {
   }, 4500);
 }
 
-function checkAchievement(id) {
-  if (isAchievementUnlocked(id)) {
-    // Already unlocked, but still apply reward (in case it was missing)
-    applyAchievementReward(id);
-    return;
-  }
-  unlockAchievement(id);
-}
-
 function applyAchievementReward(id) {
   var ach = ACHIEVEMENTS.find(function(a) { return a.id === id; });
   if (!ach || !ach.reward) return;
@@ -2747,9 +2732,6 @@ function isBoostActive() {
 }
 function isBoostCooldown() {
   return boostCooldownUntil > Date.now();
-}
-function getBoostMultiplier() {
-  return isBoostActive() ? 2 : 1;
 }
 function boostsUnlocked() {
   return boostActivationsCount >= BOOST_REQUIRED_FOR_UNLOCK;
