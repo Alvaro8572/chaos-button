@@ -2202,9 +2202,88 @@ function buildShopSlogan(slogan) {
   return item;
 }
 
-function buildShop() {
+function buildShopTabs() {
+  var tabsContainer = document.getElementById("shopTabs");
+  if (!tabsContainer) return;
+
+  tabsContainer.innerHTML = "";
+
+  var tabs = [
+    { key: "items",  label: "ITEMS" },
+    { key: "themes", label: "TEMAS" }
+  ];
+
+  tabs.forEach(function(tab) {
+    var btn = document.createElement("button");
+    btn.className = "shop-tab" + (shopTab === tab.key ? " active" : "");
+    btn.textContent = tab.label;
+    btn.setAttribute("data-tab", tab.key);
+    btn.addEventListener("click", function() {
+      shopTab = tab.key;
+      buildShop();
+    });
+    tabsContainer.appendChild(btn);
+  });
+}
+
+function buildShopThemes() {
   var list = document.getElementById("shopList");
-  list.innerHTML = "";
+
+  list.appendChild(buildShopSection("TEMAS"));
+
+  var grid = document.createElement("div");
+  grid.className = "theme-grid";
+  list.appendChild(grid);
+
+  SHOP_THEMES.forEach(function(theme) {
+    var swatch = document.createElement("div");
+    swatch.className = "theme-swatch tier-" + theme.tier;
+    if (theme.key === equippedTheme) swatch.classList.add("equipped");
+    if (isThemeOwned(theme.key)) swatch.classList.add("owned");
+
+    var colors = theme.swatch;
+    var gradientCss = "linear-gradient(135deg, " + colors[0] + ", " + colors[1] + ")";
+
+    var preview = document.createElement("div");
+    preview.className = "theme-preview";
+    preview.style.background = gradientCss;
+    swatch.appendChild(preview);
+
+    var name = document.createElement("div");
+    name.className = "theme-name";
+    name.textContent = theme.name;
+    swatch.appendChild(name);
+
+    var badge = document.createElement("div");
+    badge.className = "theme-badge";
+    if (theme.tier === 2) badge.textContent = "PRO";
+    else if (theme.price === 0) badge.textContent = "GRATIS";
+    swatch.appendChild(badge);
+
+    var action = document.createElement("button");
+    action.className = "theme-action";
+    if (theme.key === equippedTheme) {
+      action.classList.add("equipped");
+      action.textContent = "EQUIPADO";
+      action.disabled = true;
+    } else if (isThemeOwned(theme.key)) {
+      action.classList.add("equip");
+      action.textContent = "EQUIPAR";
+      action.onclick = function() { equipTheme(theme.key); };
+    } else {
+      action.classList.add("buy");
+      action.textContent = theme.price + " 🪙";
+      action.disabled = coins < theme.price;
+      action.onclick = function() { buyTheme(theme); };
+    }
+    swatch.appendChild(action);
+
+    grid.appendChild(swatch);
+  });
+}
+
+function buildShopItems() {
+  var list = document.getElementById("shopList");
 
   list.appendChild(buildShopSection("FOTOS DE PERFIL"));
   SHOP_PICTURES.forEach(function(pic) {
@@ -2271,6 +2350,19 @@ function buildShop() {
       list.appendChild(buildShopPicture({ file: r.file, name: r.name, isReward: true }));
     }
   });
+}
+
+function buildShop() {
+  var list = document.getElementById("shopList");
+  list.innerHTML = "";
+
+  buildShopTabs();
+
+  if (shopTab === "themes") {
+    buildShopThemes();
+  } else {
+    buildShopItems();
+  }
 }
 
 function buildShopFrame(frame) {
@@ -3167,6 +3259,72 @@ document.getElementById("collectibleFullscreen").addEventListener("click", funct
 
 buildCollection();
 checkAchievements();
+
+/* ========================= */
+/* CUSTOM THEMES               */
+/* ========================= */
+
+var SHOP_THEMES = [
+  { key: "chaos",     name: "CAOS",        price: 0,  tier: 0, swatch: ["#ff0055", "#ffcc00"] },
+  { key: "matrix",    name: "MATRIX",      price: 10, tier: 1, swatch: ["#00ff41", "#003b00"] },
+  { key: "hellfire",  name: "HELLFIRE",    price: 10, tier: 1, swatch: ["#ff3300", "#ff9900"] },
+  { key: "ocean",     name: "OCEAN",       price: 10, tier: 1, swatch: ["#39cccc", "#001f3f"] },
+  { key: "toxic",     name: "TOXIC",       price: 10, tier: 1, swatch: ["#ccff00", "#76ff03"] },
+  { key: "cyberpunk", name: "CYBERPUNK",   price: 10, tier: 1, swatch: ["#ff00ff", "#00ffff"] },
+  { key: "sunset",    name: "SUNSET",      price: 10, tier: 1, swatch: ["#ff6b35", "#ff2975"] },
+  { key: "void",      name: "VOID",        price: 50, tier: 2, swatch: ["#b026ff", "#00f0ff"] },
+  { key: "gold",      name: "GOLD RUSH",   price: 50, tier: 2, swatch: ["#ffd700", "#ffaa00"] },
+  { key: "blood",     name: "BLOOD MOON",  price: 50, tier: 2, swatch: ["#dc143c", "#8b0000"] }
+];
+
+var ownedThemes = safeJSON("chaosOwnedThemes", ["chaos"]);
+var equippedTheme = safeJSON("chaosEquippedTheme", "chaos");
+var shopTab = "items"; // "items" or "themes"
+
+function safeJSON_set(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (e) {}
+}
+
+function isThemeOwned(themeKey) {
+  return ownedThemes.indexOf(themeKey) !== -1;
+}
+
+function buyTheme(theme) {
+  if (isThemeOwned(theme.key)) return;
+  if (coins < theme.price) {
+    showToast("Monedas insuficientes", "error");
+    return;
+  }
+  coins -= theme.price;
+  localStorage.setItem("chaosCoins", String(coins));
+  coinNumberEl.textContent = formatNumber(coins);
+  if (shopOpen) updateShopBalance();
+  ownedThemes.push(theme.key);
+  safeJSON_set("chaosOwnedThemes", ownedThemes);
+  showToast(theme.name + " comprado!", "success");
+  playSoundSafe("assets/sounds/purchase.mp3");
+  buildShop();
+  checkAchievements();
+}
+
+function equipTheme(themeKey) {
+  equippedTheme = themeKey;
+  safeJSON_set("chaosEquippedTheme", equippedTheme);
+  applyTheme(themeKey);
+  showToast("Tema equipado", "info");
+  buildShop();
+}
+
+function applyTheme(themeKey) {
+  var theme = SHOP_THEMES.filter(function(t) { return t.key === themeKey; })[0];
+  if (!theme) themeKey = "chaos";
+  document.documentElement.setAttribute("data-theme", themeKey || "chaos");
+}
+
+// Apply saved theme on boot
+applyTheme(equippedTheme);
 
 /* ========================= */
 /* HAMBURGER MENU             */
