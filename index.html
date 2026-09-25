@@ -34,7 +34,55 @@
 </script>
 </head>
 
-<body>
+<body>
+
+<button id="menuToggle" aria-label="Abrir menú" aria-expanded="false" aria-controls="menuPanel">☰</button>
+
+<div id="menuBackdrop" aria-hidden="true"></div>
+
+<div id="menuPanel" role="dialog" aria-label="Menú principal">
+  <div id="menuHeader">
+    <span id="menuTitle">CHAOS</span>
+    <button id="menuClose" aria-label="Cerrar menú">×</button>
+  </div>
+  <div id="menuList">
+    <button class="menu-item" data-section="shop">
+      <span class="menu-icon">⚡</span>
+      <span class="menu-label">TIENDA</span>
+    </button>
+    <button class="menu-item" data-section="roulette">
+      <span class="menu-icon">🎰</span>
+      <span class="menu-label">RULETA</span>
+    </button>
+    <button class="menu-item" data-section="unlocked">
+      <span class="menu-icon">📋</span>
+      <span class="menu-label">HECHOS</span>
+    </button>
+    <button class="menu-item" data-section="achievements">
+      <span class="menu-icon">🏆</span>
+      <span class="menu-label">LOGROS</span>
+    </button>
+    <button class="menu-item" data-section="collection">
+      <span class="menu-icon">📦</span>
+      <span class="menu-label">COLECCION</span>
+    </button>
+    <button class="menu-item" data-section="profile">
+      <span class="menu-icon">👤</span>
+      <span class="menu-label">PERFIL</span>
+    </button>
+    <div class="menu-divider"></div>
+    <button class="menu-item menu-toggle-setting" id="menuSoundToggle">
+      <span class="menu-icon">🔊</span>
+      <span class="menu-label">SONIDO</span>
+      <span class="menu-state" id="menuSoundState">ON</span>
+    </button>
+  </div>
+  <div id="menuFooter">
+    <span id="menuStats">0 CLICKS · 0 🪙</span>
+  </div>
+</div>
+
+
 
 
 
@@ -136,7 +184,7 @@
 
 
 
-<button id="toggleUnlocked" aria-label="Ver hechos desbloqueados" aria-expanded="false" aria-controls="unlockedPanel">HECHOS</button>
+<!-- toggleUnlocked removed - now in menu -->
 
 
 
@@ -152,11 +200,11 @@
 
 
 
-<button id="toggleShop" aria-label="Abrir tienda" aria-expanded="false" aria-controls="shopPanel">TIENDA</button>
+<!-- toggleShop removed - now in menu -->
 
 
 
-<button id="toggleRoulette" aria-label="Abrir ruleta" aria-expanded="false" aria-controls="rouletteModal">RULETA</button>
+<!-- toggleRoulette removed - now in menu -->
 
 
 
@@ -244,11 +292,11 @@
 
 
 
-<button id="toggleCollection" aria-label="Ver colección" aria-expanded="false" aria-controls="collectionPanel">COLECCION</button>
+<!-- toggleCollection removed - now in menu -->
 
 
 
-<button id="toggleAchievements" aria-label="Ver logros" aria-expanded="false" aria-controls="achievementsPanel">LOGROS</button>
+<!-- toggleAchievements removed - now in menu -->
 
 
 

@@ -568,6 +568,16 @@
   border-color: rgba(255, 235, 59, 0.5);
   box-shadow: 0 0 30px rgba(0, 0, 0, 0.5), 0 0 50px rgba(255, 235, 59, 0.12);
 }
+#profileBar.pulse-attention {
+  animation: profileBarPulse 1.2s ease;
+}
+@keyframes profileBarPulse {
+  0%   { transform: scale(1); }
+  20%  { transform: scale(1.08); border-color: rgba(255, 235, 59, 0.9); }
+  40%  { transform: scale(0.98); }
+  60%  { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
 
 #profileEdit {
   position: absolute;
@@ -2973,5 +2983,178 @@
     width: 20px !important;
     height: 20px !important;
   }
+}
+
+/* ========================= */
+/* HAMBURGER MENU             */
+/* ========================= */
+
+#menuToggle {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+#menuToggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: scale(1.05);
+}
+
+#menuBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 799;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+#menuBackdrop.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#menuPanel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 80vw;
+  max-width: 320px;
+  height: 100vh;
+  background: rgba(8, 8, 20, 0.96);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-right: 1px solid rgba(255, 215, 0, 0.2);
+  z-index: 800;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(-100%);
+  visibility: hidden;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s 0.3s;
+  font-family: "Orbitron", monospace;
+}
+#menuPanel.open {
+  transform: translateX(0);
+  visibility: visible;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s 0s;
+}
+
+#menuHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 20px;
+  border-bottom: 1px solid rgba(255, 215, 0, 0.15);
+}
+#menuTitle {
+  font-size: 14px;
+  letter-spacing: 4px;
+  color: rgba(255, 215, 0, 0.9);
+  font-weight: bold;
+}
+#menuClose {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 28px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.2s;
+  font-family: inherit;
+}
+#menuClose:hover { color: white; }
+
+#menuList {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 20px;
+  background: none;
+  border: none;
+  border-left: 3px solid transparent;
+  color: rgba(255, 255, 255, 0.8);
+  font-family: inherit;
+  font-size: 13px;
+  letter-spacing: 1.5px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  width: 100%;
+  opacity: 0;
+  transform: translateX(-12px);
+}
+.menu-item.show {
+  opacity: 1;
+  transform: translateX(0);
+}
+.menu-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: white;
+}
+.menu-item:active {
+  background: rgba(255, 215, 0, 0.12);
+  color: rgba(255, 215, 0, 1);
+  border-left-color: rgba(255, 215, 0, 0.8);
+}
+
+.menu-icon {
+  font-size: 18px;
+  width: 24px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.menu-label {
+  flex: 1;
+  font-weight: 600;
+}
+.menu-state {
+  font-size: 11px;
+  opacity: 0.6;
+  letter-spacing: 1px;
+}
+
+.menu-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.06);
+  margin: 8px 20px;
+}
+
+#menuFooter {
+  padding: 14px 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  color: rgba(255, 255, 255, 0.4);
+  text-align: center;
+}
+#menuStats {
+  display: block;
 }
 

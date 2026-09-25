@@ -1442,7 +1442,9 @@ document.addEventListener("keydown", function(e) {
 
 // Close the most recently opened overlay/panel
 function closeTopmostOverlay() {
-  if (document.getElementById("collectibleFullscreen").classList.contains("show")) {
+  if (typeof isMenuOpen === "function" && isMenuOpen()) {
+    closeMenu();
+  } else if (document.getElementById("collectibleFullscreen").classList.contains("show")) {
     document.getElementById("collectibleFullscreen").classList.remove("show");
   } else if (document.getElementById("rouletteModal").classList.contains("show")) {
     closeRoulette();
@@ -3187,6 +3189,155 @@ document.getElementById("collectibleFullscreen").addEventListener("click", funct
 
 buildCollection();
 checkAchievements();
+
+/* ========================= */
+/* HAMBURGER MENU             */
+/* ========================= */
+
+var menuPanel = document.getElementById("menuPanel");
+var menuBackdrop = document.getElementById("menuBackdrop");
+var menuToggle = document.getElementById("menuToggle");
+var menuClose = document.getElementById("menuClose");
+var menuSoundToggle = document.getElementById("menuSoundToggle");
+var menuSoundState = document.getElementById("menuSoundState");
+var menuStats = document.getElementById("menuStats");
+var menuOpen = false;
+
+function isMenuOpen() { return menuOpen; }
+
+function openMenu() {
+  if (menuOpen) return;
+  menuOpen = true;
+  menuPanel.classList.add("open");
+  menuBackdrop.classList.add("show");
+  menuToggle.setAttribute("aria-expanded", "true");
+
+  // Stagger animation for items
+  var items = menuPanel.querySelectorAll(".menu-item");
+  items.forEach(function(item, i) {
+    item.classList.remove("show");
+    setTimeout(function() { item.classList.add("show"); }, 50 + i * 50);
+  });
+
+  updateMenuSoundState();
+  updateMenuStats();
+}
+
+function closeMenu() {
+  if (!menuOpen) return;
+  menuOpen = false;
+  menuPanel.classList.remove("open");
+  menuBackdrop.classList.remove("show");
+  menuToggle.setAttribute("aria-expanded", "false");
+}
+
+function toggleMenu() {
+  if (menuOpen) closeMenu();
+  else openMenu();
+}
+
+function updateMenuStats() {
+  var clicksText = formatNumber(typeof totalClicks !== "undefined" ? totalClicks : 0);
+  var coinsText = formatNumber(typeof coins !== "undefined" ? coins : 0);
+  if (menuStats) menuStats.textContent = clicksText + " CLICKS · " + coinsText + " 🪙";
+}
+
+function updateMenuSoundState() {
+  if (menuSoundState) menuSoundState.textContent = soundEnabled ? "ON" : "OFF";
+}
+
+// Map data-section to actual action
+function navigateToSection(section) {
+  closeMenu();
+  switch (section) {
+    case "shop":
+      if (typeof openShop === "function") openShop();
+      break;
+    case "roulette":
+      if (typeof openRoulette === "function") openRoulette();
+      break;
+    case "unlocked":
+      sidebarOpen = !sidebarOpen;
+      if (sidebarOpen) {
+        unlockedPanel.classList.add("open");
+      } else {
+        unlockedPanel.classList.remove("open");
+      }
+      break;
+    case "achievements":
+      achievementsOpen = !achievementsOpen;
+      if (achievementsOpen) {
+        achievementsPanel.classList.add("open");
+        if (typeof buildAchievements === "function") buildAchievements();
+      } else {
+        achievementsPanel.classList.remove("open");
+      }
+      achievementsBtn.setAttribute("aria-expanded", achievementsOpen ? "true" : "false");
+      break;
+    case "collection":
+      collectionOpen = !collectionOpen;
+      if (collectionOpen) {
+        collectionPanel.classList.add("open");
+      } else {
+        collectionPanel.classList.remove("open");
+      }
+      collectionBtn.setAttribute("aria-expanded", collectionOpen ? "true" : "false");
+      break;
+    case "profile":
+      // Pulse the profile bar to indicate it's interactive
+      var profileBar = document.getElementById("profileBar");
+      if (profileBar) {
+        profileBar.classList.remove("pulse-attention");
+        void profileBar.offsetWidth;
+        profileBar.classList.add("pulse-attention");
+      }
+      break;
+  }
+}
+
+// Wire up menu items
+if (menuToggle) {
+  menuToggle.addEventListener("click", function(e) {
+    e.stopPropagation();
+    toggleMenu();
+  });
+}
+
+if (menuClose) {
+  menuClose.addEventListener("click", function(e) {
+    e.stopPropagation();
+    closeMenu();
+  });
+}
+
+if (menuBackdrop) {
+  menuBackdrop.addEventListener("click", function() {
+    closeMenu();
+  });
+}
+
+document.querySelectorAll(".menu-item[data-section]").forEach(function(item) {
+  item.addEventListener("click", function() {
+    var section = item.getAttribute("data-section");
+    navigateToSection(section);
+  });
+});
+
+if (menuSoundToggle) {
+  menuSoundToggle.addEventListener("click", function() {
+    if (typeof soundEnabled !== "undefined") {
+      soundEnabled = !soundEnabled;
+      try { localStorage.setItem("chaosSoundEnabled", JSON.stringify(soundEnabled)); } catch (e) {}
+      if (typeof renderSoundToggle === "function") renderSoundToggle();
+      updateMenuSoundState();
+    }
+  });
+}
+
+// Update menu stats periodically (when sound toggle changes coins)
+setInterval(function() {
+  if (menuOpen) updateMenuStats();
+}, 1000);
 
 /* ========================= */
 /* DEBUG HELPERS (console) — gated by ?debug=1 or window.DEBUG_MODE */
