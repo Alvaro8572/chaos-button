@@ -5,12 +5,12 @@
    for runtime fetches. Aggressive caching so the game works fully offline.
 */
 
-const CACHE_VERSION = "chaos-v9";
+const CACHE_VERSION = "chaos-v10";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=16",
-  "./app.js?v=16",
+  "./styles.css?v=17",
+  "./app.js?v=17",
   "./manifest.json",
   "./assets/icons/icon-192.png",
   "./assets/icons/icon-512.png",
@@ -35,6 +35,14 @@ const APP_SHELL = [
   "./assets/images/foto_de_perfil.png",
   "./assets/images/Mouse_roto.png",
   "./assets/images/Trollface.png",
+  "./assets/images/Gumball.jpg",
+  "./assets/images/darwin.jpg",
+  "./assets/images/agnes-tachyon.jpg",
+  "./assets/images/pessi.jpg",
+  "./assets/images/camellonaldo.jpg",
+  "./assets/images/pan.jpg",
+  "./assets/images/big-mac.jpg",
+  "./assets/images/killian-dictador.jpg",
 
   // Roulette collectibles
   "./assets/images/Doge.jpg",

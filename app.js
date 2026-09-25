@@ -1481,7 +1481,15 @@ var SHOP_PICTURES = [
   { file: "assets/images/Tomioka.jpg",  name: "Tomioka",   price: 60,  req: 2500 },
   { file: "assets/images/Muichiro.jpg", name: "Muichiro",  price: 60,  req: 2500 },
   { file: "assets/images/Megumi.jpg",   name: "Megumi",    price: 60,  req: 2500 },
-  { file: "assets/images/Knight.jpg",   name: "Knight",    price: 60,  req: 2750 }
+  { file: "assets/images/Knight.jpg",   name: "Knight",    price: 60,  req: 2750 },
+  { file: "assets/images/Gumball.jpg",         name: "Gumball",        price: 20,  req: 100 },
+  { file: "assets/images/darwin.jpg",          name: "Darwin",         price: 20,  req: 100 },
+  { file: "assets/images/agnes-tachyon.jpg",   name: "Agnes Tachyon",  price: 30,  req: 300 },
+  { file: "assets/images/pessi.jpg",            name: "Pessi",          price: 30,  req: 300 },
+  { file: "assets/images/camellonaldo.jpg",     name: "Camellonaldo",   price: 40,  req: 800 },
+  { file: "assets/images/pan.jpg",              name: "Pan",            price: 40,  req: 800 },
+  { file: "assets/images/big-mac.jpg",          name: "Big Mac",        price: 50,  req: 1500 },
+  { file: "assets/images/killian-dictador.jpg",  name: "Killian",        price: 50,  req: 1500 }
 ];
 
 var SHOP_SECRET_PICTURES = [
