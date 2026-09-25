@@ -3493,6 +3493,14 @@
   border-color: rgba(var(--secondary-rgb), 0.8);
   box-shadow: 0 0 12px rgba(var(--secondary-rgb), 0.3);
 }
+.theme-swatch.tier-2 {
+  border-color: rgba(255, 215, 0, 0.35);
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.15);
+}
+.theme-swatch.tier-2:hover {
+  border-color: rgba(255, 215, 0, 0.7);
+  box-shadow: 0 0 16px rgba(255, 215, 0, 0.3);
+}
 
 .theme-preview {
   height: 60px;
@@ -3527,7 +3535,15 @@
 .theme-swatch.tier-2 .theme-badge {
   background: linear-gradient(135deg, #ffd700, #ffaa00);
   color: #1a0f00;
-  box-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
+  font-size: 8px;
+  padding: 3px 8px;
+  letter-spacing: 1.5px;
+  animation: proBadgePulse 1.5s ease-in-out infinite;
+}
+@keyframes proBadgePulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.1); }
 }
 
 .theme-action {
@@ -3564,14 +3580,18 @@
 /* THEME PRO ANIMATIONS        */
 /* ========================= */
 
-[data-theme-tier="2"] .theme-swatch.tier-2:not(.equipped) .theme-preview::before {
+/* Shimmer effect on PRO theme swatches - only when a pro theme is active */
+[data-theme="void"] .theme-swatch.tier-2 .theme-preview::before,
+[data-theme="gold"] .theme-swatch.tier-2 .theme-preview::before,
+[data-theme="blood"] .theme-swatch.tier-2 .theme-preview::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(115deg, transparent 40%, rgba(255, 255, 255, 0.3) 50%, transparent 60%);
+  background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, 0.45) 50%, transparent 65%);
   background-size: 200% 100%;
-  animation: themeShimmer 3s linear infinite;
+  animation: themeShimmer 2s linear infinite;
   pointer-events: none;
+  mix-blend-mode: overlay;
 }
 
 @keyframes themeShimmer {
@@ -3579,27 +3599,44 @@
   100% { background-position: -200% 0; }
 }
 
-[data-theme="void"] body {
+/* Body glow overlay for pro themes - fixed full-screen ::before element */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+
+[data-theme="void"] body::before {
+  background: radial-gradient(ellipse at center, transparent 30%, rgba(var(--primary-rgb), 0.35) 100%);
   animation: voidGlow 4s ease-in-out infinite;
+  opacity: 1;
 }
 @keyframes voidGlow {
-  0%, 100% { box-shadow: inset 0 0 80px rgba(var(--primary-rgb), 0.15); }
-  50%      { box-shadow: inset 0 0 120px rgba(var(--primary-rgb), 0.3); }
+  0%, 100% { opacity: 0.4; }
+  50%      { opacity: 0.85; }
 }
 
-[data-theme="gold"] body {
+[data-theme="gold"] body::before {
+  background: radial-gradient(ellipse at top, rgba(255, 215, 0, 0.3) 0%, transparent 60%);
   animation: goldGlow 3s ease-in-out infinite;
+  opacity: 1;
 }
 @keyframes goldGlow {
-  0%, 100% { box-shadow: inset 0 0 40px rgba(255, 215, 0, 0.1); }
-  50%      { box-shadow: inset 0 0 80px rgba(255, 215, 0, 0.25); }
+  0%, 100% { opacity: 0.35; }
+  50%      { opacity: 0.75; }
 }
 
-[data-theme="blood"] body {
+[data-theme="blood"] body::before {
+  background: radial-gradient(ellipse at bottom, rgba(220, 20, 60, 0.4) 0%, transparent 60%);
   animation: bloodPulse 2.5s ease-in-out infinite;
+  opacity: 1;
 }
 @keyframes bloodPulse {
-  0%, 100% { box-shadow: inset 0 0 30px rgba(220, 20, 60, 0.15); }
-  50%      { box-shadow: inset 0 0 70px rgba(220, 20, 60, 0.35); }
+  0%, 100% { opacity: 0.45; }
+  50%      { opacity: 1; }
 }
 
