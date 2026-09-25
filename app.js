@@ -569,45 +569,35 @@ function spawnChaosSymbol() {
 
 var unlockedList = document.getElementById("unlockedList");
 var unlockedCount = document.getElementById("unlockedCount");
-var toggleBtn = document.getElementById("toggleUnlocked");
 var unlockedPanel = document.getElementById("unlockedPanel");
-
-toggleBtn.addEventListener("click", function() {
-  sidebarOpen = !sidebarOpen;
-  if (sidebarOpen) {
-    unlockedPanel.classList.add("open");
-    toggleBtn.setAttribute("aria-expanded", "true");
-  } else {
-    unlockedPanel.classList.remove("open");
-    toggleBtn.setAttribute("aria-expanded", "false");
-  }
-});
 
 /* ========================= */
 /* COLLECTION PANEL */
 /* ========================= */
 
-var collectionBtn = document.getElementById("toggleCollection");
+var collectionBtn = null;
 var collectionPanel = document.getElementById("collectionPanel");
 var collectionList = document.getElementById("collectionList");
 var collectionCount = document.getElementById("collectionCount");
 var collectionCloseBtn = document.getElementById("collectionClose");
 
-collectionBtn.addEventListener("click", function() {
-  collectionOpen = !collectionOpen;
-  if (collectionOpen) {
-    collectionPanel.classList.add("open");
-    collectionBtn.setAttribute("aria-expanded", "true");
-  } else {
-    collectionPanel.classList.remove("open");
-    collectionBtn.setAttribute("aria-expanded", "false");
-  }
-});
+if (collectionBtn) {
+  collectionBtn.addEventListener("click", function() {
+    collectionOpen = !collectionOpen;
+    if (collectionOpen) {
+      collectionPanel.classList.add("open");
+      collectionBtn.setAttribute("aria-expanded", "true");
+    } else {
+      collectionPanel.classList.remove("open");
+      collectionBtn.setAttribute("aria-expanded", "false");
+    }
+  });
+}
 
 collectionCloseBtn.addEventListener("click", function() {
   collectionPanel.classList.remove("open");
   collectionOpen = false;
-  collectionBtn.setAttribute("aria-expanded", "false");
+  if (collectionBtn) collectionBtn.setAttribute("aria-expanded", "false");
 });
 
 function buildCollection() {
@@ -1451,23 +1441,15 @@ function closeTopmostOverlay() {
   } else if (document.getElementById("shopPanel").classList.contains("open")) {
     document.getElementById("shopPanel").classList.remove("open");
     shopOpen = false;
-    var ts = document.getElementById("toggleShop");
-    if (ts) ts.setAttribute("aria-expanded", "false");
   } else if (document.getElementById("unlockedPanel").classList.contains("open")) {
     document.getElementById("unlockedPanel").classList.remove("open");
     sidebarOpen = false;
-    var tu = document.getElementById("toggleUnlocked");
-    if (tu) tu.setAttribute("aria-expanded", "false");
   } else if (document.getElementById("achievementsPanel").classList.contains("open")) {
     document.getElementById("achievementsPanel").classList.remove("open");
     achievementsOpen = false;
-    var ta = document.getElementById("toggleAchievements");
-    if (ta) ta.setAttribute("aria-expanded", "false");
   } else if (document.getElementById("collectionPanel").classList.contains("open")) {
     document.getElementById("collectionPanel").classList.remove("open");
     collectionOpen = false;
-    var tc = document.getElementById("toggleCollection");
-    if (tc) tc.setAttribute("aria-expanded", "false");
   } else if (document.getElementById("factPanel").classList.contains("visible")) {
     document.getElementById("factPanel").classList.remove("visible");
   }
@@ -1799,25 +1781,27 @@ function buildAchievements() {
 }
 
 var achievementsOpen = false;
-var achievementsBtn = document.getElementById("toggleAchievements");
+var achievementsBtn = null;
 var achievementsPanel = document.getElementById("achievementsPanel");
 var achievementsCloseBtn = document.getElementById("achievementsClose");
 
-achievementsBtn.addEventListener("click", function() {
-  achievementsOpen = !achievementsOpen;
-  if (achievementsOpen) {
-    achievementsPanel.classList.add("open");
-    achievementsBtn.setAttribute("aria-expanded", "true");
-    buildAchievements();
-  } else {
-    achievementsPanel.classList.remove("open");
-    achievementsBtn.setAttribute("aria-expanded", "false");
-  }
-});
+if (achievementsBtn) {
+  achievementsBtn.addEventListener("click", function() {
+    achievementsOpen = !achievementsOpen;
+    if (achievementsOpen) {
+      achievementsPanel.classList.add("open");
+      achievementsBtn.setAttribute("aria-expanded", "true");
+      buildAchievements();
+    } else {
+      achievementsPanel.classList.remove("open");
+      achievementsBtn.setAttribute("aria-expanded", "false");
+    }
+  });
+}
 achievementsCloseBtn.addEventListener("click", function() {
   achievementsPanel.classList.remove("open");
   achievementsOpen = false;
-  achievementsBtn.setAttribute("aria-expanded", "false");
+  if (achievementsBtn) achievementsBtn.setAttribute("aria-expanded", "false");
 });
 achievementsPanel.addEventListener("click", function(e) {
   if (e.target === achievementsPanel) {
@@ -2361,20 +2345,14 @@ function updateShopBalance() {
 function openShop() {
   shopOpen = true;
   document.getElementById("shopPanel").classList.add("open");
-  document.getElementById("toggleShop").setAttribute("aria-expanded", "true");
   updateShopBalance();
   buildShop();
 }
 function closeShop() {
   shopOpen = false;
   document.getElementById("shopPanel").classList.remove("open");
-  document.getElementById("toggleShop").setAttribute("aria-expanded", "false");
 }
 
-document.getElementById("toggleShop").addEventListener("click", function() {
-  if (shopOpen) closeShop();
-  else openShop();
-});
 document.getElementById("shopClose").addEventListener("click", closeShop);
 
 /* ========================= */
@@ -3134,7 +3112,7 @@ function closeRoulette() {
   document.getElementById("rouletteResult").className = "roulette-result";
 }
 
-document.getElementById("toggleRoulette").addEventListener("click", openRoulette);
+// toggleRoulette was removed - roulette now opens from the menu
 document.getElementById("rouletteClose").addEventListener("click", closeRoulette);
 document.getElementById("rouletteSpinBtn").addEventListener("click", spinRoulette);
 document.getElementById("rouletteModal").addEventListener("click", function(e) {
@@ -3272,7 +3250,6 @@ function navigateToSection(section) {
       } else {
         achievementsPanel.classList.remove("open");
       }
-      achievementsBtn.setAttribute("aria-expanded", achievementsOpen ? "true" : "false");
       break;
     case "collection":
       collectionOpen = !collectionOpen;
@@ -3281,7 +3258,6 @@ function navigateToSection(section) {
       } else {
         collectionPanel.classList.remove("open");
       }
-      collectionBtn.setAttribute("aria-expanded", collectionOpen ? "true" : "false");
       break;
     case "profile":
       // Pulse the profile bar to indicate it's interactive
