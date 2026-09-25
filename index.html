@@ -14,7 +14,7 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Bungee&amp;family=Monoton&amp;family=Rubik+Glitch&amp;family=Sixtyfour&amp;family=Honk&amp;family=Jersey+10&amp;family=Micro+5&amp;family=Nabla&amp;family=Orbitron:wght@400;600;900&amp;family=Press+Start+2P&amp;family=Rubik+Burned&amp;family=Smooch+Sans:wght@900&amp;family=Tilt+Prism&amp;family=UnifrakturMaguntia&amp;family=Dancing+Script:wght@400;700&amp;family=Great+Vibes&amp;family=Creepster&amp;family=Bowlby+One&amp;family=Black+Ops+One&amp;display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="styles.css?v=12">
+<link rel="stylesheet" href="styles.css?v=13">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#ff0055">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -24,10 +24,10 @@
 <script>
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", function() {
-      navigator.serviceWorker.register("sw.js?v=12").then(function(reg) {
+      navigator.serviceWorker.register("sw.js?v=13-fresh").then(function(reg) {
         console.log("[PWA] Service Worker registered:", reg.scope);
 
-        // Detect when a new SW is waiting and force-activate it
+        // Aggressive update strategy: detect new SW and force activation
         function trackInstalling(worker) {
           worker.addEventListener("statechange", function() {
             if (worker.state === "installed" && navigator.serviceWorker.controller) {
@@ -38,9 +38,13 @@
         }
 
         if (reg.waiting) trackInstalling(reg.waiting);
+        if (reg.installing) trackInstalling(reg.installing);
         reg.addEventListener("updatefound", function() {
           if (reg.installing) trackInstalling(reg.installing);
         });
+
+        // Force check for updates every 60 seconds
+        setInterval(function() { reg.update(); }, 60000);
 
         // Reload once the new SW has taken control
         var refreshing = false;
@@ -53,7 +57,6 @@
       }).catch(function(err) {
         console.warn("[PWA] Service Worker registration failed:", err);
       });
-    });
   }
 </script>
 </head>
@@ -464,7 +467,7 @@
 
 
 
-<script src="app.js?v=12" defer></script>
+<script src="app.js?v=13" defer></script>
 
 
 
