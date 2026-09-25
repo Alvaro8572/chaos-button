@@ -5,12 +5,12 @@
    for runtime fetches. Aggressive caching so the game works fully offline.
 */
 
-const CACHE_VERSION = "chaos-v4";
+const CACHE_VERSION = "chaos-v5";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=11",
-  "./app.js?v=11",
+  "./styles.css?v=12",
+  "./app.js?v=12",
   "./manifest.json",
   "./assets/icons/icon-192.png",
   "./assets/icons/icon-512.png",
@@ -96,6 +96,13 @@ self.addEventListener("activate", function(event) {
       return self.clients.claim();
     })
   );
+});
+
+// Handle messages from the page (e.g. SKIP_WAITING to force-update)
+self.addEventListener("message", function(event) {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener("fetch", function(event) {
