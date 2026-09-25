@@ -2273,7 +2273,7 @@ function buildShopThemes() {
     } else {
       action.classList.add("buy");
       action.textContent = theme.price + " 🪙";
-      action.disabled = coins < theme.price;
+      if (coins < theme.price) action.classList.add("cannot-afford");
       action.onclick = function() { buyTheme(theme); };
     }
     swatch.appendChild(action);

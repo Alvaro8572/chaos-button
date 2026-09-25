@@ -52,6 +52,9 @@
     --border-subtle: rgba(255, 255, 255, 0.1);
     --border-accent: rgba(var(--secondary-rgb), 0.2);
 
+    /* Button gradient - CAOS theme is full rainbow */
+    --button-gradient: linear-gradient(90deg, #ff0055, #ffcc00, #00ff88, #aa00ff, #ff0055);
+
     /* Special: theme tier (0 = free, 1 = 10 coins, 2 = 50 coins "pro") */
     --theme-tier: 0;
   }
@@ -81,6 +84,8 @@
     --text-dim: rgba(0, 255, 65, 0.4);
     --border-subtle: rgba(0, 255, 65, 0.15);
     --border-accent: rgba(0, 255, 65, 0.35);
+    
+    --button-gradient: linear-gradient(90deg, #00ff41, #003b00, #00cc33, #003b00, #00ff41);
     --theme-tier: 1;
   }
 
@@ -104,6 +109,8 @@
     --text-dim: rgba(255, 153, 0, 0.4);
     --border-subtle: rgba(255, 80, 0, 0.15);
     --border-accent: rgba(255, 80, 0, 0.35);
+    
+    --button-gradient: linear-gradient(90deg, #ff3300, #ff9900, #ffcc00, #ff9900, #ff3300);
     --theme-tier: 1;
   }
 
@@ -127,6 +134,8 @@
     --text-dim: rgba(127, 219, 255, 0.4);
     --border-subtle: rgba(57, 204, 204, 0.15);
     --border-accent: rgba(57, 204, 204, 0.35);
+    
+    --button-gradient: linear-gradient(90deg, #39cccc, #001f3f, #7fdbff, #001f3f, #39cccc);
     --theme-tier: 1;
   }
 
@@ -150,6 +159,8 @@
     --text-dim: rgba(204, 255, 0, 0.4);
     --border-subtle: rgba(204, 255, 0, 0.15);
     --border-accent: rgba(204, 255, 0, 0.35);
+    
+    --button-gradient: linear-gradient(90deg, #ccff00, #76ff03, #ffff00, #76ff03, #ccff00);
     --theme-tier: 1;
   }
 
@@ -173,6 +184,8 @@
     --text-dim: rgba(0, 255, 255, 0.5);
     --border-subtle: rgba(255, 0, 255, 0.15);
     --border-accent: rgba(255, 0, 255, 0.35);
+    
+    --button-gradient: linear-gradient(90deg, #ff00ff, #00ffff, #ffeb3b, #00ffff, #ff00ff);
     --theme-tier: 1;
   }
 
@@ -196,6 +209,8 @@
     --text-dim: rgba(255, 107, 53, 0.4);
     --border-subtle: rgba(255, 107, 53, 0.15);
     --border-accent: rgba(255, 107, 53, 0.35);
+    
+    --button-gradient: linear-gradient(90deg, #ff6b35, #ff2975, #ffb627, #ff2975, #ff6b35);
     --theme-tier: 1;
   }
 
@@ -219,6 +234,8 @@
     --text-dim: rgba(176, 38, 255, 0.45);
     --border-subtle: rgba(176, 38, 255, 0.2);
     --border-accent: rgba(176, 38, 255, 0.5);
+    
+    --button-gradient: linear-gradient(90deg, #b026ff, #00f0ff, #ff00aa, #00f0ff, #b026ff);
     --theme-tier: 2;
   }
 
@@ -242,6 +259,8 @@
     --text-dim: rgba(255, 170, 0, 0.45);
     --border-subtle: rgba(var(--secondary-rgb), 0.2);
     --border-accent: rgba(var(--secondary-rgb), 0.5);
+    
+    --button-gradient: linear-gradient(90deg, #ffd700, #ffaa00, #fff8b0, #ffaa00, #ffd700);
     --theme-tier: 2;
   }
 
@@ -265,6 +284,8 @@
     --text-dim: rgba(139, 0, 0, 0.5);
     --border-subtle: rgba(220, 20, 60, 0.2);
     --border-accent: rgba(220, 20, 60, 0.5);
+    
+    --button-gradient: linear-gradient(90deg, #dc143c, #8b0000, #ff1744, #8b0000, #dc143c);
     --theme-tier: 2;
   }
 
@@ -360,7 +381,7 @@
     letter-spacing: 4px;
     user-select: none;
     position: relative; z-index: 1;
-    background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent), var(--secondary), var(--primary));
+    background: var(--button-gradient, linear-gradient(90deg, var(--primary), var(--secondary), var(--accent), var(--secondary), var(--primary)));
     background-size: 300% 100%;
     animation: rgbShift 2s linear infinite;
     transition: transform 0.15s ease, box-shadow 0.15s ease;
@@ -1320,8 +1341,8 @@
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #fff8b0 0%, var(--secondary) 45%, #b8860b 100%);
-  box-shadow: 0 0 6px rgba(var(--secondary-rgb), 0.35), inset 0 -1px 2px rgba(0, 0, 0, 0.3);
+  background: radial-gradient(circle at 35% 35%, #fff8b0 0%, #ffd700 45%, #b8860b 100%);
+  box-shadow: 0 0 6px rgba(255, 215, 0, 0.35), inset 0 -1px 2px rgba(0, 0, 0, 0.3);
   display: inline-block;
   position: relative;
 }
@@ -1534,7 +1555,7 @@
   height: 100%;
   min-width: 4px;
   width: 0%;
-  background: linear-gradient(90deg, #2196f3 0%, #2196f3 30%, var(--secondary) 50%, #ff9800 70%, #f44336 100%);
+    background: linear-gradient(90deg, #2196f3 0%, #2196f3 30%, #ffc107 50%, #ff9800 70%, #f44336 100%);
   background-size: 240px 100%;
   background-position: 0 0;
   border-radius: 4px;
@@ -1571,7 +1592,7 @@
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5), 0 0 18px rgba(244, 67, 54, 0.8);
 }
 .boost-bar-track.active .boost-bar-fill {
-  background: linear-gradient(90deg, #f44336, #ff5722, #ff9800, var(--secondary), #ff9800, #ff5722, #f44336);
+    background: linear-gradient(90deg, #f44336, #ff5722, #ff9800, #ffeb3b, #ff9800, #ff5722, #f44336);
   background-size: 240px 100%;
   animation: boostBarActiveShimmer 0.8s linear infinite;
 }
@@ -3529,6 +3550,9 @@
 .theme-action:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+.theme-action.cannot-afford {
+  opacity: 0.5;
 }
 .theme-action.equipped {
   background: rgba(var(--secondary-rgb), 0.18);
