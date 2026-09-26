@@ -3700,6 +3700,215 @@
 }
 
 /* ========================= */
+/* BOSS FIGHT (boss.html)      */
+/* ========================= */
+
+body.boss-arena-body {
+  margin: 0;
+  min-height: 100vh;
+  background: #000000;
+  background-image:
+    radial-gradient(ellipse at center, rgba(40, 0, 0, 0.4) 0%, rgba(0, 0, 0, 1) 70%),
+    repeating-linear-gradient(
+      0deg,
+      rgba(255, 0, 0, 0.03) 0px,
+      rgba(255, 0, 0, 0.03) 2px,
+      transparent 2px,
+      transparent 4px
+    );
+  color: white;
+  font-family: "Orbitron", monospace;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+body.boss-arena-body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 40%, rgba(255, 50, 50, 0.08) 0%, transparent 60%);
+  pointer-events: none;
+  animation: bossAuraPulse 4s ease-in-out infinite;
+}
+@keyframes bossAuraPulse {
+  0%, 100% { opacity: 0.6; }
+  50%      { opacity: 1; }
+}
+
+#bossArenaRoot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 20px;
+  width: 100%;
+  max-width: 480px;
+  position: relative;
+  z-index: 1;
+}
+
+#bossArenaHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 0 8px;
+}
+
+#bossName {
+  font-family: "Bungee", cursive;
+  font-size: 22px;
+  letter-spacing: 4px;
+  color: #ff3333;
+  text-shadow: 0 0 10px rgba(255, 51, 51, 0.8), 0 0 20px rgba(255, 51, 51, 0.5);
+}
+
+#bossTimer {
+  font-family: "Orbitron", monospace;
+  font-size: 32px;
+  font-weight: 900;
+  color: #00ff88;
+  text-shadow: 0 0 10px rgba(0, 255, 136, 0.6);
+  letter-spacing: 2px;
+  min-width: 60px;
+  text-align: right;
+}
+
+#bossHpBar {
+  width: 100%;
+  height: 24px;
+  background: rgba(0, 0, 0, 0.85);
+  border: 2px solid #ff3333;
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 0 20px rgba(255, 51, 51, 0.3), inset 0 0 8px rgba(0, 0, 0, 0.6);
+}
+
+#bossHpFill {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #ff5252, #ff1744);
+  transition: width 0.15s ease, background 0.3s ease;
+  box-shadow: 0 0 14px rgba(255, 82, 82, 0.6);
+}
+
+#bossHpText {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 11px;
+  font-weight: 700;
+  color: white;
+  text-shadow: 0 0 4px black, 0 0 8px black;
+  letter-spacing: 1px;
+}
+
+#bossImageWrap {
+  width: 220px;
+  height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  animation: bossFloat 3s ease-in-out infinite;
+  margin: 8px 0;
+}
+@keyframes bossFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-14px); }
+}
+
+#bossImage {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 0 20px rgba(255, 51, 51, 0.6)) drop-shadow(0 0 40px rgba(255, 0, 0, 0.4));
+  border-radius: 8px;
+}
+
+#bossImageOverlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at center, transparent 50%, rgba(255, 0, 0, 0.15) 100%);
+  animation: bossOverlayPulse 2s ease-in-out infinite;
+}
+@keyframes bossOverlayPulse {
+  0%, 100% { opacity: 0.4; }
+  50%      { opacity: 0.9; }
+}
+
+#bossImageWrap.boss-hit #bossImage {
+  animation: bossHitFlash 0.2s ease;
+}
+@keyframes bossHitFlash {
+  0%   { filter: brightness(2) drop-shadow(0 0 30px #fff); transform: translateX(-3px); }
+  25%  { filter: brightness(2) drop-shadow(0 0 30px #fff); transform: translateX(3px); }
+  50%  { filter: brightness(2) drop-shadow(0 0 30px #fff); transform: translateX(-2px); }
+  100% { filter: drop-shadow(0 0 20px rgba(255, 51, 51, 0.6)); transform: translateX(0); }
+}
+
+#bossImageWrap.boss-defeated #bossImage {
+  animation: bossDefeated 1.5s ease forwards;
+}
+@keyframes bossDefeated {
+  0%   { transform: scale(1); filter: brightness(1); }
+  30%  { transform: scale(1.1); filter: brightness(2); }
+  100% { transform: scale(0.7); filter: brightness(0.3) grayscale(0.5); opacity: 0.5; }
+}
+
+#bossImageWrap.boss-victor #bossImage {
+  animation: bossVictor 1.2s ease forwards;
+}
+@keyframes bossVictor {
+  0%   { transform: scale(1); }
+  100% { transform: scale(1.15) rotate(2deg); filter: drop-shadow(0 0 40px rgba(255, 51, 51, 0.9)); }
+}
+
+#bossAttackBtn {
+  background: linear-gradient(135deg, rgba(255, 51, 51, 0.9), rgba(220, 20, 60, 0.9));
+  border: 2px solid #ff5252;
+  color: white;
+  font-family: "Bungee", cursive;
+  font-size: 16px;
+  letter-spacing: 3px;
+  padding: 18px 36px;
+  border-radius: 10px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: transform 0.1s ease, box-shadow 0.2s ease;
+  box-shadow: 0 4px 20px rgba(255, 51, 51, 0.5), inset 0 0 16px rgba(255, 82, 82, 0.3);
+  width: 100%;
+  max-width: 320px;
+  -webkit-tap-highlight-color: transparent;
+  animation: bossButtonPulse 1.5s ease-in-out infinite;
+}
+@keyframes bossButtonPulse {
+  0%, 100% { box-shadow: 0 4px 20px rgba(255, 51, 51, 0.5), inset 0 0 16px rgba(255, 82, 82, 0.3); }
+  50%      { box-shadow: 0 4px 30px rgba(255, 51, 51, 0.9), inset 0 0 22px rgba(255, 82, 82, 0.5); }
+}
+#bossAttackBtn:active {
+  transform: scale(0.96);
+}
+
+#bossMessage {
+  font-family: "Bungee", cursive;
+  font-size: 22px;
+  letter-spacing: 3px;
+  text-align: center;
+  min-height: 28px;
+  color: white;
+}
+
+/* ========================= */
 /* SHOP TABS (ITEMS / TEMAS)  */
 /* ========================= */
 
@@ -3911,5 +4120,59 @@ body::before {
 @keyframes bloodPulse {
   0%, 100% { opacity: 0.45; }
   50%      { opacity: 1; }
+}
+
+/* ========================= */
+/* THEME: FUEGO (PRO)          */
+/* ========================= */
+[data-theme="fire"] {
+  --primary: #ff4500;
+  --primary-rgb: 255, 69, 0;
+  --secondary: #ffcc00;
+  --secondary-rgb: 255, 204, 0;
+  --accent: #ff7700;
+  --accent-rgb: 255, 119, 0;
+  --bg-dark: #0a0000;
+  --bg-dark-rgb: 10, 0, 0;
+  --bg-deep: rgba(20, 5, 0, 0.95);
+  --glow-primary: rgba(255, 69, 0, 0.7);
+  --glow-secondary: rgba(255, 204, 0, 0.55);
+  --text-primary: #fff5e0;
+  --text-muted: rgba(255, 165, 0, 0.8);
+  --text-dim: rgba(255, 69, 0, 0.45);
+  --border-subtle: rgba(255, 100, 0, 0.25);
+  --border-accent: rgba(255, 165, 0, 0.55);
+  --theme-tier: 2;
+}
+
+[data-theme="fire"] body::before {
+  background:
+    radial-gradient(ellipse at bottom, rgba(255, 69, 0, 0.45) 0%, transparent 55%),
+    radial-gradient(ellipse at top, rgba(255, 204, 0, 0.15) 0%, transparent 50%);
+  animation: fireGlow 1.8s ease-in-out infinite;
+  opacity: 1;
+}
+@keyframes fireGlow {
+  0%, 100% { opacity: 0.6; }
+  50%      { opacity: 1; }
+}
+
+[data-theme="fire"] body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(circle at 20% 95%, rgba(255, 100, 0, 0.18) 0%, transparent 8%),
+    radial-gradient(circle at 50% 100%, rgba(255, 200, 0, 0.22) 0%, transparent 7%),
+    radial-gradient(circle at 80% 95%, rgba(255, 69, 0, 0.18) 0%, transparent 8%),
+    radial-gradient(circle at 35% 100%, rgba(255, 150, 0, 0.15) 0%, transparent 6%),
+    radial-gradient(circle at 65% 100%, rgba(255, 80, 0, 0.2) 0%, transparent 7%);
+  animation: fireFlicker 0.4s steps(2) infinite;
+}
+@keyframes fireFlicker {
+  0%   { opacity: 0.7; }
+  100% { opacity: 1; }
 }
 

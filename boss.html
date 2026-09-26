@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>BOSS FIGHT - CHAOS BUTTON</title>
+  <link rel="stylesheet" href="styles.css?v=20">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#ff0000">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Boss">
+  <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+</head>
+<body class="boss-arena-body">
+  <div id="bossArenaRoot">
+    <div id="bossArenaHeader">
+      <div id="bossName">BOSS</div>
+      <div id="bossTimer">25</div>
+    </div>
+
+    <div id="bossHpBar">
+      <div id="bossHpFill"></div>
+      <div id="bossHpText">0 / 0</div>
+    </div>
+
+    <div id="bossImageWrap">
+      <img id="bossImage" src="assets/boss.jpg" alt="Chaos God">
+      <div id="bossImageOverlay"></div>
+    </div>
+
+    <button id="bossAttackBtn" aria-label="Atacar">
+      <span id="bossAttackText">CLIQUEÁ PARA ATACAR</span>
+    </button>
+
+    <div id="bossMessage"></div>
+  </div>
+
+  <audio id="bossMusic" loop preload="auto"></audio>
+
+  <script src="boss.js?v=20" defer></script>
+</body>
+</html>

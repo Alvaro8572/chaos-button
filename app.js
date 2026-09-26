@@ -631,9 +631,6 @@ function buildCollection() {
       vid.muted = true;
       vid.addEventListener("mouseenter", function() { vid.play().catch(function(){}); });
       vid.addEventListener("mouseleave", function() { vid.pause(); vid.currentTime = 0; });
-      vid.addEventListener("click", function() {
-        playVideoFullscreen(v.file, false);
-      });
 
       var name = document.createElement("div");
       name.className = "collection-item-name";
@@ -702,54 +699,9 @@ function buildCollection() {
   collectionCount.textContent = unlockedVideos.length + " / 3 · " + ownedCount + " / " + totalCollectibles;
 }
 
-function playVideoFullscreen(file, isNew) {
-  overlayVideo.src = file;
-  overlayVideo.muted = false;
-  videoOverlay.classList.add("show");
-  overlayVideo.play().catch(function() {});
-  if (isNew) {
-    overlayVideo.onended = function() {
-      videoOverlay.classList.remove("show");
-      buildCollection();
-      resetEverything();
-    };
-  } else {
-    overlayVideo.onended = function() {
-      videoOverlay.classList.remove("show");
-    };
-  }
-}
-
 function showRepetido() {
   repetidoMsg.classList.add("show");
   setTimeout(function() { repetidoMsg.classList.remove("show"); }, 3000);
-}
-
-function triggerVideoUnlock() {
-  var roll = Math.random();
-  var cumulative = 0;
-  var selectedVideo = null;
-
-  for (var i = 0; i < VIDEOS.length; i++) {
-    cumulative += VIDEOS[i].prob;
-    if (roll < cumulative) {
-      selectedVideo = VIDEOS[i];
-      break;
-    }
-  }
-  if (!selectedVideo) selectedVideo = VIDEOS[0];
-
-  var alreadyUnlocked = unlockedVideos.some(function(v) { return v.file === selectedVideo.file; });
-
-  if (alreadyUnlocked) {
-    showRepetido();
-    setTimeout(resetEverything, 3000);
-  } else {
-    unlockedVideos.push(selectedVideo);
-    localStorage.setItem("chaosVideos", JSON.stringify(unlockedVideos));
-    playVideoFullscreen(selectedVideo.file, true);
-    checkAchievements();
-  }
 }
 
 function addToSidebar(fact) {
@@ -1398,7 +1350,13 @@ function chaos() {
       if (chaos100NumberEl) chaos100NumberEl.textContent = chaosReachedHundredCount;
       logEl.innerText = "🔥 100% caos alcanzado por " + chaosReachedHundredCount + "ª vez";
     }
-    triggerVideoUnlock();
+    localStorage.setItem("chaosPendingReset", "1");
+    var kills = parseInt(localStorage.getItem("chaosBossKills") || "0", 10) || 0;
+    var nextLevel = kills + 1;
+    if (nextLevel > 10) nextLevel = 10;
+    setTimeout(function() {
+      window.location.href = "boss.html?level=" + nextLevel + "&v=20";
+    }, 400);
     checkAchievements();
     return;
   }
@@ -1542,14 +1500,13 @@ var ACHIEVEMENTS = [
   { id: "clickeador",   tier: "bronze", name: "Clickeador",          desc: "Alcanzá 500 clicks",                  category: "clicks",  reward: null },
   { id: "foto_inicial", tier: "bronze", name: "Foto Inicial",        desc: "Comprá tu primera foto de perfil",    category: "fotos",   reward: null },
   { id: "frase_marcada",tier: "bronze", name: "Frase Marcada",       desc: "Equipá tu primera frase",             category: "frases",  reward: null },
-  { id: "coleccionista_novato", tier: "bronze", name: "Coleccionista Novato", desc: "Desbloqueá tu primer video",       category: "coleccion", reward: null },
+  { id: "first_blood",  tier: "bronze", name: "First Blood",         desc: "Derrota al Chaos God por primera vez", category: "boss",    reward: null },
 
   // PLATA (5)
   { id: "clickeador_pro",tier: "silver", name: "Clickeador Pro",      desc: "Alcanzá 5,000 clicks",                category: "clicks",  reward: null },
   { id: "slider",       tier: "silver", name: "Slider",              desc: "Comprá 3 fotos de perfil",            category: "fotos",   reward: null },
   { id: "first_boost",  tier: "silver", name: "First Boost",         desc: "Activá tu primer boost",              category: "clicks",  reward: null },
   { id: "espia",        tier: "silver", name: "Espía",               desc: "Equipá 3 frases",                     category: "frases",  reward: null },
-  { id: "curador",      tier: "silver", name: "Curador",             desc: "Desbloqueá los 3 videos",            category: "coleccion", reward: null },
 
   // ORO (15)
   { id: "bot_frenesi",  tier: "gold",   name: "Bot Frenesí",         desc: "Alcanzá 25,000 clicks",               category: "clicks",  reward: null },
@@ -1562,6 +1519,7 @@ var ACHIEVEMENTS = [
   { id: "espia_pro",    tier: "gold",   name: "Espía Pro",           desc: "Equipá todas las 6 frases",           category: "frases",  reward: null },
   { id: "riqueza",      tier: "gold",   name: "Riqueza",             desc: "Acumulá 1,000 monedas",               category: "clicks",  reward: null },
   { id: "marmolista",   tier: "gold",   name: "Marmolista",          desc: "Activá 25 boosts",                    category: "clicks",  reward: null },
+  { id: "boss_slayer",  tier: "gold",   name: "Boss Slayer",         desc: "Derrota al Chaos God 5 veces",        category: "boss",    reward: { type: "picture", file: "assets/boss.jpg" } },
   { id: "ruleta_maestra",tier: "gold",  name: "Ruleta Maestra",      desc: "Girá la ruleta 25 veces",             category: "coleccion", reward: null },
   { id: "coleccionista",tier: "gold",   name: "Coleccionista",       desc: "Desbloqueá todos los logros de Colección", category: "coleccion", reward: { type: "picture", file: "assets/images/medalla_de_oro.jpg" } },
   { id: "maratonista",  tier: "gold",   name: "Maratonista",         desc: "Activá 10 boosts",                    category: "clicks",  reward: null },
@@ -1695,8 +1653,7 @@ function checkAchievements() {
       case "espia":        unlocked = inventory.slogans.length >= 3; break;
       case "espia_pro":    unlocked = inventory.slogans.length >= 6; break;
       case "tipografo":    unlocked = inventory.fonts.length >= 5; break;
-      case "coleccionista_novato": unlocked = unlockedVideos.length >= 1; break;
-      case "curador":      unlocked = unlockedVideos.length >= 3; break;
+      case "curador":      unlocked = false; break;
       case "ruletero":     unlocked = rouletteTotalSpins >= 5; break;
       case "ruleta_maestra":unlocked = rouletteTotalSpins >= 25; break;
       case "intelectual":  unlocked = unlockedFacts.length >= FACTS.length; break;
@@ -3289,6 +3246,23 @@ document.getElementById("collectibleFullscreen").addEventListener("click", funct
 buildCollection();
 checkAchievements();
 
+// Handle pending reset from boss fight (or any other cause)
+if (localStorage.getItem("chaosPendingReset") === "1") {
+  localStorage.removeItem("chaosPendingReset");
+  setTimeout(function() { resetEverything(); }, 100);
+}
+
+// Check if user just unlocked boss_slayer
+if (localStorage.getItem("chaosUnlockedBossSlayer") === "1") {
+  localStorage.removeItem("chaosUnlockedBossSlayer");
+  setTimeout(function() {
+    var unlocked = [];
+    try { unlocked = JSON.parse(localStorage.getItem("chaosAchievements") || "[]"); } catch (e) {}
+    var ach = ACHIEVEMENTS.filter(function(a) { return a.id === "boss_slayer"; })[0];
+    if (ach) showAchievementNotification(ach);
+  }, 1500);
+}
+
 /* ========================= */
 /* CUSTOM THEMES               */
 /* ========================= */
@@ -3301,6 +3275,7 @@ var SHOP_THEMES = [
   { key: "toxic",     name: "TOXIC",       price: 10, tier: 1, swatch: ["#ccff00", "#76ff03"] },
   { key: "cyberpunk", name: "CYBERPUNK",   price: 10, tier: 1, swatch: ["#ff00ff", "#00ffff"] },
   { key: "sunset",    name: "SUNSET",      price: 10, tier: 1, swatch: ["#ff6b35", "#ff2975"] },
+  { key: "fire",      name: "FUEGO",       price: 0,  tier: 2, swatch: ["#ff4500", "#ffcc00"], rewardOnly: true },
   { key: "void",      name: "VOID",        price: 50, tier: 2, swatch: ["#b026ff", "#00f0ff"] },
   { key: "gold",      name: "GOLD RUSH",   price: 50, tier: 2, swatch: ["#ffd700", "#ffaa00"] },
   { key: "blood",     name: "BLOOD MOON",  price: 50, tier: 2, swatch: ["#dc143c", "#8b0000"] }
