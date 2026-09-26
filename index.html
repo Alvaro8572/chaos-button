@@ -14,7 +14,7 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Bungee&amp;family=Monoton&amp;family=Rubik+Glitch&amp;family=Sixtyfour&amp;family=Honk&amp;family=Jersey+10&amp;family=Micro+5&amp;family=Nabla&amp;family=Orbitron:wght@400;600;900&amp;family=Press+Start+2P&amp;family=Rubik+Burned&amp;family=Smooch+Sans:wght@900&amp;family=Tilt+Prism&amp;family=UnifrakturMaguntia&amp;family=Dancing+Script:wght@400;700&amp;family=Great+Vibes&amp;family=Creepster&amp;family=Bowlby+One&amp;family=Black+Ops+One&amp;display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="styles.css?v=17">
+<link rel="stylesheet" href="styles.css?v=18">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#ff0055">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -24,7 +24,7 @@
 <script>
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", function() {
-      navigator.serviceWorker.register("sw.js?v=17-new-pics").then(function(reg) {
+      navigator.serviceWorker.register("sw.js?v=18-memory").then(function(reg) {
         console.log("[PWA] Service Worker registered:", reg.scope);
 
         // Aggressive update strategy: detect new SW and force activation
@@ -94,8 +94,13 @@
       <span class="menu-label">COLECCION</span>
     </button>
     <button class="menu-item" data-section="profile">
-      <span class="menu-icon">👤</span>
+      <span class="menu-icon">??</span>
       <span class="menu-label">PERFIL</span>
+    </button>
+    <button class="menu-item" data-section="memory">
+      <span class="menu-icon">🕯️</span>
+      <span class="menu-label">MEMORIA</span>
+      <span class="menu-state" id="menuMemoryState">0 / 8</span>
     </button>
     <div class="menu-divider"></div>
     <button class="menu-item menu-toggle-setting" id="menuSoundToggle">
@@ -468,11 +473,37 @@
 
 
 
-<script src="app.js?v=17" defer></script>
+<script src="app.js?v=18" defer></script>
 
 
 
 
 
+<div id="memoryPanel" role="dialog" aria-label="Panel de memoria">
+  <div id="memoryPanelHeader">
+    <span id="memoryPanelTitle">MEMORIA</span>
+    <span id="memoryProgress">0 / 8</span>
+    <button id="memoryPanelClose" aria-label="Cerrar memoria">×</button>
+  </div>
+  <div id="memoryList"></div>
+</div>
+
+<div id="memoryFragment" aria-hidden="true">
+  <div id="memoryFragmentInner">
+    <div id="memoryFragmentNumber">#1</div>
+    <div id="memoryFragmentText"></div>
+    <button id="memoryFragmentClose" aria-label="Cerrar">✕</button>
+  </div>
+</div>
+
+<div id="memoryFinal" aria-hidden="true">
+  <div id="memoryFinalInner">
+    <div id="memoryFinalTitle">EL ÚLTIMO HUMANO</div>
+    <div id="memoryFinalSubtitle">8 de 8 fragmentos encontrados</div>
+    <div id="memoryFinalList"></div>
+    <button id="memoryFinalClose" aria-label="Cerrar">Cerrar</button>
+  </div>
+</div>
+
 </body></html>
 

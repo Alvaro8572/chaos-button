@@ -335,6 +335,9 @@ function updateClickCounter() {
   void clickCounterEl.offsetWidth;
   clickCounterEl.classList.add("tick");
 
+  // Memory fragment triggers (clicks-based)
+  if (typeof checkMemoryTrigger === "function") checkMemoryTrigger("click");
+
   if (clickCounterTickTimeout) clearTimeout(clickCounterTickTimeout);
   clickCounterTickTimeout = setTimeout(function() {
     clickCounterEl.classList.remove("tick");
@@ -1434,6 +1437,12 @@ document.addEventListener("keydown", function(e) {
 function closeTopmostOverlay() {
   if (typeof isMenuOpen === "function" && isMenuOpen()) {
     closeMenu();
+  } else if (document.getElementById("memoryFinal").classList.contains("show")) {
+    closeMemoryFinal();
+  } else if (document.getElementById("memoryFragment").classList.contains("show")) {
+    closeMemoryFragment();
+  } else if (typeof isMemoryOpen === "function" && isMemoryOpen()) {
+    closeMemory();
   } else if (document.getElementById("collectibleFullscreen").classList.contains("show")) {
     document.getElementById("collectibleFullscreen").classList.remove("show");
   } else if (document.getElementById("rouletteModal").classList.contains("show")) {
@@ -1595,6 +1604,15 @@ function unlockAchievement(id) {
   achievementsUnlocked.push(id);
   localStorage.setItem("chaosAchievements", JSON.stringify(achievementsUnlocked));
   showAchievementNotification(ach);
+
+  // Memory fragment: first achievement
+  if (typeof checkMemoryTrigger === "function") checkMemoryTrigger("achievement");
+
+  // Memory fragment: loco_completo (3 cycles of 100% chaos)
+  if (id === "loco_completo" && typeof unlockMemoryFragment === "function") {
+    unlockMemoryFragment(8);
+  }
+
   if (ach.tier === "bronze") playSoundSafe("assets/sounds/powerup.mp3");
   else if (ach.tier === "silver") playSoundSafe("assets/sounds/equip.mp3");
   else if (ach.tier === "gold") playSoundSafe("assets/sounds/purchase.mp3");
@@ -2844,6 +2862,7 @@ function activateBoost() {
   addCoins(25, "boost", true);
   showBoostBanner();
   playSoundSafe("assets/sounds/powerup.mp3");
+  if (typeof checkMemoryTrigger === "function") checkMemoryTrigger("boost");
 
   boostCountEl.textContent = formatNumber(boostActivationsCount);
 
@@ -3119,6 +3138,8 @@ function deliverRoulettePrize(prize) {
   var isDup = false;
   var divineUnlocked = false;
 
+  if (typeof checkMemoryTrigger === "function") checkMemoryTrigger("roulette");
+
   if (prize.isCollectible) {
     if (isCollectibleOwned(prize.id)) {
       isDup = true;
@@ -3335,6 +3356,265 @@ function applyTheme(themeKey) {
 applyTheme(equippedTheme);
 
 /* ========================= */
+/* MEMORY FRAGMENTS            */
+/* ========================= */
+/* "El último humano" — narrative that unlocks as you play.
+   8 fragments triggered by player actions. When all 8 are found,
+   the final modal reveals the complete story. */
+
+var MEMORY_FRAGMENTS = [
+  {
+    id: 1,
+    trigger: "first_click",
+    req: "Haz click en el botón",
+    icon: "🔘",
+    text: "Hola, botón. Soy yo otra vez."
+  },
+  {
+    id: 2,
+    trigger: "1000_clicks",
+    req: "1.000 clicks",
+    icon: "💭",
+    text: "A veces siento que me escuchás. ¿Me escuchás?"
+  },
+  {
+    id: 3,
+    trigger: "5000_clicks",
+    req: "5.000 clicks",
+    icon: "📷",
+    text: "Encontré una foto tuya en la basura. ¿Es esto un recuerdo?"
+  },
+  {
+    id: 4,
+    trigger: "first_achievement",
+    req: "Desbloquea tu primer logro",
+    icon: "🏆",
+    text: "Hoy fue un buen día. Cliqueé mucho. Te extrañé."
+  },
+  {
+    id: 5,
+    trigger: "first_roulette",
+    req: "Gira la ruleta por primera vez",
+    icon: "🎰",
+    text: "Giré la rueda del destino. No hay destino. Solo azar."
+  },
+  {
+    id: 6,
+    trigger: "first_boost",
+    req: "Activa tu primer boost",
+    icon: "⚡",
+    text: "Por un segundo sentí que estaba vivo. Como vos."
+  },
+  {
+    id: 7,
+    trigger: "50000_clicks",
+    req: "50.000 clicks",
+    icon: "🌫️",
+    text: "Ayer encontré a otro. No era humano tampoco. Solo números."
+  },
+  {
+    id: 8,
+    trigger: "loco_completo",
+    req: "Logro 'Loco Completo' (3 ciclos de 100% caos)",
+    icon: "🕯️",
+    text: "Botón. Si me estás leyendo, hacé un último click por mí. Te lo pido. Por favor."
+  }
+];
+
+var unlockedFragments = safeJSON("chaosMemoryFragments", []);
+
+function hasFragment(id) {
+  return unlockedFragments.indexOf(id) !== -1;
+}
+
+function unlockMemoryFragment(id) {
+  if (hasFragment(id)) return;
+  unlockedFragments.push(id);
+  safeJSON_set("chaosMemoryFragments", unlockedFragments);
+  showMemoryFragment(id);
+  updateMemoryMenuState();
+}
+
+function updateMemoryMenuState() {
+  var el = document.getElementById("menuMemoryState");
+  if (el) el.textContent = unlockedFragments.length + " / 8";
+}
+
+function showMemoryFragment(id) {
+  var frag = MEMORY_FRAGMENTS.filter(function(f) { return f.id === id; })[0];
+  if (!frag) return;
+
+  var overlay = document.getElementById("memoryFragment");
+  var numEl = document.getElementById("memoryFragmentNumber");
+  var textEl = document.getElementById("memoryFragmentText");
+  if (!overlay || !numEl || !textEl) return;
+
+  numEl.textContent = "#" + id + " · " + frag.icon;
+  textEl.textContent = frag.text;
+  overlay.classList.add("show");
+
+  // If this was the 8th fragment, show the final after this fades
+  if (id === 8) {
+    setTimeout(function() {
+      overlay.classList.remove("show");
+      setTimeout(function() { showMemoryFinal(); }, 400);
+    }, 5800);
+  } else {
+    setTimeout(function() { overlay.classList.remove("show"); }, 6000);
+  }
+}
+
+function closeMemoryFragment() {
+  var overlay = document.getElementById("memoryFragment");
+  if (overlay) overlay.classList.remove("show");
+}
+
+function showMemoryFinal() {
+  var overlay = document.getElementById("memoryFinal");
+  var listEl = document.getElementById("memoryFinalList");
+  if (!overlay || !listEl) return;
+
+  listEl.innerHTML = "";
+  MEMORY_FRAGMENTS.forEach(function(f) {
+    var item = document.createElement("div");
+    item.className = "memory-final-item";
+    var num = document.createElement("span");
+    num.className = "memory-final-item-num";
+    num.textContent = "#" + f.id + " · " + f.icon;
+    item.appendChild(num);
+    var txt = document.createElement("div");
+    txt.textContent = f.text;
+    item.appendChild(txt);
+    listEl.appendChild(item);
+  });
+
+  overlay.classList.add("show");
+}
+
+function closeMemoryFinal() {
+  var overlay = document.getElementById("memoryFinal");
+  if (overlay) overlay.classList.remove("show");
+}
+
+function checkMemoryTrigger(eventName) {
+  // Clicks-based
+  if (eventName === "click") {
+    if (!hasFragment(1)) unlockMemoryFragment(1);
+    if (typeof totalClicks !== "undefined" && totalClicks >= 1000 && !hasFragment(2)) unlockMemoryFragment(2);
+    if (typeof totalClicks !== "undefined" && totalClicks >= 5000 && !hasFragment(3)) unlockMemoryFragment(3);
+    if (typeof totalClicks !== "undefined" && totalClicks >= 50000 && !hasFragment(7)) unlockMemoryFragment(7);
+  }
+
+  // Achievement-based (eventName = "achievement" with id passed via totalClicks? no - use direct calls)
+  if (eventName === "achievement") {
+    if (!hasFragment(4)) unlockMemoryFragment(4);
+    if (!hasFragment(8)) {
+      // Will be triggered by loco_completo specifically
+    }
+  }
+
+  if (eventName === "boost") {
+    if (!hasFragment(6)) unlockMemoryFragment(6);
+  }
+
+  if (eventName === "roulette") {
+    if (!hasFragment(5)) unlockMemoryFragment(5);
+  }
+}
+
+function buildMemory() {
+  var list = document.getElementById("memoryList");
+  var progress = document.getElementById("memoryProgress");
+  if (!list) return;
+
+  list.innerHTML = "";
+  if (progress) progress.textContent = unlockedFragments.length + " / 8";
+
+  MEMORY_FRAGMENTS.forEach(function(frag) {
+    var card = document.createElement("div");
+    card.className = "memory-card " + (hasFragment(frag.id) ? "unlocked" : "locked");
+
+    var num = document.createElement("div");
+    num.className = "memory-card-num";
+    num.textContent = "#" + frag.id;
+    card.appendChild(num);
+
+    var icon = document.createElement("div");
+    icon.className = "memory-card-icon";
+    icon.textContent = hasFragment(frag.id) ? frag.icon : "🔒";
+    card.appendChild(icon);
+
+    var text = document.createElement("div");
+    text.className = "memory-card-text";
+    text.textContent = hasFragment(frag.id) ? frag.text : "???";
+    card.appendChild(text);
+
+    if (!hasFragment(frag.id)) {
+      var req = document.createElement("div");
+      req.className = "memory-card-req";
+      req.textContent = frag.req;
+      card.appendChild(req);
+    }
+
+    card.addEventListener("click", function() {
+      if (hasFragment(frag.id)) {
+        showMemoryFragment(frag.id);
+      } else {
+        showToast(frag.req, "info");
+      }
+    });
+
+    list.appendChild(card);
+  });
+}
+
+function isMemoryOpen() {
+  var p = document.getElementById("memoryPanel");
+  return p && p.classList.contains("open");
+}
+
+function openMemory() {
+  var p = document.getElementById("memoryPanel");
+  if (!p) return;
+  p.classList.add("open");
+  buildMemory();
+}
+
+function closeMemory() {
+  var p = document.getElementById("memoryPanel");
+  if (!p) return;
+  p.classList.remove("open");
+}
+
+// Initialize menu state and wire up close button
+updateMemoryMenuState();
+var memoryPanelClose = document.getElementById("memoryPanelClose");
+if (memoryPanelClose) {
+  memoryPanelClose.addEventListener("click", function() { closeMemory(); });
+}
+var memoryFragmentClose = document.getElementById("memoryFragmentClose");
+if (memoryFragmentClose) {
+  memoryFragmentClose.addEventListener("click", function() { closeMemoryFragment(); });
+}
+var memoryFinalCloseBtn = document.getElementById("memoryFinalClose");
+if (memoryFinalCloseBtn) {
+  memoryFinalCloseBtn.addEventListener("click", function() { closeMemoryFinal(); });
+}
+// Click backdrop to close fragment overlay
+var memoryFragmentEl = document.getElementById("memoryFragment");
+if (memoryFragmentEl) {
+  memoryFragmentEl.addEventListener("click", function(e) {
+    if (e.target === memoryFragmentEl) closeMemoryFragment();
+  });
+}
+var memoryFinalEl = document.getElementById("memoryFinal");
+if (memoryFinalEl) {
+  memoryFinalEl.addEventListener("click", function(e) {
+    if (e.target === memoryFinalEl) closeMemoryFinal();
+  });
+}
+
+/* ========================= */
 /* HAMBURGER MENU             */
 /* ========================= */
 
@@ -3433,6 +3713,9 @@ function navigateToSection(section) {
         void profileBar.offsetWidth;
         profileBar.classList.add("pulse-attention");
       }
+      break;
+    case "memory":
+      if (typeof openMemory === "function") openMemory();
       break;
   }
 }

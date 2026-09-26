@@ -3427,6 +3427,279 @@
 }
 
 /* ========================= */
+/* MEMORY FRAGMENTS            */
+/* ========================= */
+
+#memoryPanel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 80vw;
+  max-width: 360px;
+  height: 100vh;
+  background: rgba(8, 8, 20, 0.96);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-right: 1px solid rgba(255, 215, 0, 0.2);
+  z-index: 800;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(-100%);
+  visibility: hidden;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s 0.3s;
+  font-family: "Orbitron", monospace;
+}
+#memoryPanel.open {
+  transform: translateX(0);
+  visibility: visible;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s 0s;
+}
+
+#memoryPanelHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 20px;
+  border-bottom: 1px solid rgba(255, 215, 0, 0.15);
+}
+#memoryPanelTitle {
+  font-size: 14px;
+  letter-spacing: 4px;
+  color: rgba(255, 215, 0, 0.9);
+  font-weight: bold;
+  flex: 1;
+}
+#memoryProgress {
+  font-size: 11px;
+  color: rgba(255, 215, 0, 0.6);
+  letter-spacing: 1.5px;
+}
+#memoryPanelClose {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 28px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  font-family: inherit;
+}
+#memoryPanelClose:hover { color: white; }
+
+#memoryList {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  align-content: start;
+}
+
+.memory-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 12px 10px;
+  min-height: 110px;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+  position: relative;
+}
+.memory-card:hover {
+  transform: translateY(-2px);
+}
+.memory-card.unlocked {
+  background: rgba(255, 245, 220, 0.06);
+  border-color: rgba(255, 215, 0, 0.4);
+}
+.memory-card.unlocked:hover {
+  border-color: rgba(255, 215, 0, 0.7);
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.2);
+}
+.memory-card.locked {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.memory-card-num {
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: rgba(255, 215, 0, 0.7);
+  margin-bottom: 6px;
+}
+.memory-card-icon {
+  font-size: 24px;
+  margin-bottom: 6px;
+}
+.memory-card-text {
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--text-primary);
+  font-family: Georgia, serif;
+  font-style: italic;
+  flex: 1;
+}
+.memory-card-req {
+  font-size: 9px;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  margin-top: 6px;
+  line-height: 1.3;
+}
+
+/* Memory fragment drop animation */
+#memoryFragment {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#memoryFragment.show {
+  pointer-events: auto;
+  background: rgba(0, 0, 0, 0.6);
+}
+#memoryFragmentInner {
+  width: min(85vw, 420px);
+  background: rgba(255, 248, 220, 0.98);
+  color: #2a1f00;
+  border: 2px solid rgba(255, 200, 80, 0.6);
+  border-radius: 8px;
+  padding: 32px 28px 28px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 40px rgba(255, 215, 0, 0.3);
+  font-family: Georgia, serif;
+  font-style: italic;
+  font-size: 17px;
+  line-height: 1.6;
+  position: relative;
+  transform: translateY(-100vh) rotate(-2deg);
+  opacity: 0;
+}
+#memoryFragment.show #memoryFragmentInner {
+  animation: fragmentFall 6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+@keyframes fragmentFall {
+  0%   { transform: translateY(-100vh) rotate(-2deg); opacity: 0; }
+  8%   { transform: translateY(20px) rotate(1deg); opacity: 1; }
+  15%  { transform: translateY(0) rotate(0deg); opacity: 1; }
+  90%  { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(-30px) rotate(0.5deg); opacity: 0; }
+}
+#memoryFragmentNumber {
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: rgba(120, 80, 0, 0.7);
+  font-family: "Orbitron", monospace;
+  font-style: normal;
+  margin-bottom: 12px;
+}
+#memoryFragmentText {
+  color: #2a1f00;
+}
+#memoryFragmentClose {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  background: none;
+  border: none;
+  color: rgba(120, 80, 0, 0.5);
+  font-size: 22px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  font-family: inherit;
+}
+#memoryFragmentClose:hover { color: #2a1f00; }
+
+/* Final overlay (8 fragments complete) */
+#memoryFinal {
+  position: fixed;
+  inset: 0;
+  z-index: 2100;
+  background: rgba(0, 0, 0, 0.85);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+#memoryFinal.show {
+  display: flex;
+}
+#memoryFinalInner {
+  width: min(95vw, 560px);
+  max-height: 90vh;
+  background: rgba(8, 8, 20, 0.98);
+  border: 2px solid rgba(255, 215, 0, 0.5);
+  border-radius: 12px;
+  padding: 24px;
+  overflow-y: auto;
+  font-family: "Orbitron", monospace;
+}
+#memoryFinalTitle {
+  font-size: 18px;
+  letter-spacing: 5px;
+  color: var(--secondary);
+  text-align: center;
+  text-shadow: 0 0 12px rgba(var(--secondary-rgb), 0.5);
+  margin-bottom: 6px;
+}
+#memoryFinalSubtitle {
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--text-muted);
+  text-align: center;
+  margin-bottom: 18px;
+}
+#memoryFinalList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.memory-final-item {
+  background: rgba(255, 245, 220, 0.06);
+  border-left: 3px solid var(--secondary);
+  padding: 10px 14px;
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  font-family: Georgia, serif;
+  font-style: italic;
+}
+.memory-final-item-num {
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--secondary);
+  font-family: "Orbitron", monospace;
+  font-style: normal;
+  margin-bottom: 4px;
+  display: block;
+}
+#memoryFinalClose {
+  display: block;
+  margin: 0 auto;
+  background: rgba(var(--secondary-rgb), 0.15);
+  border: 1px solid rgba(var(--secondary-rgb), 0.5);
+  color: var(--secondary);
+  font-family: "Orbitron", monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  padding: 10px 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 700;
+}
+#memoryFinalClose:hover {
+  background: rgba(var(--secondary-rgb), 0.3);
+}
+
+/* ========================= */
 /* SHOP TABS (ITEMS / TEMAS)  */
 /* ========================= */
 
