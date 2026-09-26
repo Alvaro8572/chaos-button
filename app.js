@@ -1258,7 +1258,7 @@ function chaos() {
   applyBoostClick();
 
   clicks++;
-  chaosLevel = Math.min(100, (clicks / 500) * 100);
+  chaosLevel = Math.min(100, (clicks / 200) * 100);
   updateChaosMeter();
   updateClickCounter();
 
@@ -1361,10 +1361,7 @@ function chaos() {
     return;
   }
 
-  // Occasional random reset at lower levels - only if chaos > 80
-  if (chaosLevel > 80 && Math.random() < 0.03) {
-    setTimeout(resetEverything, 1000);
-  }
+  // No random reset: only the boss fight teleports user at 100%.
 
   checkAchievements();
 }
