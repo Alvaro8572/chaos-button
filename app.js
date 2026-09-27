@@ -1350,8 +1350,8 @@ function chaos() {
       if (chaos100NumberEl) chaos100NumberEl.textContent = chaosReachedHundredCount;
       logEl.innerText = "🔥 100% caos alcanzado por " + chaosReachedHundredCount + "ª vez";
     }
-    // 80% chance to reset, 20% chance to keep chaos going (for grind)
-    if (Math.random() < 0.8) {
+    // 40% chance to trigger boss fight, 60% chance to just reset (harder to enter boss)
+    if (Math.random() < 0.4) {
       localStorage.setItem("chaosPendingReset", "1");
       var kills = parseInt(localStorage.getItem("chaosBossKills") || "0", 10) || 0;
       var nextLevel = kills + 1;

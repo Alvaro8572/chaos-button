@@ -331,29 +331,43 @@
   }
 
   .chaos-meter {
-    display: flex; align-items: center; gap: 12px;
-    font-size: 12px; letter-spacing: 2px;
-    text-transform: uppercase; opacity: 0.5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    opacity: 0.5;
     transition: opacity 0.3s;
+    width: min(90vw, 320px);
+    max-width: 100%;
+    box-sizing: border-box;
   }
   .chaos-meter:hover { opacity: 1; }
 
   .chaos-bar-track {
-    width: 160px;
-    flex: 1;
-    min-width: 60px;
-    max-width: 100%;
-    height: 6px;
-    background: rgba(255,255,255,0.1);
-    border-radius: 3px;
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 8px;
+    background: rgba(255,255,255,0.12);
+    border-radius: 4px;
     overflow: hidden;
+    position: relative;
   }
   .chaos-bar-fill {
-    height: 100%; width: 0%;
-    border-radius: 3px;
+    height: 100%;
+    width: 0%;
+    min-width: 0;
+    border-radius: 4px;
     background: linear-gradient(90deg, var(--accent), var(--secondary), var(--primary), var(--secondary));
     transition: width 0.3s ease;
-    min-width: 2px;
+    display: block;
+  }
+  /* The chaos level text and "Caos" label need explicit min-width: 0 in flex */
+  .chaos-meter > span {
+    flex-shrink: 0;
+    min-width: 0;
   }
 
   h1 {
@@ -2940,13 +2954,11 @@
   }
   #chaosBtn:active { transform: scale(0.96); }
 
-  /* chaos-meter: width fluid */
+  /* chaos-meter: width fluid - already defined in base, keep flex-wrap off */
   .chaos-meter {
-    width: min(90vw, 320px);
-    justify-content: center;
     flex-wrap: nowrap;
   }
-  .chaos-bar-track { width: 100%; min-width: 80px; }
+  .chaos-bar-track { width: 100%; }
 
   /* statsRow: wrap on mobile */
   #statsRow {
@@ -3229,7 +3241,6 @@
   .chaos-meter, #boostBarWrap {
     width: 100%;
     max-width: 100%;
-    justify-content: center;
   }
   .boost-bar-track {
     width: 100%;
