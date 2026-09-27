@@ -545,9 +545,11 @@ function pickThemedHue() {
   if (typeof equippedTheme === "undefined") return Math.random() * 360;
   var t = SHOP_THEMES.filter(function(th) { return th.key === equippedTheme; })[0];
   if (!t || !t.swatch || t.key === "chaos") return Math.random() * 360;
-  // Parse one of the swatch hexes to a numeric hue so BurstParticle
-  // (which spreads hue +/- 20 per particle) keeps the burst in palette.
-  return hexToHue(t.swatch[Math.random() < 0.5 ? 0 : 1]);
+  // 80% primary swatch (the dominant theme color), 20% secondary.
+  // This keeps glows/particles on the theme's signature hue and avoids
+  // the visual feeling "too cyan/blue" when the secondary is a cool color.
+  var pick = Math.random() < 0.8 ? t.swatch[0] : t.swatch[1];
+  return hexToHue(pick);
 }
 
 function hexToHue(hex) {
