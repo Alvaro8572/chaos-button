@@ -1350,13 +1350,22 @@ function chaos() {
       if (chaos100NumberEl) chaos100NumberEl.textContent = chaosReachedHundredCount;
       logEl.innerText = "🔥 100% caos alcanzado por " + chaosReachedHundredCount + "ª vez";
     }
-    localStorage.setItem("chaosPendingReset", "1");
-    var kills = parseInt(localStorage.getItem("chaosBossKills") || "0", 10) || 0;
-    var nextLevel = kills + 1;
-    if (nextLevel > 10) nextLevel = 10;
-    setTimeout(function() {
-      window.location.href = "boss.html?level=" + nextLevel + "&v=20";
-    }, 400);
+    // 80% chance to reset, 20% chance to keep chaos going (for grind)
+    if (Math.random() < 0.8) {
+      localStorage.setItem("chaosPendingReset", "1");
+      var kills = parseInt(localStorage.getItem("chaosBossKills") || "0", 10) || 0;
+      var nextLevel = kills + 1;
+      if (nextLevel > 10) nextLevel = 10;
+      setTimeout(function() {
+        window.location.href = "boss.html?level=" + nextLevel + "&v=20";
+      }, 400);
+    } else {
+      // 20% — keep playing, reset chaosLevel but don't teleport
+      hasCountedHundredThisCycle = false;
+      chaosLevel = 0;
+      clicks = 0;
+      logEl.innerText = "El caos se contuvo... esta vez.";
+    }
     checkAchievements();
     return;
   }
