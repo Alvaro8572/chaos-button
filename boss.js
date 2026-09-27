@@ -41,7 +41,8 @@
   var timeLeft = TIME_LIMIT;
   var totalClicks = 0;
   var fightActive = false;
-  var returnUrl = "index.html?v=20";
+  var timerInterval = null;
+  var returnUrl = "index.html?v=23";
 
   var $name = document.getElementById("bossName");
   var $timer = document.getElementById("bossTimer");
@@ -185,8 +186,6 @@
       window.location.href = returnUrl;
     }, 1800);
   }
-
-  var timerInterval = null;
 
   function startTimer() {
     timerInterval = setInterval(function() {
