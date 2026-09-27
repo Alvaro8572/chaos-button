@@ -28,7 +28,7 @@
     /* Primary palette - used for buttons, headings, accents */
     --primary: #ff0055;
     --primary-rgb: 255, 0, 85;
-    --secondary: var(--secondary);
+    --secondary: #ffcc00;
     --secondary-rgb: 255, 204, 0;
     --accent: #00ff88;
     --accent-rgb: 0, 255, 136;
@@ -357,6 +357,7 @@
   }
   .chaos-bar-fill {
     height: 100%;
+    width: 0%;
     min-width: 0;
     border-radius: 4px;
     background: linear-gradient(90deg, var(--accent), var(--secondary), var(--primary), var(--secondary));
@@ -364,10 +365,6 @@
     display: block;
     position: relative;
     overflow: hidden;
-  }
-  /* Fill starts hidden via opacity; width set by JS inline style */
-  .chaos-bar-fill:not([style*="width"]) {
-    opacity: 0;
   }
   /* The chaos level text and "Caos" label need explicit min-width: 0 in flex */
   .chaos-meter > span {
