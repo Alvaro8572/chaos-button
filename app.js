@@ -527,12 +527,47 @@ initParticles();
 function spawnBurst(x, y) {
   var count = 15 + Math.floor(chaosLevel * 0.5);
   if (count > 60) count = 60;
-  var hue = Math.random() * 360;
+  // Pick a base hue from the active theme if equipped, otherwise random.
+  // BurstParticle spreads each particle +/- 20 around this base, so the whole
+  // burst stays within the theme's hue family.
+  var hue = pickThemedHue();
   for (var i = 0; i < count; i++) {
     if (burstParticles.length < 200) {
       burstParticles.push(new BurstParticle(x, y, hue));
     }
   }
+}
+
+// Helper: returns a numeric HUE (0-360) derived from the active theme's
+// palette when one is equipped, or a random hue for the default 'chaos'
+// theme. Used by all chaos visuals so colored effects stay on-palette.
+function pickThemedHue() {
+  if (typeof equippedTheme === "undefined") return Math.random() * 360;
+  var t = SHOP_THEMES.filter(function(th) { return th.key === equippedTheme; })[0];
+  if (!t || !t.swatch || t.key === "chaos") return Math.random() * 360;
+  // Parse one of the swatch hexes to a numeric hue so BurstParticle
+  // (which spreads hue +/- 20 per particle) keeps the burst in palette.
+  return hexToHue(t.swatch[Math.random() < 0.5 ? 0 : 1]);
+}
+
+function hexToHue(hex) {
+  // "#rrggbb" or "rrggbb" -> numeric HSL hue 0-360
+  var h = (hex || "").replace("#", "");
+  if (h.length !== 6) return Math.random() * 360;
+  var r = parseInt(h.substring(0, 2), 16) / 255;
+  var g = parseInt(h.substring(2, 4), 16) / 255;
+  var b = parseInt(h.substring(4, 6), 16) / 255;
+  var max = Math.max(r, g, b);
+  var min = Math.min(r, g, b);
+  var d = max - min;
+  if (d === 0) return 0;
+  var hue;
+  if (max === r) hue = ((g - b) / d) % 6;
+  else if (max === g) hue = (b - r) / d + 2;
+  else hue = (r - g) / d + 4;
+  hue = hue * 60;
+  if (hue < 0) hue += 360;
+  return hue;
 }
 
 function animate() {
@@ -560,7 +595,8 @@ function spawnChaosSymbol() {
   sym.textContent = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
   sym.style.left = (10 + Math.random() * 80) + "%";
   sym.style.bottom = "15%";
-  sym.style.color = randomHsl(100, 60);
+  // Pull hue from active theme so symbols stay on-palette
+  sym.style.color = "hsl(" + pickThemedHue() + ", 100%, 60%)";
   sym.style.fontSize = (18 + Math.random() * 24 + Math.min(chaosLevel, 40)) + "px";
   document.body.appendChild(sym);
   setTimeout(function() { trackedRemove(sym, "chaos-symbol"); }, 1200);
@@ -1271,8 +1307,19 @@ function chaos() {
   var cx = rect.left + rect.width / 2;
   var cy = rect.top + rect.height / 2;
 
-  // Title color
-  var color1 = randomHsl(100, 60);
+  // Resolve active theme once per click so chaos visuals stay on-palette.
+  var activeTheme = SHOP_THEMES.filter(function(t) { return t.key === equippedTheme; })[0];
+  var onTheme = activeTheme && activeTheme.key !== "chaos" && activeTheme.swatch;
+
+  // Title color — derive from active theme so colors stay on-palette
+  var color1;
+  if (onTheme) {
+    // Build HSL from the themed hue so the title can shift lightness
+    // naturally without breaking out of the palette.
+    color1 = "hsl(" + pickThemedHue() + ", 100%, 60%)";
+  } else {
+    color1 = randomHsl(100, 60);
+  }
   title.style.color = color1;
 
   // Button glow
@@ -1280,9 +1327,6 @@ function chaos() {
   chaosBtn.style.boxShadow = "0 0 25px " + color1;
 
   // Background — derive from active theme so chaos effects stay on-palette
-  var activeTheme = SHOP_THEMES.filter(function(t) { return t.key === equippedTheme; })[0];
-  var onTheme = activeTheme && activeTheme.key !== "chaos" && activeTheme.swatch;
-
   if (onTheme) {
     // Theme active: shift lightness slightly with chaos level for visual variety
     // while keeping the hue family intact (no random HSL on themed sessions).
