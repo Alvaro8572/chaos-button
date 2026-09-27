@@ -462,7 +462,7 @@ AmbientParticle.prototype.reset = function(initial) {
   this.size = Math.random() * 2 + 0.5;
   this.vx = (Math.random() - 0.5) * 0.4;
   this.vy = (Math.random() - 0.5) * 0.4;
-  this.hue = Math.random() * 360;
+  this.hue = pickThemedHue();
   this.alpha = Math.random() * 0.4 + 0.1;
   this.pulse = Math.random() * Math.PI * 2;
   this.pulseSpeed = 0.01 + Math.random() * 0.015;
@@ -836,11 +836,8 @@ var EVENTS = [
             if (!canCreate("shockwave")) return;
             var wave = document.createElement("div");
             wave.className = "shockwave";
-            wave.style.borderColor = idx === 0
-              ? "rgba(255, 200, 50, 0.9)"
-              : idx === 1
-                ? "rgba(255, 100, 20, 0.7)"
-                : "rgba(255, 255, 255, 0.5)";
+            // Use themed hue for shockwave borders instead of hardcoded yellows.
+            wave.style.borderColor = "hsla(" + pickThemedHue() + ", 90%, 60%, " + (idx === 2 ? 0.5 : 0.9 - idx * 0.2) + ")";
             document.body.appendChild(wave);
             setTimeout(function() { trackedRemove(wave, "shockwave"); }, 900);
           }, idx * 100);
@@ -850,7 +847,7 @@ var EVENTS = [
       var cx = window.innerWidth / 2;
       var cy = window.innerHeight / 2;
       for (var j = 0; j < 50; j++) {
-        burstParticles.push(new BurstParticle(cx, cy, Math.random() * 360));
+        burstParticles.push(new BurstParticle(cx, cy, pickThemedHue()));
       }
     }
   },
@@ -867,7 +864,7 @@ var EVENTS = [
         sym.style.left = (Math.random() * 100) + "%";
         sym.style.top = (Math.random() * 100) + "%";
         sym.style.fontSize = (50 + Math.random() * 80) + "px";
-        sym.style.color = "hsl(" + Math.floor(Math.random() * 360) + ", 100%, 65%)";
+        sym.style.color = "hsl(" + pickThemedHue() + ", 100%, 65%)";
         sym.style.animationDelay = (Math.random() * 0.2) + "s";
         document.body.appendChild(sym);
         setTimeout(function(s) { trackedRemove(s, "invasion-symbol"); }, 1600, sym);
@@ -896,10 +893,12 @@ var EVENTS = [
     name: "Portal",
     chance: 0.07,
     execute: function() {
+      // Portal rings use themed hues so the event stays on-palette
+      var baseHue = pickThemedHue();
       var colors = [
-        "hsl(" + Math.floor(Math.random() * 360) + ", 100%, 60%)",
-        "hsl(" + Math.floor(Math.random() * 360) + ", 100%, 60%)",
-        "hsl(" + Math.floor(Math.random() * 360) + ", 100%, 60%)"
+        "hsl(" + baseHue + ", 100%, 60%)",
+        "hsl(" + ((baseHue + 30) % 360) + ", 100%, 60%)",
+        "hsl(" + ((baseHue + 60) % 360) + ", 100%, 60%)"
       ];
 
       if (canCreate("portal-vortex")) {
@@ -1088,7 +1087,7 @@ var EVENTS = [
             var col = document.createElement("div");
             col.className = "matrix-column";
             col.style.left = (idx * 25) + "px";
-            col.style.color = "hsl(120, 100%, " + (50 + Math.random() * 30) + "%)";
+            col.style.color = "hsl(" + pickThemedHue() + ", 100%, " + (50 + Math.random() * 30) + "%)";
             var dropCount = 20 + Math.floor(Math.random() * 15);
             for (var j = 0; j < dropCount; j++) {
               var ch = document.createElement("span");
@@ -1157,11 +1156,13 @@ var EVENTS = [
       flash.className = "supernova-flash";
       document.body.appendChild(flash);
 
+      // Supernova waves fade through themed hues with varying alpha
+      var baseHue = pickThemedHue();
       var colors = [
-        "rgba(255, 255, 255, 0.95)",
-        "rgba(255, 200, 50, 0.9)",
-        "rgba(255, 100, 20, 0.8)",
-        "rgba(255, 50, 100, 0.6)"
+        "hsla(" + baseHue + ", 100%, 95%, 0.95)",
+        "hsla(" + ((baseHue + 15) % 360) + ", 100%, 70%, 0.9)",
+        "hsla(" + ((baseHue + 30) % 360) + ", 100%, 55%, 0.8)",
+        "hsla(" + ((baseHue + 45) % 360) + ", 100%, 50%, 0.6)"
       ];
       for (var i = 0; i < 4; i++) {
         (function(idx) {
@@ -1180,7 +1181,7 @@ var EVENTS = [
       var cx = window.innerWidth / 2;
       var cy = window.innerHeight / 2;
       for (var k = 0; k < 80; k++) {
-        burstParticles.push(new BurstParticle(cx, cy, Math.random() * 360));
+        burstParticles.push(new BurstParticle(cx, cy, pickThemedHue()));
       }
 
       setTimeout(function() {
@@ -1193,10 +1194,14 @@ var EVENTS = [
     name: "Confetti",
     chance: 0.08,
     execute: function() {
-      var palette = [
-        "#ff0055", "#00ff88", "#00ccff", "#ffaa00", "#ff00cc",
-        "#8800ff", "#ffff00", "#00ff00", "#ff6600", "#cc00ff"
-      ];
+      // Confetti pieces use themed hues so they stay on-palette.
+      // Generate 10 distinct hues around the theme's primary hue.
+      var baseConfettiHue = pickThemedHue();
+      var palette = [];
+      for (var p = 0; p < 10; p++) {
+        var ph = (baseConfettiHue + p * 30) % 360;
+        palette.push("hsl(" + ph + ", 100%, 60%)");
+      }
       for (var i = 0; i < 80; i++) {
         (function(idx) {
           setTimeout(function() {
@@ -1261,17 +1266,24 @@ function resetEverything() {
   burstParticles = [];
 
   document.body.style.cssText = "";
-  document.body.style.background = "#0a0a0f";
   document.body.style.fontFamily = "Orbitron, monospace";
 
   title.style.cssText = "";
   title.style.fontFamily = "Orbitron, monospace";
-  title.style.color = "white";
 
   chaosBtn.style.cssText = "";
-  chaosBtn.style.background = "linear-gradient(90deg, #ff0055, #ffcc00, #00ff88, #aa00ff, #ff0055)";
   chaosBtn.style.backgroundSize = "300% 100%";
   chaosBtn.style.border = "2px solid rgba(255,255,255,0.3)";
+
+  // Restore themed background. The CSS variables for the active theme
+  // (set via [data-theme="..."] selectors) apply once the inline
+  // background is cleared, so the body naturally goes back to the
+  // theme's --bg-dark or the themed gradient applied by chaos().
+  // We don't need to set anything here — removing the inline style
+  // reverts to the CSS rule for [data-theme="X"] body { background }.
+  var themedBg = getComputedStyle(document.documentElement).getPropertyValue("--bg-dark").trim();
+  if (themedBg) document.body.style.background = themedBg;
+  else document.body.style.background = "#0a0a0f";
 
   logEl.style.cssText = "";
   logEl.innerText = "Sistema re-inicializado. El caos fue contenido.";

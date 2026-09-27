@@ -412,7 +412,7 @@
     0% { background-position: 0% 50%; }
     100% { background-position: 300% 50%; }
   }
-  button:hover { transform: scale(1.05); box-shadow: 0 0 40px rgba(255,0,85,0.6); }
+  button:hover { transform: scale(1.05); box-shadow: 0 0 40px var(--primary); }
   button:active { transform: scale(0.95); }
 
   #log {
@@ -442,8 +442,8 @@
 
   .chromatic-aberration { animation: chromaticShift 0.12s ease 3; }
   @keyframes chromaticShift {
-    0%, 100% { text-shadow: 2px 0 #ff0055, -2px 0 #00ccff; }
-    50% { text-shadow: -3px 0 #ff0055, 3px 0 #00ccff, 0 0 30px currentColor; }
+    0%, 100% { text-shadow: 2px 0 var(--primary), -2px 0 var(--secondary); }
+    50% { text-shadow: -3px 0 var(--primary), 3px 0 var(--secondary), 0 0 30px currentColor; }
   }
 
   .chaos-symbol {
