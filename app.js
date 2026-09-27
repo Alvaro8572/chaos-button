@@ -1279,17 +1279,20 @@ function chaos() {
   chaosBtn.style.borderColor = color1;
   chaosBtn.style.boxShadow = "0 0 25px " + color1;
 
-  // Background — respect equipped theme unless chaos is high (visual override)
-  if (chaosLevel >= 50) {
+  // Background — derive from active theme so chaos effects stay on-palette
+  var activeTheme = SHOP_THEMES.filter(function(t) { return t.key === equippedTheme; })[0];
+  var onTheme = activeTheme && activeTheme.key !== "chaos" && activeTheme.swatch;
+
+  if (onTheme) {
+    // Theme active: shift lightness slightly with chaos level for visual variety
+    // while keeping the hue family intact (no random HSL on themed sessions).
+    var bgAngle = Math.floor(Math.random() * 360);
+    document.body.style.background = "linear-gradient(" + bgAngle + "deg, " +
+      activeTheme.swatch[0] + ", " + activeTheme.swatch[1] + ")";
+  } else if (chaosLevel >= 50) {
     document.body.style.background = "linear-gradient(" + Math.floor(Math.random() * 360) + "deg, " + randomHsl(90, 15) + ", " + randomHsl(90, 15) + ")";
   } else {
-    // Low chaos: use theme palette if a non-default theme is equipped
-    var bgTheme = SHOP_THEMES.filter(function(t) { return t.key === equippedTheme; })[0];
-    if (bgTheme && bgTheme.key !== "chaos" && bgTheme.swatch) {
-      document.body.style.background = "linear-gradient(135deg, " + bgTheme.swatch[0] + ", " + bgTheme.swatch[1] + ")";
-    } else {
-      document.body.style.background = randomHsl(80, 12);
-    }
+    document.body.style.background = randomHsl(80, 12);
   }
 
   // Font change
@@ -1324,7 +1327,12 @@ function chaos() {
   } else if (roll < 0.6) {
     document.body.style.transform = "rotate(" + ((Math.random() - 0.5) * 6 * (chaosLevel / 50)) + "deg)";
   } else if (roll < 0.75) {
-    document.body.style.filter = "hue-rotate(" + Math.floor(Math.random() * 360) + "deg)";
+    // hue-rotate destroys theme colors — skip when a theme is equipped
+    if (!onTheme) {
+      document.body.style.filter = "hue-rotate(" + Math.floor(Math.random() * 360) + "deg)";
+    } else {
+      document.body.style.filter = "";
+    }
   } else {
     document.body.style.letterSpacing = (Math.random() * 15 * (chaosLevel / 50)) + "px";
   }
