@@ -766,7 +766,7 @@ function changeFont() {
   var idx;
   do { idx = Math.floor(Math.random() * FONTS.length); }
   while (idx === lastFontIndex && FONTS.length > 1);
-lastFontIndex = idx;
+  lastFontIndex = idx;
   title.style.fontFamily = FONTS[idx];
 }
 
@@ -1235,7 +1235,7 @@ function resetEverything() {
   chaosBtn.style.backgroundSize = "300% 100%";
   chaosBtn.style.border = "2px solid rgba(255,255,255,0.3)";
 
-logEl.style.cssText = "";
+  logEl.style.cssText = "";
   logEl.innerText = "Sistema re-inicializado. El caos fue contenido.";
 
   factPanel.classList.remove("visible");
@@ -1279,11 +1279,17 @@ function chaos() {
   chaosBtn.style.borderColor = color1;
   chaosBtn.style.boxShadow = "0 0 25px " + color1;
 
-  // Background
+  // Background — respect equipped theme unless chaos is high (visual override)
   if (chaosLevel >= 50) {
     document.body.style.background = "linear-gradient(" + Math.floor(Math.random() * 360) + "deg, " + randomHsl(90, 15) + ", " + randomHsl(90, 15) + ")";
   } else {
-    document.body.style.background = randomHsl(80, 12);
+    // Low chaos: use theme palette if a non-default theme is equipped
+    var bgTheme = SHOP_THEMES.filter(function(t) { return t.key === equippedTheme; })[0];
+    if (bgTheme && bgTheme.key !== "chaos" && bgTheme.swatch) {
+      document.body.style.background = "linear-gradient(135deg, " + bgTheme.swatch[0] + ", " + bgTheme.swatch[1] + ")";
+    } else {
+      document.body.style.background = randomHsl(80, 12);
+    }
   }
 
   // Font change
@@ -1315,7 +1321,7 @@ function chaos() {
     title.classList.remove("chromatic-aberration");
     void title.offsetWidth;
     title.classList.add("chromatic-aberration");
-} else if (roll < 0.6) {
+  } else if (roll < 0.6) {
     document.body.style.transform = "rotate(" + ((Math.random() - 0.5) * 6 * (chaosLevel / 50)) + "deg)";
   } else if (roll < 0.75) {
     document.body.style.filter = "hue-rotate(" + Math.floor(Math.random() * 360) + "deg)";
@@ -1353,7 +1359,7 @@ function chaos() {
       localStorage.setItem("chaosReachedHundredCount", String(chaosReachedHundredCount));
       hasCountedHundredThisCycle = true;
       if (chaos100NumberEl) chaos100NumberEl.textContent = chaosReachedHundredCount;
-      logEl.innerText = "🔥 100% caos alcanzado por " + chaosReachedHundredCount + "ª vez";
+      logEl.innerText = "🔥 100% caos alcanzado por " + (chaosReachedHundredCount === 1 ? "primera" : chaosReachedHundredCount + "ª") + " vez";
     }
     // 40% chance to trigger boss fight, 60% chance to just reset (harder to enter boss)
     if (Math.random() < 0.4) {
@@ -1361,11 +1367,17 @@ function chaos() {
       var kills = parseInt(localStorage.getItem("chaosBossKills") || "0", 10) || 0;
       var nextLevel = kills + 1;
       if (nextLevel > 10) nextLevel = 10;
+      // Reset clicks/chaosLevel NOW to prevent the in-flight chaos() calls from
+      // counting clicks during the 400ms window before the redirect fires.
+      hasCountedHundredThisCycle = false;
+      chaosLevel = 0;
+      clicks = 0;
+      updateChaosMeter();
       setTimeout(function() {
-        window.location.href = "boss.html?level=" + nextLevel + "&v=20";
+        window.location.href = "boss.html?level=" + nextLevel + "&v=23";
       }, 400);
     } else {
-      // 20% — keep playing, reset chaosLevel but don't teleport
+      // 60% — keep playing, reset chaosLevel but don't teleport
       hasCountedHundredThisCycle = false;
       chaosLevel = 0;
       clicks = 0;
@@ -1555,18 +1567,7 @@ function unlockAchievement(id) {
   var wasUnlocked = isAchievementUnlocked(id);
 
   // Always apply reward (even if already unlocked) to fix missing rewards
-  if (ach.reward && ach.reward.type === "picture" && inventory.pictures.indexOf(ach.reward.file) === -1) {
-    inventory.pictures.push(ach.reward.file);
-    saveInventory();
-  }
-  if (ach.reward && ach.reward.type === "frame" && inventory.frames.indexOf(ach.reward.id) === -1) {
-    inventory.frames.push(ach.reward.id);
-    saveInventory();
-  }
-  if (ach.reward && ach.reward.type === "slogan" && inventory.slogans.indexOf(ach.reward.id) === -1) {
-    inventory.slogans.push(ach.reward.id);
-    saveInventory();
-  }
+  applyAchievementReward(id);
 
   if (wasUnlocked) return false;
 
@@ -1992,6 +1993,14 @@ function buySlogan(slogan) {
 
 function equipSlogan(slogan) {
   if (!isOwnedSlogan(slogan.key)) return;
+  // Secret slogans (mouse-breaker, jesus-blesses) require external conditions.
+  // Only allow equipping them if the requirements are still met.
+  if (slogan.requiresBoosts || slogan.requiresRoulette) {
+    if (!canBuySlogan(slogan)) {
+      showToast("No cumplís los requisitos", "error");
+      return;
+    }
+  }
   equipped.slogan = slogan.key;
   saveEquipped();
   showToast("\u201C" + slogan.name + "\u201D equipada", "info");
@@ -2264,6 +2273,10 @@ function buildShopThemes() {
       action.classList.add("equip");
       action.textContent = "EQUIPAR";
       action.onclick = function() { equipTheme(theme.key); };
+    } else if (theme.rewardOnly) {
+      action.classList.add("reward");
+      action.textContent = "RECOMPENSA";
+      action.disabled = true;
     } else {
       action.classList.add("buy");
       action.textContent = theme.price + " 🪙";
@@ -3086,9 +3099,7 @@ function spinRoulette() {
   wheelEl.style.transform = "rotate(" + rouletteCurrentRotation + "deg)";
 
   try {
-    var rouletteSound = new Audio("assets/sounds/roulette.mp3");
-    rouletteSound.volume = 0.6;
-    rouletteSound.play().catch(function() {});
+    playSoundSafe("assets/sounds/roulette.mp3", 0.6);
   } catch (e) {}
 
   document.getElementById("rouletteResult").textContent = "";
@@ -3309,6 +3320,10 @@ function isThemeOwned(themeKey) {
 
 function buyTheme(theme) {
   if (isThemeOwned(theme.key)) return;
+  if (theme.rewardOnly) {
+    showToast("Solo se obtiene como recompensa", "error");
+    return;
+  }
   if (coins < theme.price) {
     showToast("Monedas insuficientes", "error");
     return;
@@ -3335,8 +3350,8 @@ function equipTheme(themeKey) {
 
 function applyTheme(themeKey) {
   var theme = SHOP_THEMES.filter(function(t) { return t.key === themeKey; })[0];
-  if (!theme) themeKey = "chaos";
-  document.documentElement.setAttribute("data-theme", themeKey || "chaos");
+  var key = theme ? themeKey : "chaos";
+  document.documentElement.setAttribute("data-theme", key);
 }
 
 // Apply saved theme on boot
