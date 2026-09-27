@@ -1352,6 +1352,23 @@ function chaos() {
     unlockFact();
   }
 
+  // Late-cycle risk: as chaos climbs past 80%, each click has a rising chance
+  // of resetting the chaos meter to 0. Caps at 15% per click at 99%.
+  // Forces the player to grind harder to actually hit 100%.
+  if (chaosLevel >= 80 && chaosLevel < 100) {
+    var lateResetChance = ((chaosLevel - 80) / 19) * 0.15;
+    if (Math.random() < lateResetChance) {
+      chaosLevel = 0;
+      clicks = 0;
+      hasCountedHundredThisCycle = false;
+      logEl.innerText = "\u26a0\ufe0f El caos se contuvo a tiempo...";
+      logEl.classList.remove("panicked");
+      void logEl.offsetWidth;
+      logEl.classList.add("panicked");
+      return;
+    }
+  }
+
   // 100% reset - always happens at 100
   if (chaosLevel >= 100) {
     if (chaosLevel === 100 && !hasCountedHundredThisCycle) {
