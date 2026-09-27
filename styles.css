@@ -357,12 +357,17 @@
   }
   .chaos-bar-fill {
     height: 100%;
-    width: 0%;
     min-width: 0;
     border-radius: 4px;
     background: linear-gradient(90deg, var(--accent), var(--secondary), var(--primary), var(--secondary));
     transition: width 0.3s ease;
     display: block;
+    position: relative;
+    overflow: hidden;
+  }
+  /* Fill starts hidden via opacity; width set by JS inline style */
+  .chaos-bar-fill:not([style*="width"]) {
+    opacity: 0;
   }
   /* The chaos level text and "Caos" label need explicit min-width: 0 in flex */
   .chaos-meter > span {

@@ -750,8 +750,13 @@ function unlockFact() {
 // ===== CORE FUNCTIONS =====
 function updateChaosMeter() {
   var displayLevel = Math.floor(chaosLevel);
-  chaosBar.style.width = chaosLevel.toFixed(2) + "%";
-  chaosLevelSpan.textContent = displayLevel + "%";
+  if (chaosBar) {
+    var pct = Math.max(0, Math.min(100, chaosLevel));
+    chaosBar.style.width = pct.toFixed(2) + "%";
+  }
+  if (chaosLevelSpan) {
+    chaosLevelSpan.textContent = displayLevel + "%";
+  }
   if (chaos100NumberEl) {
     chaos100NumberEl.textContent = chaosReachedHundredCount;
   }
@@ -3251,6 +3256,7 @@ document.getElementById("collectibleFullscreen").addEventListener("click", funct
 
 buildCollection();
 checkAchievements();
+updateChaosMeter();
 
 // Handle pending reset from boss fight (or any other cause)
 if (localStorage.getItem("chaosPendingReset") === "1") {
