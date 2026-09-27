@@ -5,7 +5,7 @@
    for runtime fetches. Aggressive caching so the game works fully offline.
 */
 
-const CACHE_VERSION = "chaos-v24";
+const CACHE_VERSION = "chaos-v25";
 const APP_SHELL = [
   "./",
   "./index.html",

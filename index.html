@@ -14,7 +14,7 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Bungee&amp;family=Monoton&amp;family=Rubik+Glitch&amp;family=Sixtyfour&amp;family=Honk&amp;family=Jersey+10&amp;family=Micro+5&amp;family=Nabla&amp;family=Orbitron:wght@400;600;900&amp;family=Press+Start+2P&amp;family=Rubik+Burned&amp;family=Smooch+Sans:wght@900&amp;family=Tilt+Prism&amp;family=UnifrakturMaguntia&amp;family=Dancing+Script:wght@400;700&amp;family=Great+Vibes&amp;family=Creepster&amp;family=Bowlby+One&amp;family=Black+Ops+One&amp;display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="styles.css?v=25">
+<link rel="stylesheet" href="styles.css?v=25-clean">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#ff0055">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -22,9 +22,30 @@
 <meta name="apple-mobile-web-app-title" content="Chaos">
 <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
 <script>
+// Self-healing SW cache: when ?v= changes, nuke old caches and unregister
+// any leftover SW before registering the new one. This makes hard-refresh
+// unnecessary after every deploy.
+(function() {
+  var CURRENT_BUILD = "30-all-clean";  // must match the sw.js?v= below
+  var savedBuild = null;
+  try { savedBuild = localStorage.getItem("chaosBuildId"); } catch (e) {}
+  if (savedBuild && savedBuild !== CURRENT_BUILD && "serviceWorker" in navigator) {
+    navigator.serviceWorker.getRegistrations().then(function(regs) {
+      regs.forEach(function(r) { r.unregister(); });
+    });
+    if (window.caches && caches.keys) {
+      caches.keys().then(function(keys) {
+        keys.forEach(function(k) { caches.delete(k); });
+      });
+    }
+  }
+  try { localStorage.setItem("chaosBuildId", CURRENT_BUILD); } catch (e) {}
+})();
+</script>
+<script>
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", function() {
-        navigator.serviceWorker.register("sw.js?v=30-all").then(function(reg) {
+        navigator.serviceWorker.register("sw.js?v=30-all-clean").then(function(reg) {
         console.log("[PWA] Service Worker registered:", reg.scope);
 
         // Aggressive update strategy: detect new SW and force activation
@@ -463,7 +484,7 @@
 
 
 
-<script src="app.js?v=30" defer></script>
+<script src="app.js?v=30-clean" defer></script>
 
 
 
