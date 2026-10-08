@@ -4229,3 +4229,107 @@ body.boss-arena-body::before {
   --theme-tier: 2;
 }
 
+/* ===== INFO / CRÉDITOS ===== */
+#infoPanel {
+  position: fixed;
+  inset: 0;
+  z-index: 2050;
+  background: rgba(0, 0, 0, 0.88);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+#infoPanel.open {
+  display: flex;
+}
+#infoPanelInner {
+  width: min(95vw, 580px);
+  max-height: 90vh;
+  background: rgba(8, 8, 20, 0.98);
+  border: 2px solid rgba(var(--secondary-rgb), 0.45);
+  border-radius: 12px;
+  padding: 24px;
+  overflow-y: auto;
+  font-family: "Orbitron", monospace;
+}
+#infoPanelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(var(--secondary-rgb), 0.2);
+}
+#infoPanelTitle {
+  font-size: 15px;
+  letter-spacing: 5px;
+  color: var(--secondary);
+  text-shadow: 0 0 10px rgba(var(--secondary-rgb), 0.5);
+  font-weight: bold;
+}
+#infoPanelClose {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 28px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  font-family: inherit;
+}
+#infoPanelClose:hover { color: white; }
+#infoPanelContent {
+  font-size: 13px;
+  line-height: 1.8;
+  color: rgba(255, 255, 255, 0.88);
+  letter-spacing: 0.5px;
+}
+#infoPanelContent p {
+  margin: 0 0 14px 0;
+}
+#infoPanelContent strong {
+  color: var(--secondary);
+  font-weight: 600;
+}
+.info-greeting {
+  font-size: 18px;
+  color: var(--secondary);
+  text-shadow: 0 0 10px rgba(var(--secondary-rgb), 0.5);
+  margin-bottom: 16px !important;
+}
+.info-credits {
+  margin: 20px 0 16px 0;
+  padding: 16px;
+  border-top: 1px solid rgba(var(--secondary-rgb), 0.2);
+  border-bottom: 1px solid rgba(var(--secondary-rgb), 0.2);
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 6px;
+}
+.info-credits h3 {
+  margin: 0 0 12px 0;
+  font-size: 12px;
+  letter-spacing: 4px;
+  color: var(--secondary);
+  text-align: center;
+}
+.info-credits p {
+  margin: 0 0 8px 0 !important;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.8);
+}
+.info-gratitude {
+  margin-top: 18px !important;
+  text-align: center;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.75);
+}
+.info-thanks {
+  text-align: center;
+  font-size: 16px;
+  letter-spacing: 3px;
+  color: var(--secondary);
+  text-shadow: 0 0 12px rgba(var(--secondary-rgb), 0.6);
+  margin-top: 12px !important;
+}
+

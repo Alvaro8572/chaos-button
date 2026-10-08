@@ -1620,6 +1620,8 @@ function closeTopmostOverlay() {
   } else if (document.getElementById("collectionPanel").classList.contains("open")) {
     document.getElementById("collectionPanel").classList.remove("open");
     collectionOpen = false;
+  } else if (document.getElementById("infoPanel").classList.contains("open")) {
+    closeInfo();
   } else if (document.getElementById("factPanel").classList.contains("visible")) {
     document.getElementById("factPanel").classList.remove("visible");
   }
@@ -3791,6 +3793,18 @@ function closeMemory() {
   p.classList.remove("open");
 }
 
+function openInfo() {
+  var p = document.getElementById("infoPanel");
+  if (!p) return;
+  p.classList.add("open");
+}
+
+function closeInfo() {
+  var p = document.getElementById("infoPanel");
+  if (!p) return;
+  p.classList.remove("open");
+}
+
 // Initialize menu state and wire up close button
 updateMemoryMenuState();
 var memoryPanelClose = document.getElementById("memoryPanelClose");
@@ -3804,6 +3818,10 @@ if (memoryFragmentClose) {
 var memoryFinalCloseBtn = document.getElementById("memoryFinalClose");
 if (memoryFinalCloseBtn) {
   memoryFinalCloseBtn.addEventListener("click", function() { closeMemoryFinal(); });
+}
+var infoPanelCloseBtn = document.getElementById("infoPanelClose");
+if (infoPanelCloseBtn) {
+  infoPanelCloseBtn.addEventListener("click", function() { closeInfo(); });
 }
 // Click backdrop to close fragment overlay
 var memoryFragmentEl = document.getElementById("memoryFragment");
@@ -3921,6 +3939,9 @@ function navigateToSection(section) {
       break;
     case "memory":
       if (typeof openMemory === "function") openMemory();
+      break;
+    case "info":
+      if (typeof openInfo === "function") openInfo();
       break;
   }
 }
