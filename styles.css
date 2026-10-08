@@ -4262,23 +4262,26 @@ body.boss-arena-body::before {
   border-bottom: 1px solid rgba(var(--secondary-rgb), 0.2);
 }
 #infoPanelTitle {
-  font-size: 15px;
-  letter-spacing: 5px;
-  color: var(--secondary);
-  text-shadow: 0 0 10px rgba(var(--secondary-rgb), 0.5);
-  font-weight: bold;
+  font-size: 14px;
+  letter-spacing: 2px;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 600;
+  text-transform: none;
 }
 #infoPanelClose {
   background: none;
   border: none;
   color: rgba(255, 255, 255, 0.6);
-  font-size: 28px;
-  cursor: pointer;
+  font-size: 24px;
+  font-weight: normal;
+  letter-spacing: normal;
+  text-transform: none;
   padding: 0;
   line-height: 1;
   font-family: inherit;
+  cursor: pointer;
 }
-#infoPanelClose:hover { color: white; }
+#infoPanelClose:hover { color: white; transform: none; box-shadow: none; }
 #infoPanelContent {
   font-size: 13px;
   line-height: 1.8;
