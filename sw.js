@@ -5,14 +5,14 @@
    for runtime fetches. Aggressive caching so the game works fully offline.
 */
 
-const CACHE_VERSION = "chaos-v33-fx";
+const CACHE_VERSION = "chaos-v34-swupdate";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=33-fx",
-  "./app.js?v=33-fx",
+  "./styles.css?v=34-swupdate",
+  "./app.js?v=34-swupdate",
   "./boss.html",
-  "./boss.js?v=33-fx",
+  "./boss.js?v=34-swupdate",
   "./manifest.json",
   "./assets/icons/icon-192.png",
   "./assets/icons/icon-512.png",
@@ -124,9 +124,26 @@ self.addEventListener("fetch", function(event) {
   if (req.method !== "GET") return;
 
   var url = new URL(req.url);
-
-  // Only handle same-origin requests (skip Google Fonts CSS, etc.)
   if (url.origin !== self.location.origin) return;
+
+  var isHTML = req.mode === "navigate" || req.destination === "document" || (req.headers.get("accept") || "").indexOf("text/html") !== -1;
+
+  if (isHTML) {
+    event.respondWith(
+      fetch(req).then(function(networkRes) {
+        if (networkRes && networkRes.status === 200) {
+          var copy = networkRes.clone();
+          caches.open(CACHE_VERSION).then(function(cache) { cache.put(req, copy); });
+        }
+        return networkRes;
+      }).catch(function() {
+        return caches.match(req).then(function(cached) {
+          return cached || new Response("Offline", { status: 503, statusText: "Offline" });
+        });
+      })
+    );
+    return;
+  }
 
   event.respondWith(
     caches.match(req).then(function(cached) {
@@ -139,12 +156,8 @@ self.addEventListener("fetch", function(event) {
         }
         return networkRes;
       }).catch(function() {
-        // Offline: return cached or a basic offline response
         return cached || new Response("Offline", { status: 503, statusText: "Offline" });
       });
-
-      // Stale-while-revalidate: return cached immediately if present,
-      // otherwise wait for network
       return cached || networkFetch;
     })
   );
