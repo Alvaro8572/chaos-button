@@ -374,6 +374,8 @@ var MAX_ELEMENTS = {
   "glitch-slice": 5,
   "hackerman-line": 15,
   "aurora-layer": 4,
+  "virus-overlay": 1,
+  "hackerman-overlay": 1,
   "falling-cat": 1,
   "sardine": 1,
   "coin-button": 1
@@ -1226,7 +1228,13 @@ var EVENTS = [
     name: "Aurora",
     chance: 0.05,
     execute: function() {
-      if (!canCreate("aurora-layer")) return;
+      var reserved = 0;
+      if (canCreate("aurora-layer")) reserved++;
+      if (canCreate("aurora-layer")) reserved++;
+      if (reserved < 2) {
+        for (var r = 0; r < reserved; r++) releaseElement("aurora-layer");
+        return;
+      }
       var layer1 = document.createElement("div");
       layer1.className = "aurora-layer aurora-layer-1";
       var layer2 = document.createElement("div");
@@ -1242,15 +1250,104 @@ var EVENTS = [
 ];
 
 function triggerRandomEvent() {
-  var roll = Math.random();
+  var total = 0;
+  for (var i = 0; i < EVENTS.length; i++) total += EVENTS[i].chance;
+  if (total <= 0) return;
+  var roll = Math.random() * total;
   var cumulative = 0;
-  for (var i = 0; i < EVENTS.length; i++) {
-    cumulative += EVENTS[i].chance;
+  for (var j = 0; j < EVENTS.length; j++) {
+    cumulative += EVENTS[j].chance;
     if (roll < cumulative) {
-      EVENTS[i].execute();
+      EVENTS[j].execute();
       return;
     }
   }
+}
+
+function fxCleanup(el, ms) {
+  setTimeout(function() { if (el.parentNode) el.parentNode.removeChild(el); }, ms);
+}
+
+var PRO_THEME_EFFECTS = {
+  void: function() {
+    var portal = document.createElement("div");
+    portal.className = "fx-void-portal";
+    document.body.appendChild(portal);
+    fxCleanup(portal, 1200);
+    for (var i = 0; i < 14; i++) {
+      var spark = document.createElement("div");
+      spark.className = "fx-void-spark";
+      var angle = Math.random() * 6.283;
+      var dist = 70 + Math.random() * 130;
+      spark.style.left = (window.innerWidth / 2) + "px";
+      spark.style.top = (window.innerHeight / 2) + "px";
+      spark.style.setProperty("--dx", (Math.cos(angle) * dist).toFixed(0) + "px");
+      spark.style.setProperty("--dy", (Math.sin(angle) * dist).toFixed(0) + "px");
+      document.body.appendChild(spark);
+      fxCleanup(spark, 1000);
+    }
+  },
+  gold: function() {
+    for (var i = 0; i < 22; i++) {
+      (function(idx) {
+        setTimeout(function() {
+          var coin = document.createElement("div");
+          coin.className = "fx-coin";
+          coin.textContent = "🪙";
+          coin.style.left = (Math.random() * 96) + "%";
+          var dur = 1 + Math.random() * 1.2;
+          coin.style.animationDuration = dur + "s";
+          document.body.appendChild(coin);
+          fxCleanup(coin, dur * 1000 + 200);
+        }, idx * 30);
+      })(i);
+    }
+  },
+  blood: function() {
+    for (var i = 0; i < 16; i++) {
+      (function(idx) {
+        setTimeout(function() {
+          var drip = document.createElement("div");
+          drip.className = "fx-blood";
+          drip.style.left = (Math.random() * 100) + "%";
+          drip.style.height = (18 + Math.random() * 46) + "px";
+          var dur = 0.9 + Math.random() * 0.8;
+          drip.style.animationDuration = dur + "s";
+          document.body.appendChild(drip);
+          fxCleanup(drip, dur * 1000 + 200);
+        }, idx * 35);
+      })(i);
+    }
+  },
+  fire: function() {
+    for (var i = 0; i < 26; i++) {
+      (function(idx) {
+        setTimeout(function() {
+          var ember = document.createElement("div");
+          ember.className = "fx-ember";
+          ember.style.left = (Math.random() * 100) + "%";
+          ember.style.setProperty("--drift", ((Math.random() - 0.5) * 90).toFixed(0) + "px");
+          var dur = 1 + Math.random() * 1;
+          ember.style.animationDuration = dur + "s";
+          document.body.appendChild(ember);
+          fxCleanup(ember, dur * 1000 + 200);
+        }, idx * 25);
+      })(i);
+    }
+  }
+};
+
+var lastThemeEffectTime = 0;
+
+function triggerThemeEffect() {
+  var now = Date.now();
+  if (now - lastThemeEffectTime < 1500) return;
+  var theme = SHOP_THEMES.filter(function(t) { return t.key === equippedTheme; })[0];
+  if (!theme || theme.tier !== 2) return;
+  var fn = PRO_THEME_EFFECTS[theme.key];
+  if (!fn) return;
+  lastThemeEffectTime = now;
+  fn();
 }
 
 function resetEverything() {
@@ -1340,14 +1437,7 @@ function chaos() {
   chaosBtn.style.borderColor = color1;
   chaosBtn.style.boxShadow = "0 0 25px " + color1;
 
-  // Background — derive from active theme so chaos effects stay on-palette
-  if (onTheme) {
-    // Theme active: shift lightness slightly with chaos level for visual variety
-    // while keeping the hue family intact (no random HSL on themed sessions).
-    var bgAngle = Math.floor(Math.random() * 360);
-    document.body.style.background = "linear-gradient(" + bgAngle + "deg, " +
-      activeTheme.swatch[0] + ", " + activeTheme.swatch[1] + ")";
-  } else if (chaosLevel >= 50) {
+  if (chaosLevel >= 50) {
     document.body.style.background = "linear-gradient(" + Math.floor(Math.random() * 360) + "deg, " + randomHsl(90, 15) + ", " + randomHsl(90, 15) + ")";
   } else {
     document.body.style.background = randomHsl(80, 12);
@@ -1400,6 +1490,10 @@ function chaos() {
     triggerRandomEvent();
   }
 
+  if (Math.random() < 0.08) {
+    triggerThemeEffect();
+  }
+
   // Coin event (1.2% per click + timer)
   if (!coinEvent && Math.random() < 0.012) {
     spawnCoinEvent();
@@ -1427,6 +1521,7 @@ function chaos() {
       chaosLevel = 0;
       clicks = 0;
       hasCountedHundredThisCycle = false;
+      updateChaosMeter();
       logEl.innerText = "\u26a0\ufe0f El caos se contuvo a tiempo...";
       logEl.classList.remove("panicked");
       void logEl.offsetWidth;
@@ -1457,13 +1552,14 @@ function chaos() {
       clicks = 0;
       updateChaosMeter();
       setTimeout(function() {
-        window.location.href = "boss.html?level=" + nextLevel + "&v=23";
+        window.location.href = "boss.html?level=" + nextLevel + "&v=33-fx";
       }, 400);
     } else {
       // 60% — keep playing, reset chaosLevel but don't teleport
       hasCountedHundredThisCycle = false;
       chaosLevel = 0;
       clicks = 0;
+      updateChaosMeter();
       logEl.innerText = "El caos se contuvo... esta vez.";
     }
     checkAchievements();
@@ -1487,7 +1583,8 @@ document.addEventListener("keydown", function(e) {
     var t = e.target;
     var tag = t && t.tagName ? t.tagName.toLowerCase() : "";
     var isEditable = t && (t.isContentEditable || tag === "input" || tag === "textarea" || tag === "select");
-    if (isEditable) return;
+    var isOtherButton = (tag === "button" && t !== chaosBtn) || (t && typeof t.getAttribute === "function" && t.getAttribute("role") === "button");
+    if (isEditable || isOtherButton) return;
     e.preventDefault();
     playClickSound();
     chaos();
@@ -1612,17 +1709,17 @@ var ACHIEVEMENTS = [
   { id: "clickeador_pro",tier: "silver", name: "Clickeador Pro",      desc: "Alcanzá 5,000 clicks",                category: "clicks",  reward: null },
   { id: "slider",       tier: "silver", name: "Slider",              desc: "Comprá 3 fotos de perfil",            category: "fotos",   reward: null },
   { id: "first_boost",  tier: "silver", name: "First Boost",         desc: "Activá tu primer boost",              category: "clicks",  reward: null },
-  { id: "espia",        tier: "silver", name: "Espía",               desc: "Equipá 3 frases",                     category: "frases",  reward: null },
+  { id: "espia",        tier: "silver", name: "Espía",               desc: "Comprá 3 frases",                     category: "frases",  reward: null },
 
   // ORO (15)
   { id: "bot_frenesi",  tier: "gold",   name: "Bot Frenesí",         desc: "Alcanzá 25,000 clicks",               category: "clicks",  reward: null },
-  { id: "multitud",     tier: "gold",   name: "Multitud",            desc: "Comprá todas las 6 fotos",            category: "fotos",   reward: null },
+  { id: "multitud",     tier: "gold",   name: "Multitud",            desc: "Comprá 6 fotos de perfil",            category: "fotos",   reward: null },
   { id: "mouse_breaker",tier: "gold",   name: "Mouse Breaker",       desc: "Alcanzá 50,000 clicks",               category: "clicks",  reward: { type: "picture", file: "assets/images/Ratón_gamer.jpg" } },
   { id: "ruletero",     tier: "gold",   name: "Ruletero",            desc: "Girá la ruleta 5 veces",             category: "coleccion", reward: null },
   { id: "loco_completo",tier: "gold",   name: "Loco Completo",       desc: "Llegá a 100% caos 3 veces",           category: "clicks",  reward: null },
   { id: "tipografo",    tier: "gold",   name: "Tipógrafo",           desc: "Comprá todas las 5 fuentes",          category: "frases",  reward: null },
   { id: "intelectual",  tier: "gold",   name: "Intelectual",         desc: "Desbloqueá todos los hechos",         category: "hechos",  reward: { type: "picture", file: "assets/images/Nikola-Albert.webp" } },
-  { id: "espia_pro",    tier: "gold",   name: "Espía Pro",           desc: "Equipá todas las 6 frases",           category: "frases",  reward: null },
+  { id: "espia_pro",    tier: "gold",   name: "Espía Pro",           desc: "Comprá 6 frases",                     category: "frases",  reward: null },
   { id: "riqueza",      tier: "gold",   name: "Riqueza",             desc: "Acumulá 1,000 monedas",               category: "clicks",  reward: null },
   { id: "marmolista",   tier: "gold",   name: "Marmolista",          desc: "Activá 25 boosts",                    category: "clicks",  reward: null },
   { id: "boss_slayer",  tier: "gold",   name: "Boss Slayer",         desc: "Derrota al Chaos God 5 veces",        category: "boss",    reward: { type: "picture", file: "assets/boss.jpg" } },
@@ -1720,6 +1817,10 @@ function applyAchievementReward(id) {
     inventory.slogans.push(ach.reward.id);
     saveInventory();
   }
+  if (id === "boss_slayer" && typeof ownedThemes !== "undefined" && Array.isArray(ownedThemes) && ownedThemes.indexOf("fire") === -1) {
+    ownedThemes.push("fire");
+    safeJSON_set("chaosOwnedThemes", ownedThemes);
+  }
 }
 
 function checkAchievements() {
@@ -1753,6 +1854,7 @@ function checkAchievements() {
       case "ruleta_maestra":unlocked = rouletteTotalSpins >= 25; break;
       case "intelectual":  unlocked = unlockedFacts.length >= FACTS.length; break;
       case "bendecido":    unlocked = jesusRewardUnlocked; break;
+      case "first_blood":  unlocked = (parseInt(localStorage.getItem("chaosBossKills"), 10) || 0) >= 1; break;
     }
     if (unlocked) unlockAchievement(ach.id);
   });
@@ -2328,7 +2430,9 @@ function buildShopThemes() {
     if (isThemeOwned(theme.key)) swatch.classList.add("owned");
 
     var colors = theme.swatch;
-    var gradientCss = "linear-gradient(135deg, " + colors[0] + ", " + colors[1] + ")";
+    var gradientCss = theme.key === "chaos"
+      ? "linear-gradient(135deg, #ff0055, #ffcc00, #00ff88, #aa00ff, #ff0055)"
+      : "linear-gradient(135deg, " + colors[0] + ", " + colors[1] + ")";
 
     var preview = document.createElement("div");
     preview.className = "theme-preview";
@@ -2340,11 +2444,13 @@ function buildShopThemes() {
     name.textContent = theme.name;
     swatch.appendChild(name);
 
-    var badge = document.createElement("div");
-    badge.className = "theme-badge";
-    if (theme.tier === 2) badge.textContent = "PRO";
-    else if (theme.price === 0) badge.textContent = "GRATIS";
-    swatch.appendChild(badge);
+    var badgeText = theme.tier === 2 ? "PRO" : (theme.price === 0 ? "GRATIS" : "");
+    if (badgeText) {
+      var badge = document.createElement("div");
+      badge.className = "theme-badge";
+      badge.textContent = badgeText;
+      swatch.appendChild(badge);
+    }
 
     var action = document.createElement("button");
     action.className = "theme-action";
@@ -2358,7 +2464,7 @@ function buildShopThemes() {
       action.onclick = function() { equipTheme(theme.key); };
     } else if (theme.rewardOnly) {
       action.classList.add("reward");
-      action.textContent = "RECOMPENSA";
+      action.textContent = theme.rewardHint || "RECOMPENSA";
       action.disabled = true;
     } else {
       action.classList.add("buy");
@@ -3381,14 +3487,19 @@ var SHOP_THEMES = [
   { key: "toxic",     name: "TOXIC",       price: 10, tier: 1, swatch: ["#ccff00", "#76ff03"] },
   { key: "cyberpunk", name: "CYBERPUNK",   price: 10, tier: 1, swatch: ["#ff00ff", "#00ffff"] },
   { key: "sunset",    name: "SUNSET",      price: 10, tier: 1, swatch: ["#ff6b35", "#ff2975"] },
-  { key: "fire",      name: "FUEGO",       price: 0,  tier: 2, swatch: ["#ff4500", "#ffcc00"], rewardOnly: true },
+  { key: "fire",      name: "FUEGO",       price: 0,  tier: 2, swatch: ["#ff4500", "#ffcc00"], rewardOnly: true, rewardHint: "BOSS SLAYER" },
   { key: "void",      name: "VOID",        price: 50, tier: 2, swatch: ["#b026ff", "#00f0ff"] },
   { key: "gold",      name: "GOLD RUSH",   price: 50, tier: 2, swatch: ["#ffd700", "#ffaa00"] },
   { key: "blood",     name: "BLOOD MOON",  price: 50, tier: 2, swatch: ["#dc143c", "#8b0000"] }
 ];
 
 var ownedThemes = safeJSON("chaosOwnedThemes", ["chaos"]);
+if (!Array.isArray(ownedThemes)) ownedThemes = ["chaos"];
+if (ownedThemes.indexOf("chaos") === -1) ownedThemes.push("chaos");
 var equippedTheme = safeJSON("chaosEquippedTheme", "chaos");
+if (ownedThemes.indexOf(equippedTheme) === -1 || !SHOP_THEMES.some(function(t) { return t.key === equippedTheme; })) {
+  equippedTheme = "chaos";
+}
 var shopTab = "items"; // "items" or "themes"
 
 function safeJSON_set(key, value) {
@@ -3424,6 +3535,10 @@ function buyTheme(theme) {
 }
 
 function equipTheme(themeKey) {
+  if (!isThemeOwned(themeKey)) {
+    showToast("Tema no desbloqueado", "error");
+    return;
+  }
   equippedTheme = themeKey;
   safeJSON_set("chaosEquippedTheme", equippedTheme);
   applyTheme(themeKey);
@@ -3435,10 +3550,15 @@ function applyTheme(themeKey) {
   var theme = SHOP_THEMES.filter(function(t) { return t.key === themeKey; })[0];
   var key = theme ? themeKey : "chaos";
   document.documentElement.setAttribute("data-theme", key);
+  var meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute("content", (theme && theme.swatch) ? theme.swatch[0] : "#ff0055");
 }
 
 // Apply saved theme on boot
 applyTheme(equippedTheme);
+
+// Reward-only themes granted by already-unlocked achievements
+if (isAchievementUnlocked("boss_slayer")) applyAchievementReward("boss_slayer");
 
 /* ========================= */
 /* MEMORY FRAGMENTS            */

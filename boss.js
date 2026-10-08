@@ -42,7 +42,7 @@
   var totalClicks = 0;
   var fightActive = false;
   var timerInterval = null;
-  var returnUrl = "index.html?v=23";
+  var returnUrl = "index.html";
 
   var $name = document.getElementById("bossName");
   var $timer = document.getElementById("bossTimer");
@@ -134,7 +134,7 @@
 
     setTimeout(function() {
       localStorage.setItem("chaosPendingReset", "1");
-      window.location.href = returnUrl + (unlocked ? "&justUnlockedBossSlayer=1" : "");
+      window.location.href = returnUrl + (unlocked ? "?justUnlockedBossSlayer=1" : "");
     }, 2200);
   }
 

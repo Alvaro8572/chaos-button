@@ -97,7 +97,7 @@
     --primary-rgb: 255, 51, 0;
     --secondary: #ff9900;
     --secondary-rgb: 255, 153, 0;
-    --accent: var(--secondary);
+    --accent: #ffcc00;
     --accent-rgb: 255, 204, 0;
     --bg-dark: #1a0500;
     --bg-dark-rgb: 26, 5, 0;
@@ -172,7 +172,7 @@
     --primary-rgb: 255, 0, 255;
     --secondary: #00ffff;
     --secondary-rgb: 0, 255, 255;
-    --accent: var(--secondary);
+    --accent: #ffeb3b;
     --accent-rgb: 255, 235, 59;
     --bg-dark: #0a0014;
     --bg-dark-rgb: 10, 0, 20;
@@ -243,7 +243,7 @@
   /* THEME: GOLD RUSH (PRO)      */
   /* ========================= */
   [data-theme="gold"] {
-    --primary: var(--secondary);
+    --primary: #ffd700;
     --primary-rgb: 255, 215, 0;
     --secondary: #ffaa00;
     --secondary-rgb: 255, 170, 0;
@@ -4033,6 +4033,7 @@ body.boss-arena-body::before {
   color: var(--text-primary);
   z-index: 1;
 }
+.theme-badge:empty { display: none; }
 .theme-swatch.tier-2 .theme-badge {
   background: linear-gradient(135deg, #ffd700, #ffaa00);
   color: #1a0f00;
@@ -4076,6 +4077,18 @@ body.boss-arena-body::before {
   color: var(--secondary);
   text-shadow: 0 0 6px rgba(var(--secondary-rgb), 0.5);
 }
+.theme-action.equip {
+  color: var(--secondary);
+}
+.theme-action.buy {
+  color: var(--secondary);
+  background: rgba(var(--secondary-rgb), 0.16);
+}
+.theme-action.reward {
+  color: rgba(var(--secondary-rgb), 0.95);
+  background: linear-gradient(90deg, rgba(var(--secondary-rgb), 0.18), rgba(var(--secondary-rgb), 0.05));
+  letter-spacing: 1px;
+}
 
 /* ========================= */
 /* THEME PRO ANIMATIONS        */
@@ -4084,7 +4097,8 @@ body.boss-arena-body::before {
 /* Shimmer effect on PRO theme swatches - only when a pro theme is active */
 [data-theme="void"] .theme-swatch.tier-2 .theme-preview::before,
 [data-theme="gold"] .theme-swatch.tier-2 .theme-preview::before,
-[data-theme="blood"] .theme-swatch.tier-2 .theme-preview::before {
+[data-theme="blood"] .theme-swatch.tier-2 .theme-preview::before,
+[data-theme="fire"] .theme-swatch.tier-2 .theme-preview::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -4100,45 +4114,96 @@ body.boss-arena-body::before {
   100% { background-position: -200% 0; }
 }
 
-/* Body glow overlay for pro themes - fixed full-screen ::before element */
-body::before {
-  content: "";
+.fx-void-portal {
   position: fixed;
-  inset: 0;
+  left: 50%;
+  top: 50%;
+  width: 140px;
+  height: 140px;
+  margin: -70px 0 0 -70px;
+  border-radius: 50%;
+  border: 3px solid rgba(176, 38, 255, 0.85);
+  box-shadow: 0 0 45px rgba(176, 38, 255, 0.75), inset 0 0 35px rgba(0, 240, 255, 0.65);
   pointer-events: none;
-  z-index: 50;
-  opacity: 0;
-  transition: opacity 0.6s ease;
+  z-index: 4;
+  animation: fxVoidPortal 1.1s ease-out forwards;
+}
+@keyframes fxVoidPortal {
+  0%   { transform: scale(0.25) rotate(0deg); opacity: 0; }
+  20%  { opacity: 1; }
+  100% { transform: scale(2.6) rotate(240deg); opacity: 0; }
 }
 
-[data-theme="void"] body::before {
-  background: radial-gradient(ellipse at center, transparent 30%, rgba(var(--primary-rgb), 0.35) 100%);
-  animation: voidGlow 4s ease-in-out infinite;
-  opacity: 1;
+.fx-void-spark {
+  position: fixed;
+  width: 5px;
+  height: 5px;
+  margin: -2px 0 0 -2px;
+  border-radius: 50%;
+  background: #00f0ff;
+  box-shadow: 0 0 8px #00f0ff;
+  pointer-events: none;
+  z-index: 4;
+  animation: fxVoidSpark 0.9s ease-out forwards;
 }
-@keyframes voidGlow {
-  0%, 100% { opacity: 0.4; }
-  50%      { opacity: 0.85; }
-}
-
-[data-theme="gold"] body::before {
-  background: radial-gradient(ellipse at top, rgba(255, 215, 0, 0.3) 0%, transparent 60%);
-  animation: goldGlow 3s ease-in-out infinite;
-  opacity: 1;
-}
-@keyframes goldGlow {
-  0%, 100% { opacity: 0.35; }
-  50%      { opacity: 0.75; }
+@keyframes fxVoidSpark {
+  0%   { transform: translate(0, 0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--dx, 0), var(--dy, 0)) scale(0); opacity: 0; }
 }
 
-[data-theme="blood"] body::before {
-  background: radial-gradient(ellipse at bottom, rgba(220, 20, 60, 0.4) 0%, transparent 60%);
-  animation: bloodPulse 2.5s ease-in-out infinite;
-  opacity: 1;
+.fx-coin {
+  position: fixed;
+  top: -40px;
+  font-size: 24px;
+  line-height: 1;
+  pointer-events: none;
+  z-index: 4;
+  animation-name: fxCoinFall;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
 }
-@keyframes bloodPulse {
-  0%, 100% { opacity: 0.45; }
-  50%      { opacity: 1; }
+@keyframes fxCoinFall {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 0; }
+  10%  { opacity: 1; }
+  100% { transform: translateY(115vh) rotate(540deg); opacity: 0.85; }
+}
+
+.fx-blood {
+  position: fixed;
+  top: -60px;
+  width: 4px;
+  border-radius: 0 0 50% 50%;
+  background: linear-gradient(180deg, #c40000, #6b0000);
+  box-shadow: 0 0 6px rgba(180, 0, 0, 0.7);
+  pointer-events: none;
+  z-index: 4;
+  animation-name: fxBloodFall;
+  animation-timing-function: ease-in;
+  animation-fill-mode: forwards;
+}
+@keyframes fxBloodFall {
+  0%   { transform: translateY(0) scaleY(0.6); opacity: 0; }
+  15%  { opacity: 0.95; }
+  100% { transform: translateY(115vh) scaleY(1.15); opacity: 0.85; }
+}
+
+.fx-ember {
+  position: fixed;
+  bottom: -10px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffe08a, #ff6a00 70%);
+  box-shadow: 0 0 10px #ff6a00;
+  pointer-events: none;
+  z-index: 4;
+  animation-name: fxEmberRise;
+  animation-timing-function: ease-out;
+  animation-fill-mode: forwards;
+}
+@keyframes fxEmberRise {
+  0%   { transform: translate(0, 0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--drift, 0), -75vh) scale(0.2); opacity: 0; }
 }
 
 /* ========================= */
@@ -4162,36 +4227,5 @@ body::before {
   --border-subtle: rgba(255, 100, 0, 0.25);
   --border-accent: rgba(255, 165, 0, 0.55);
   --theme-tier: 2;
-}
-
-[data-theme="fire"] body::before {
-  background:
-    radial-gradient(ellipse at bottom, rgba(255, 69, 0, 0.45) 0%, transparent 55%),
-    radial-gradient(ellipse at top, rgba(255, 204, 0, 0.15) 0%, transparent 50%);
-  animation: fireGlow 1.8s ease-in-out infinite;
-  opacity: 1;
-}
-@keyframes fireGlow {
-  0%, 100% { opacity: 0.6; }
-  50%      { opacity: 1; }
-}
-
-[data-theme="fire"] body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  background:
-    radial-gradient(circle at 20% 95%, rgba(255, 100, 0, 0.18) 0%, transparent 8%),
-    radial-gradient(circle at 50% 100%, rgba(255, 200, 0, 0.22) 0%, transparent 7%),
-    radial-gradient(circle at 80% 95%, rgba(255, 69, 0, 0.18) 0%, transparent 8%),
-    radial-gradient(circle at 35% 100%, rgba(255, 150, 0, 0.15) 0%, transparent 6%),
-    radial-gradient(circle at 65% 100%, rgba(255, 80, 0, 0.2) 0%, transparent 7%);
-  animation: fireFlicker 0.4s steps(2) infinite;
-}
-@keyframes fireFlicker {
-  0%   { opacity: 0.7; }
-  100% { opacity: 1; }
 }
 
