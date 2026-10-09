@@ -128,6 +128,10 @@
       <span class="menu-icon">ℹ️</span>
       <span class="menu-label">INFO</span>
     </button>
+    <button class="menu-item" data-section="stats">
+      <span class="menu-icon">📊</span>
+      <span class="menu-label">STATS</span>
+    </button>
     <div class="menu-divider"></div>
     <button class="menu-item menu-toggle-setting" id="menuSoundToggle">
       <span class="menu-icon">🔊</span>
@@ -524,7 +528,7 @@
   <div id="infoPanelInner">
     <div id="infoPanelHeader">
       <span id="infoPanelTitle">CHAOS BUTTON</span>
-      <button id="infoPanelClose" aria-label="Cerrar información">×</button>
+      <button id="infoPanelClose" class="panel-close" aria-label="Cerrar información">×</button>
     </div>
     <div id="infoPanelContent">
       <p class="info-greeting">¡Hola!</p>
@@ -539,6 +543,27 @@
       </div>
       <p class="info-gratitude">Pero sobre todo, debo darte las gracias a ti...</p>
       <p class="info-thanks">¡Gracias por jugar Chaos Button!</p>
+    </div>
+  </div>
+</div>
+
+<div id="statsPanel" role="dialog" aria-label="Estadísticas">
+  <div id="statsPanelInner">
+    <div id="statsPanelHeader">
+      <span id="statsPanelTitle">ESTADÍSTICAS</span>
+      <button id="statsPanelClose" class="panel-close" aria-label="Cerrar estadísticas">×</button>
+    </div>
+    <div id="statsPanelContent">
+      <div class="stat-row"><span class="stat-label">Clicks totales</span><span class="stat-value" id="statClicks">0</span></div>
+      <div class="stat-row"><span class="stat-label">Monedas actuales</span><span class="stat-value" id="statCoinsCurrent">0</span></div>
+      <div class="stat-row"><span class="stat-label">Monedas totales</span><span class="stat-value" id="statCoinsTotal">0</span></div>
+      <div class="stat-row"><span class="stat-label">Boosts activados</span><span class="stat-value" id="statBoosts">0</span></div>
+      <div class="stat-row"><span class="stat-label">Veces al 100% caos</span><span class="stat-value" id="statHundred">0</span></div>
+      <div class="stat-row"><span class="stat-label">Logros</span><span class="stat-value" id="statAchievements">0 / 25</span></div>
+      <div class="stat-row stat-trueending" id="statTrueEndingRow">
+        <span class="stat-label">True Ending</span>
+        <span class="stat-value" id="statTrueEnding">NO</span>
+      </div>
     </div>
   </div>
 </div>

@@ -281,6 +281,7 @@ function formatNumber(n) {
 /* ========================= */
 
 var coins = safeNumber("chaosCoins", 0, true);
+var totalCoinsEarned = safeNumber("chaosTotalCoinsEarned", 0, true);
 var coinDisplayEl = document.getElementById("coinDisplay");
 var coinNumberEl = document.getElementById("coinNumber");
 var coinTickTimeout = null;
@@ -298,6 +299,8 @@ try {
 function addCoins(amount, source, isBig) {
   coins += amount;
   localStorage.setItem("chaosCoins", String(coins));
+  totalCoinsEarned += amount;
+  localStorage.setItem("chaosTotalCoinsEarned", String(totalCoinsEarned));
   coinNumberEl.textContent = formatNumber(coins);
   if (shopOpen) updateShopBalance();
 
@@ -1622,6 +1625,8 @@ function closeTopmostOverlay() {
     collectionOpen = false;
   } else if (document.getElementById("infoPanel").classList.contains("open")) {
     closeInfo();
+  } else if (document.getElementById("statsPanel").classList.contains("open")) {
+    closeStats();
   } else if (document.getElementById("factPanel").classList.contains("visible")) {
     document.getElementById("factPanel").classList.remove("visible");
   }
@@ -3805,6 +3810,36 @@ function closeInfo() {
   p.classList.remove("open");
 }
 
+function openStats() {
+  var p = document.getElementById("statsPanel");
+  if (!p) return;
+  document.getElementById("statClicks").textContent = String(totalClicks);
+  document.getElementById("statCoinsCurrent").textContent = String(coins);
+  document.getElementById("statCoinsTotal").textContent = String(totalCoinsEarned);
+  document.getElementById("statBoosts").textContent = String(boostActivationsCount);
+  document.getElementById("statHundred").textContent = String(chaosReachedHundredCount);
+  document.getElementById("statAchievements").textContent = achievementsUnlocked.length + " / 25";
+  var hasTrueEnding = unlockedFragments.indexOf(8) !== -1;
+  var teEl = document.getElementById("statTrueEnding");
+  var teRow = document.getElementById("statTrueEndingRow");
+  if (hasTrueEnding) {
+    teEl.textContent = "SÍ";
+    teRow.classList.add("stat-done");
+    teRow.classList.remove("stat-pending");
+  } else {
+    teEl.textContent = "NO";
+    teRow.classList.add("stat-pending");
+    teRow.classList.remove("stat-done");
+  }
+  p.classList.add("open");
+}
+
+function closeStats() {
+  var p = document.getElementById("statsPanel");
+  if (!p) return;
+  p.classList.remove("open");
+}
+
 // Initialize menu state and wire up close button
 updateMemoryMenuState();
 var memoryPanelClose = document.getElementById("memoryPanelClose");
@@ -3822,6 +3857,10 @@ if (memoryFinalCloseBtn) {
 var infoPanelCloseBtn = document.getElementById("infoPanelClose");
 if (infoPanelCloseBtn) {
   infoPanelCloseBtn.addEventListener("click", function() { closeInfo(); });
+}
+var statsPanelCloseBtn = document.getElementById("statsPanelClose");
+if (statsPanelCloseBtn) {
+  statsPanelCloseBtn.addEventListener("click", function() { closeStats(); });
 }
 // Click backdrop to close fragment overlay
 var memoryFragmentEl = document.getElementById("memoryFragment");
@@ -3942,6 +3981,9 @@ function navigateToSection(section) {
       break;
     case "info":
       if (typeof openInfo === "function") openInfo();
+      break;
+    case "stats":
+      if (typeof openStats === "function") openStats();
       break;
   }
 }
