@@ -11,7 +11,6 @@ const APP_SHELL = [
   "./index.html",
   "./styles.css?v=37-chaos",
   "./app.js?v=37-chaos",
-  "./boss.html",
   "./boss.js?v=37-chaos",
   "./manifest.json",
   "./assets/icons/icon-192.png",

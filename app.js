@@ -1556,7 +1556,9 @@ function chaos() {
       clicks = 0;
       updateChaosMeter();
       setTimeout(function() {
-        window.location.href = "boss.html?level=" + nextLevel + "&v=37-chaos";
+        if (typeof window.startBossArena === "function") {
+          window.startBossArena(nextLevel);
+        }
       }, 400);
     } else {
       // 60% — keep playing, reset chaosLevel but don't teleport
@@ -4229,6 +4231,10 @@ window.__chaosDebug = {
 console.log("💡 Debug commands available: type __chaosDebug.help()");
 
 } // end if CHAOS_DEBUG_ENABLED
+
+document.addEventListener("chaosBossEnd", function() {
+  if (typeof resetEverything === "function") resetEverything();
+});
 
 })();
 
