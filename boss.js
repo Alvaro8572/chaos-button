@@ -26,6 +26,23 @@
     "assets/music-boss-2.mp3",
     "assets/music-boss-3.mp3"
   ];
+  var BOSS_MUSIC_VOLUME = 0.5;
+  var bossMusicFade = null;
+  function fadeBossMusic(target, ms, onDone) {
+    if (!$audio) { if (onDone) onDone(); return; }
+    if (bossMusicFade) clearInterval(bossMusicFade);
+    var start = $audio.volume;
+    var t0 = Date.now();
+    bossMusicFade = setInterval(function() {
+      var k = Math.min(1, (Date.now() - t0) / ms);
+      $audio.volume = start + (target - start) * k;
+      if (k >= 1) {
+        clearInterval(bossMusicFade);
+        bossMusicFade = null;
+        if (onDone) onDone();
+      }
+    }, 40);
+  }
 
   var TIME_LIMIT = 25;
   var REWARD_COINS = 50;
@@ -94,8 +111,10 @@
     if ($audio) {
       var idx = Math.floor(Math.random() * MUSIC_FILES.length);
       $audio.src = MUSIC_FILES[idx];
+      $audio.volume = 0;
       var p = $audio.play();
       if (p && p.catch) p.catch(function() {});
+      fadeBossMusic(BOSS_MUSIC_VOLUME, 800);
     }
   }
 
@@ -115,7 +134,13 @@
   function winFight() {
     fightActive = false;
     if (timerInterval) clearInterval(timerInterval);
-    if ($audio) { $audio.pause(); $audio.currentTime = 0; }
+    if ($audio) {
+      fadeBossMusic(0, 400, function() {
+        $audio.pause();
+        $audio.currentTime = 0;
+        $audio.volume = BOSS_MUSIC_VOLUME;
+      });
+    }
 
     var newKills = (parseInt(localStorage.getItem("chaosBossKills"), 10) || 0) + 1;
     localStorage.setItem("chaosBossKills", String(newKills));
@@ -176,7 +201,13 @@
   function loseFight() {
     fightActive = false;
     if (timerInterval) clearInterval(timerInterval);
-    if ($audio) { $audio.pause(); $audio.currentTime = 0; }
+    if ($audio) {
+      fadeBossMusic(0, 400, function() {
+        $audio.pause();
+        $audio.currentTime = 0;
+        $audio.volume = BOSS_MUSIC_VOLUME;
+      });
+    }
 
     showMessage("DERROTA", "#ff3333");
     $imgWrap.classList.add("boss-victor");
