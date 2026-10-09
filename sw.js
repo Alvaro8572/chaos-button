@@ -5,14 +5,14 @@
    for runtime fetches. Aggressive caching so the game works fully offline.
 */
 
-const CACHE_VERSION = "chaos-v35-stats";
+const CACHE_VERSION = "chaos-v36-icon";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=35-stats",
-  "./app.js?v=35-stats",
+  "./styles.css?v=36-icon",
+  "./app.js?v=36-icon",
   "./boss.html",
-  "./boss.js?v=35-stats",
+  "./boss.js?v=36-icon",
   "./manifest.json",
   "./assets/icons/icon-192.png",
   "./assets/icons/icon-512.png",

@@ -1555,7 +1555,7 @@ function chaos() {
       clicks = 0;
       updateChaosMeter();
       setTimeout(function() {
-        window.location.href = "boss.html?level=" + nextLevel + "&v=35-stats";
+        window.location.href = "boss.html?level=" + nextLevel + "&v=36-icon";
       }, 400);
     } else {
       // 60% — keep playing, reset chaosLevel but don't teleport
