@@ -1515,12 +1515,12 @@ function chaos() {
     unlockFact();
   }
 
-  // Late-cycle risk: as chaos climbs past 85%, each click has a rising chance
-  // of resetting the chaos meter to 0. Caps at 8% per click at 99%.
-  // Forces the player to grind harder to actually hit 100%, but not
-  // make it feel impossible.
-  if (chaosLevel >= 85 && chaosLevel < 100) {
-    var lateResetChance = ((chaosLevel - 85) / 14) * 0.08;
+  // Late-cycle risk: as chaos climbs past 90%, each click has a rising chance
+  // of resetting the chaos meter to 0. Caps at 5% per click at 99%.
+  // The first 90% is a safe zone (free grinding); only the final 10%
+  // is tense, with a gentle ramp to 5%.
+  if (chaosLevel >= 90 && chaosLevel < 100) {
+    var lateResetChance = ((chaosLevel - 90) / 9) * 0.05;
     if (Math.random() < lateResetChance) {
       chaosLevel = 0;
       clicks = 0;
