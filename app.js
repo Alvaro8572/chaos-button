@@ -1516,11 +1516,11 @@ function chaos() {
   }
 
   // Late-cycle risk: as chaos climbs past 90%, each click has a rising chance
-  // of resetting the chaos meter to 0. Caps at 5% per click at 99%.
+  // of resetting the chaos meter to 0. Caps at 3% per click at 99%.
   // The first 90% is a safe zone (free grinding); only the final 10%
-  // is tense, with a gentle ramp to 5%.
+  // is tense, with a gentle ramp to 3%.
   if (chaosLevel >= 90 && chaosLevel < 100) {
-    var lateResetChance = ((chaosLevel - 90) / 9) * 0.05;
+    var lateResetChance = ((chaosLevel - 90) / 9) * 0.03;
     if (Math.random() < lateResetChance) {
       chaosLevel = 0;
       clicks = 0;
