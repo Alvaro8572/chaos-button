@@ -1502,6 +1502,9 @@ function chaos() {
     spawnCoinEvent();
   }
 
+  // Collectibles (comun 1.5%, raro 0.2%, legendario 0.02% por click)
+  trySpawnCollectible();
+
   // Random sound (can play over other sounds except click)
   if (Math.random() < 0.2) {
     playRandomSound();
@@ -1630,6 +1633,8 @@ function closeTopmostOverlay() {
     closeInfo();
   } else if (document.getElementById("statsPanel").classList.contains("open")) {
     closeStats();
+  } else if (document.getElementById("collectiblesPanel").classList.contains("open")) {
+    closeCollectibles();
   } else if (document.getElementById("factPanel").classList.contains("visible")) {
     document.getElementById("factPanel").classList.remove("visible");
   }
@@ -1737,7 +1742,12 @@ var ACHIEVEMENTS = [
   { id: "coleccionista",tier: "gold",   name: "Coleccionista",       desc: "Desbloqueá todos los logros de Colección", category: "coleccion", reward: { type: "picture", file: "assets/images/medalla_de_oro.jpg" } },
   { id: "maratonista",  tier: "gold",   name: "Maratonista",         desc: "Activá 10 boosts",                    category: "clicks",  reward: null },
   { id: "bendecido",    tier: "gold",   name: "Bendecido",           desc: "Recibí la bendición divina",          category: "coleccion", reward: { type: "picture", file: "assets/images/Jesus_Payne.jpg" } },
-  { id: "completista",  tier: "gold",   name: "Completista",         desc: "Desbloqueá todos los logros",         category: "clicks",  reward: { type: "frame", id: "gold-complete" } }
+  { id: "completista",  tier: "gold",   name: "Completista",         desc: "Desbloqueá todos los logros",         category: "clicks",  reward: { type: "frame", id: "gold-complete" } },
+  { id: "primer_collectible", tier: "bronze", name: "Primer Collectible", desc: "Agarra tu primer collectible", category: "collectibles", reward: null },
+  { id: "coleccionista_comun", tier: "silver", name: "Coleccionista Común", desc: "Agarra los 5 Comunes al menos una vez", category: "collectibles", reward: null },
+  { id: "ojo_raro", tier: "silver", name: "Ojo Raro", desc: "Agarra los 2 Raros al menos una vez", category: "collectibles", reward: null },
+  { id: "cazador_legendario", tier: "gold", name: "Cazador Legendario", desc: "Agarra tu primer Legendario", category: "collectibles", reward: null },
+  { id: "maestro_del_caos", tier: "gold", name: "Maestro del Caos", desc: "Agarra los 2 Legendarios al menos una vez", category: "collectibles", reward: null }
 ];
 
 var achievementsUnlocked = safeJSON("chaosAchievements", []);
@@ -1865,6 +1875,11 @@ function checkAchievements() {
       case "intelectual":  unlocked = unlockedFacts.length >= FACTS.length; break;
       case "bendecido":    unlocked = jesusRewardUnlocked; break;
       case "first_blood":  unlocked = (parseInt(localStorage.getItem("chaosBossKills"), 10) || 0) >= 1; break;
+      case "primer_collectible": unlocked = Object.keys(collectedCounts).some(function(k){ return (collectedCounts[k]||0) > 0; }); break;
+      case "coleccionista_comun": unlocked = COLLECTIBLES.filter(function(c){return c.tier==="comun";}).every(function(c){ return (collectedCounts[c.id]||0) > 0; }); break;
+      case "ojo_raro": unlocked = COLLECTIBLES.filter(function(c){return c.tier==="raro";}).every(function(c){ return (collectedCounts[c.id]||0) > 0; }); break;
+      case "cazador_legendario": unlocked = COLLECTIBLES.filter(function(c){return c.tier==="legendario";}).some(function(c){ return (collectedCounts[c.id]||0) > 0; }); break;
+      case "maestro_del_caos": unlocked = COLLECTIBLES.filter(function(c){return c.tier==="legendario";}).every(function(c){ return (collectedCounts[c.id]||0) > 0; }); break;
     }
     if (unlocked) unlockAchievement(ach.id);
   });
@@ -2701,67 +2716,150 @@ function finishCoinEvent() {
   nextCoinEventTime = Date.now() + 8000 + Math.random() * 12000;
 }
 
+var COLLECTIBLES = [
+  { id: "gato", name: "Gato", src: "assets/images/gato.png", sound: "assets/sounds/meow.mp3", tier: "comun", desc: "Un gato que cae del cielo." },
+  { id: "sardina", name: "Sardina", src: "assets/images/sardina.png", sound: "assets/sounds/splash.mp3", tier: "comun", desc: "Una sardina que nada." },
+  { id: "sandwich", name: "Sandwich de Vainilla", src: "assets/images/vanilla-sandwich.png", sound: "assets/sounds/crunchy-bite.mp3", tier: "comun", desc: "Un sandwich crujiente." },
+  { id: "c", name: "La C del Caos", src: "assets/images/c.png", sound: "assets/sounds/magic-fairy.mp3", tier: "comun", desc: "La letra C, brillando con caos." },
+  { id: "refresco", name: "Refresco Zuko", src: "assets/images/refresco-zuko.png", sound: "assets/sounds/cola-sound-effect.mp3", tier: "raro", desc: "Un refresco en zigzag." },
+  { id: "honguito", name: "Honguito Mágico", src: "assets/images/honguito.png", sound: "assets/sounds/mario-64-lets-a-go.mp3", tier: "raro", desc: "Un hongo que gira y crece." },
+  { id: "amongus", name: "Among Us", src: "assets/images/amongus.png", sound: "assets/sounds/emergency-meeting-among-us.mp3", tier: "legendario", desc: "Un tripulante sospechoso." },
+  { id: "pizzaguy", name: "Pizza Guy", src: "assets/images/pizza-guy.png", sound: "assets/sounds/pizza-roblox.mp3", tier: "legendario", desc: "El repartidor que esquiva.", house: "assets/images/house.png" }
+];
+
+var activeCollectible = null;
+var collectedCounts = safeJSON("chaosCollected", {});
+
+function saveCollected() {
+  safeJSON_set("chaosCollected", collectedCounts);
+}
+
+function isCollected(id) {
+  return (collectedCounts[id] || 0) > 0;
+}
+
+function getCollectCount(id) {
+  return collectedCounts[id] || 0;
+}
+
+function collectItem(c) {
+  if (!c || c.caught) return;
+  c.caught = true;
+  var id = c.id;
+  collectedCounts[id] = (collectedCounts[id] || 0) + 1;
+  saveCollected();
+  if (c.sound) playSoundSafe(c.sound);
+  if (id === "gato" || id === "sardina") addCoins(5, "collectible-" + id, true);
+  if (typeof showToast === "function") showToast("¡" + c.name + "!", "success");
+  if (typeof checkAchievements === "function") checkAchievements();
+  if (c.el && c.el.parentNode) {
+    c.el.classList.add("collected");
+    setTimeout(function() { if (c.el.parentNode) c.el.parentNode.removeChild(c.el); }, 400);
+  }
+  if (c === activeCollectible) activeCollectible = null;
+}
+
+function makeBasicCollectible(c) {
+  if (activeCollectible) return null;
+  var el = document.createElement("div");
+  el.className = "collectible collectible-" + c.id + " tier-" + c.tier;
+  el.innerHTML = '<img src="' + c.src + '" alt="' + c.name + '" draggable="false">';
+  el.style.left = (5 + Math.random() * 85) + "%";
+  el.style.top = (20 + Math.random() * 50) + "%";
+  document.body.appendChild(el);
+  var obj = { id: c.id, name: c.name, src: c.src, sound: c.sound, el: el, caught: false };
+  activeCollectible = obj;
+  el.addEventListener("click", function(e) { e.stopPropagation(); collectItem(obj); });
+  setTimeout(function() {
+    if (!obj.caught && obj === activeCollectible) {
+      if (el.parentNode) el.parentNode.removeChild(el);
+      activeCollectible = null;
+    }
+  }, 8000);
+  return obj;
+}
+
+function spawnCollectibleById(id) {
+  if (id === "gato") { spawnFallingCat(); return; }
+  var c = COLLECTIBLES.find(function(x) { return x.id === id; });
+  if (c) makeBasicCollectible(c);
+}
+
+function trySpawnCollectible() {
+  if (activeCollectible) return;
+  var r = Math.random();
+  var comunChance = 0.015;
+  var raroChance = 0.002;
+  var legChance = 0.0002;
+  var total = comunChance + raroChance + legChance;
+  if (r >= total) return;
+  var tier;
+  if (r < comunChance) tier = "comun";
+  else if (r < comunChance + raroChance) tier = "raro";
+  else tier = "legendario";
+  var pool = COLLECTIBLES.filter(function(c) { return c.tier === tier; });
+  if (pool.length === 0) return;
+  var pick = pool[Math.floor(Math.random() * pool.length)];
+  spawnCollectibleById(pick.id);
+}
+
 function spawnFallingCat() {
+  if (activeCollectible) return;
   if (!canCreate("falling-cat")) return;
   var cat = document.createElement("div");
-  cat.className = "falling-cat";
-  cat.innerHTML = '<img src="assets/images/Gato.jpg" alt="cat" draggable="false">';
+  cat.className = "falling-cat collectible collectible-gato";
+  cat.innerHTML = '<img src="assets/images/gato.png" alt="gato" draggable="false">';
   cat.style.left = (5 + Math.random() * 85) + "%";
   document.body.appendChild(cat);
 
-  var clicked = false;
+  var obj = { id: "gato", name: "Gato", src: "assets/images/gato.png", sound: "assets/sounds/meow.mp3", el: cat, caught: false };
+  activeCollectible = obj;
+
   function clickHandler(e) {
-    if (clicked) return;
-    clicked = true;
+    if (obj.caught) return;
     e.stopPropagation();
-    addCoins(5, "event", true);
-    playSoundSafe(COIN_EVENT_FILES.cat);
-    finishCoinEvent();
-    cat.classList.add("caught");
-    setTimeout(function() { trackedRemove(cat, "falling-cat"); }, 500);
+    collectItem(obj);
   }
   cat.addEventListener("click", clickHandler);
 
-  coinEvent = { type: "cat", el: cat, timeoutId: null };
-  setTimeout(function() { if (!clicked) cat.classList.add("falling"); }, 80);
+  setTimeout(function() { if (!obj.caught) cat.classList.add("falling"); }, 80);
 
-  coinEvent.timeoutId = setTimeout(function() {
-    if (clicked) return;
+  setTimeout(function() {
+    if (obj.caught) return;
     cat.classList.add("missed");
-    finishCoinEvent();
-    setTimeout(function() { trackedRemove(cat, "falling-cat"); }, 300);
+    if (cat.parentNode) cat.parentNode.removeChild(cat);
+    if (obj === activeCollectible) activeCollectible = null;
+    trackedRemove(cat, "falling-cat");
   }, 2500);
 }
 
 function spawnSardine() {
+  if (activeCollectible) return;
   if (!canCreate("sardine")) return;
   var fish = document.createElement("div");
-  fish.className = "sardine";
-  fish.innerHTML = '<img src="assets/images/Sardina.jpg" alt="sardine" draggable="false">';
+  fish.className = "sardine collectible collectible-sardine";
+  fish.innerHTML = '<img src="assets/images/sardina.png" alt="sardine" draggable="false">';
   fish.style.bottom = (8 + Math.random() * 30) + "%";
   document.body.appendChild(fish);
 
-  var clicked = false;
+  var obj = { id: "sardina", name: "Sardina", src: "assets/images/sardina.png", sound: "assets/sounds/splash.mp3", el: fish, caught: false };
+  activeCollectible = obj;
+
   function clickHandler(e) {
-    if (clicked) return;
-    clicked = true;
+    if (obj.caught) return;
     e.stopPropagation();
-    addCoins(5, "event", true);
-    playSplash();
-    finishCoinEvent();
-    fish.classList.add("caught");
-    setTimeout(function() { trackedRemove(fish, "sardine"); }, 500);
+    collectItem(obj);
   }
   fish.addEventListener("click", clickHandler);
 
-  coinEvent = { type: "sardine", el: fish, timeoutId: null };
-  setTimeout(function() { if (!clicked) fish.classList.add("swimming"); }, 80);
+  setTimeout(function() { if (!obj.caught) fish.classList.add("swimming"); }, 80);
 
-  coinEvent.timeoutId = setTimeout(function() {
-    if (clicked) return;
+  setTimeout(function() {
+    if (obj.caught) return;
     fish.classList.add("missed");
-    finishCoinEvent();
-    setTimeout(function() { trackedRemove(fish, "sardine"); }, 300);
+    if (fish.parentNode) fish.parentNode.removeChild(fish);
+    if (obj === activeCollectible) activeCollectible = null;
+    trackedRemove(fish, "sardine");
   }, 4000);
 }
 
@@ -2798,10 +2896,7 @@ function spawnCoinButton() {
 
 function spawnCoinEvent() {
   if (coinEvent) return;
-  var r = Math.random();
-  if (r < 0.30) spawnFallingCat();
-  else if (r < 0.55) spawnSardine();
-  else spawnCoinButton();
+  spawnCoinButton();
 }
 
 chaosSetInterval(function() {
@@ -3813,6 +3908,75 @@ function closeInfo() {
   p.classList.remove("open");
 }
 
+function buildCollectiblesPanel() {
+  var content = document.getElementById("collectiblesPanelContent");
+  if (!content) return;
+  content.innerHTML = "";
+  var tiers = [
+    { key: "comun", label: "COMÚN" },
+    { key: "raro", label: "RARO" },
+    { key: "legendario", label: "LEGENDARIO" }
+  ];
+  tiers.forEach(function(tier) {
+    var header = document.createElement("div");
+    header.className = "collectibles-tier-header tier-" + tier.key;
+    header.textContent = tier.label;
+    content.appendChild(header);
+
+    var grid = document.createElement("div");
+    grid.className = "collectibles-grid";
+    COLLECTIBLES.filter(function(c) { return c.tier === tier.key; }).forEach(function(c) {
+      var card = document.createElement("div");
+      var count = getCollectCount(c.id);
+      var owned = count > 0;
+      card.className = "collectible-card tier-" + c.tier + (owned ? " owned" : " locked");
+      if (tier.key === "legendario" && owned) card.classList.add("gold-glow");
+
+      var imgWrap = document.createElement("div");
+      imgWrap.className = "collectible-card-img-wrap";
+      var img = document.createElement("img");
+      img.src = c.src;
+      img.alt = c.name;
+      img.className = "collectible-card-img";
+      img.onerror = function() { this.style.background = "rgba(255,80,80,0.2)"; };
+      imgWrap.appendChild(img);
+      if (!owned) {
+        var lock = document.createElement("div");
+        lock.className = "collectible-card-lock";
+        lock.textContent = "🔒";
+        imgWrap.appendChild(lock);
+      }
+      card.appendChild(imgWrap);
+
+      var name = document.createElement("div");
+      name.className = "collectible-card-name";
+      name.textContent = owned ? c.name : "???";
+      card.appendChild(name);
+
+      var countEl = document.createElement("div");
+      countEl.className = "collectible-card-count";
+      countEl.textContent = owned ? "x" + count : "—";
+      card.appendChild(countEl);
+
+      grid.appendChild(card);
+    });
+    content.appendChild(grid);
+  });
+}
+
+function openCollectibles() {
+  var p = document.getElementById("collectiblesPanel");
+  if (!p) return;
+  buildCollectiblesPanel();
+  p.classList.add("open");
+}
+
+function closeCollectibles() {
+  var p = document.getElementById("collectiblesPanel");
+  if (!p) return;
+  p.classList.remove("open");
+}
+
 function openStats() {
   var p = document.getElementById("statsPanel");
   if (!p) return;
@@ -3864,6 +4028,10 @@ if (infoPanelCloseBtn) {
 var statsPanelCloseBtn = document.getElementById("statsPanelClose");
 if (statsPanelCloseBtn) {
   statsPanelCloseBtn.addEventListener("click", function() { closeStats(); });
+}
+var collectiblesPanelCloseBtn = document.getElementById("collectiblesPanelClose");
+if (collectiblesPanelCloseBtn) {
+  collectiblesPanelCloseBtn.addEventListener("click", function() { closeCollectibles(); });
 }
 // Click backdrop to close fragment overlay
 var memoryFragmentEl = document.getElementById("memoryFragment");
@@ -3988,6 +4156,9 @@ function navigateToSection(section) {
     case "stats":
       if (typeof openStats === "function") openStats();
       break;
+    case "collectibles":
+      if (typeof openCollectibles === "function") openCollectibles();
+      break;
   }
 }
 
@@ -4045,6 +4216,16 @@ var CHAOS_DEBUG_ENABLED = (typeof window !== "undefined") &&
 if (CHAOS_DEBUG_ENABLED) {
 
 window.__chaosDebug = {
+  spawnGato: function() { if (typeof spawnCollectibleById === "function") spawnCollectibleById("gato"); else console.warn("spawnCollectibleById not available"); },
+  spawnSardina: function() { if (typeof spawnCollectibleById === "function") spawnCollectibleById("sardina"); },
+  spawnSandwich: function() { if (typeof spawnCollectibleById === "function") spawnCollectibleById("sandwich"); },
+  spawnC: function() { if (typeof spawnCollectibleById === "function") spawnCollectibleById("c"); },
+  spawnRefresco: function() { if (typeof spawnCollectibleById === "function") spawnCollectibleById("refresco"); },
+  spawnHonguito: function() { if (typeof spawnCollectibleById === "function") spawnCollectibleById("honguito"); },
+  spawnAmongus: function() { if (typeof spawnCollectibleById === "function") spawnCollectibleById("amongus"); },
+  spawnPizzaGuy: function() { if (typeof spawnCollectibleById === "function") spawnCollectibleById("pizzaguy"); },
+  clearCollectible: function() { if (activeCollectible && activeCollectible.el && activeCollectible.el.parentNode) activeCollectible.el.parentNode.removeChild(activeCollectible.el); activeCollectible = null; console.log("✓ collectible cleared"); },
+  getCollection: function() { console.log(JSON.stringify(collectedCounts, null, 2)); },
   giveClicks: function(n) {
     if (typeof n !== "number") n = 99999;
     localStorage.setItem("totalClicks", String(n));

@@ -5,13 +5,13 @@
    for runtime fetches. Aggressive caching so the game works fully offline.
 */
 
-const CACHE_VERSION = "chaos-v37-chaos";
+const CACHE_VERSION = "chaos-v38-fase1";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=37-chaos",
-  "./app.js?v=37-chaos",
-  "./boss.js?v=37-chaos",
+  "./styles.css?v=38-fase1",
+  "./app.js?v=38-fase1",
+  "./boss.js?v=38-fase1",
   "./manifest.json",
   "./assets/icons/icon-192.png",
   "./assets/icons/icon-512.png",
@@ -56,9 +56,16 @@ const APP_SHELL = [
   "./assets/images/Ven_paca.jpg",
   "./assets/images/Atun_con_mayonesa.jpg",
 
-  // Coin events
-  "./assets/images/Gato.jpg",
-  "./assets/images/Sardina.jpg",
+  // Collectibles
+  "./assets/images/gato.png",
+  "./assets/images/sardina.png",
+  "./assets/images/amongus.png",
+  "./assets/images/c.png",
+  "./assets/images/honguito.png",
+  "./assets/images/house.png",
+  "./assets/images/pizza-guy.png",
+  "./assets/images/refresco-zuko.png",
+  "./assets/images/vanilla-sandwich.png",
 
   // Videos
   "./assets/videos/Avioncito.mp4",
@@ -73,6 +80,12 @@ const APP_SHELL = [
   "./assets/sounds/roulette.mp3",
   "./assets/sounds/meow.mp3",
   "./assets/sounds/splash.mp3",
+  "./assets/sounds/crunchy-bite.mp3",
+  "./assets/sounds/emergency-meeting-among-us.mp3",
+  "./assets/sounds/pizza-roblox.mp3",
+  "./assets/sounds/cola-sound-effect.mp3",
+  "./assets/sounds/mario-64-lets-a-go.mp3",
+  "./assets/sounds/magic-fairy.mp3",
   "./assets/sounds/galaxy-meme.mp3",
   "./assets/sounds/bruh.mp3",
   "./assets/sounds/ara-ara-sayonara.mp3",
