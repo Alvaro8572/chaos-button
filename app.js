@@ -2626,10 +2626,206 @@ function makeBasicCollectible(c) {
   return obj;
 }
 
+function spawnSandwich() {
+  if (activeCollectible) return;
+  var c = COLLECTIBLES.find(function(x) { return x.id === "sandwich"; });
+  if (!c) return;
+  var el = document.createElement("div");
+  el.className = "collectible collectible-sandwich tier-" + c.tier;
+  el.innerHTML = '<img src="' + c.src + '" alt="' + c.name + '" draggable="false">';
+  document.body.appendChild(el);
+  var obj = { id: c.id, name: c.name, src: c.src, sound: c.sound, el: el, caught: false };
+  activeCollectible = obj;
+
+  function place() {
+    el.style.left = (5 + Math.random() * 85) + "%";
+    el.style.top = (15 + Math.random() * 55) + "%";
+  }
+  place();
+  el.addEventListener("click", function(e) { e.stopPropagation(); collectItem(obj); });
+
+  var cycle = setInterval(function() {
+    if (obj.caught) { clearInterval(cycle); return; }
+    el.classList.add("collectible-hidden");
+    setTimeout(function() {
+      if (obj.caught) return;
+      place();
+      el.classList.remove("collectible-hidden");
+    }, 250);
+  }, 2000);
+
+  setTimeout(function() {
+    clearInterval(cycle);
+    if (!obj.caught && obj === activeCollectible) {
+      if (el.parentNode) el.parentNode.removeChild(el);
+      activeCollectible = null;
+    }
+  }, 12000);
+}
+
+function spawnRefresco() {
+  if (activeCollectible) return;
+  var c = COLLECTIBLES.find(function(x) { return x.id === "refresco"; });
+  if (!c) return;
+  var el = document.createElement("div");
+  el.className = "collectible collectible-refresco tier-" + c.tier + " zigzag";
+  el.innerHTML = '<img src="' + c.src + '" alt="' + c.name + '" draggable="false">';
+  document.body.appendChild(el);
+  var obj = { id: c.id, name: c.name, src: c.src, sound: c.sound, el: el, caught: false };
+  activeCollectible = obj;
+  el.addEventListener("click", function(e) { e.stopPropagation(); collectItem(obj); });
+  setTimeout(function() {
+    if (!obj.caught && obj === activeCollectible) {
+      if (el.parentNode) el.parentNode.removeChild(el);
+      activeCollectible = null;
+    }
+  }, 8000);
+}
+
+function spawnHonguito() {
+  if (activeCollectible) return;
+  var c = COLLECTIBLES.find(function(x) { return x.id === "honguito"; });
+  if (!c) return;
+  var el = document.createElement("div");
+  el.className = "collectible collectible-honguito tier-" + c.tier;
+  el.innerHTML = '<img src="' + c.src + '" alt="' + c.name + '" draggable="false">';
+  el.style.left = "50%";
+  el.style.top = "50%";
+  el.style.marginLeft = "-40px";
+  el.style.marginTop = "-40px";
+  document.body.appendChild(el);
+  var obj = { id: c.id, name: c.name, src: c.src, sound: c.sound, el: el, caught: false, catchable: false };
+  activeCollectible = obj;
+
+  el.addEventListener("click", function(e) {
+    e.stopPropagation();
+    if (!obj.catchable) return;
+    collectItem(obj);
+  });
+
+  el.classList.add("honguito-growing");
+  setTimeout(function() {
+    if (obj.caught) return;
+    el.classList.remove("honguito-growing");
+    el.classList.add("honguito-still");
+    obj.catchable = true;
+  }, 1200);
+  setTimeout(function() {
+    if (obj.caught) return;
+    el.classList.remove("honguito-still");
+    el.classList.add("honguito-shrinking");
+    obj.catchable = false;
+  }, 2200);
+  setTimeout(function() {
+    if (!obj.caught && obj === activeCollectible) {
+      if (el.parentNode) el.parentNode.removeChild(el);
+      activeCollectible = null;
+    }
+  }, 3400);
+}
+
+function spawnAmongus() {
+  if (activeCollectible) return;
+  var c = COLLECTIBLES.find(function(x) { return x.id === "amongus"; });
+  if (!c) return;
+  var el = document.createElement("div");
+  el.className = "collectible collectible-amongus tier-" + c.tier;
+  el.innerHTML = '<img src="' + c.src + '" alt="' + c.name + '" draggable="false">';
+  el.style.top = (15 + Math.random() * 55) + "%";
+  document.body.appendChild(el);
+  var obj = { id: c.id, name: c.name, src: c.src, sound: c.sound, el: el, caught: false, dodges: 0 };
+  activeCollectible = obj;
+
+  el.classList.add("amongus-move");
+
+  el.addEventListener("click", function(e) {
+    e.stopPropagation();
+    if (obj.caught) return;
+    if (obj.dodges < 3) {
+      obj.dodges++;
+      el.style.top = (15 + Math.random() * 55) + "%";
+      el.classList.remove("amongus-move");
+      void el.offsetWidth;
+      el.classList.add("amongus-move");
+    } else {
+      collectItem(obj);
+    }
+  });
+
+  setTimeout(function() {
+    if (!obj.caught && obj === activeCollectible) {
+      if (el.parentNode) el.parentNode.removeChild(el);
+      activeCollectible = null;
+    }
+  }, 9000);
+}
+
+function spawnHouse(pizzaObj) {
+  var el = document.createElement("div");
+  el.className = "collectible-house";
+  el.innerHTML = '<img src="assets/images/house.png" alt="casa" draggable="false">';
+  el.style.left = (10 + Math.random() * 70) + "%";
+  document.body.appendChild(el);
+  el.classList.add("house-fall");
+  el.addEventListener("click", function(e) {
+    e.stopPropagation();
+    if (pizzaObj.houseDestroyed) return;
+    pizzaObj.houseDestroyed = true;
+    el.classList.add("house-destroyed");
+    setTimeout(function() { if (el.parentNode) el.parentNode.removeChild(el); }, 300);
+  });
+  setTimeout(function() {
+    if (el.parentNode) el.parentNode.removeChild(el);
+  }, 2600);
+}
+
+function spawnPizzaGuy() {
+  if (activeCollectible) return;
+  var c = COLLECTIBLES.find(function(x) { return x.id === "pizzaguy"; });
+  if (!c) return;
+  var el = document.createElement("div");
+  el.className = "collectible collectible-pizzaguy tier-" + c.tier;
+  el.innerHTML = '<img src="' + c.src + '" alt="' + c.name + '" draggable="false">';
+  el.style.top = (15 + Math.random() * 45) + "%";
+  document.body.appendChild(el);
+  var obj = { id: c.id, name: c.name, src: c.src, sound: c.sound, el: el, caught: false, houseDestroyed: false };
+  activeCollectible = obj;
+
+  el.classList.add("pizzaguy-move");
+  spawnHouse(obj);
+
+  el.addEventListener("click", function(e) {
+    e.stopPropagation();
+    if (obj.caught) return;
+    if (!obj.houseDestroyed) {
+      el.style.top = (15 + Math.random() * 45) + "%";
+    } else {
+      collectItem(obj);
+    }
+  });
+
+  setTimeout(function() {
+    if (!obj.caught && obj === activeCollectible) {
+      if (el.parentNode) el.parentNode.removeChild(el);
+      activeCollectible = null;
+    }
+  }, 10000);
+}
+
 function spawnCollectibleById(id) {
-  if (id === "gato") { spawnFallingCat(); return; }
-  var c = COLLECTIBLES.find(function(x) { return x.id === id; });
-  if (c) makeBasicCollectible(c);
+  switch (id) {
+    case "gato":
+    case "c": spawnFalling(id); break;
+    case "sardina": spawnSardine(); break;
+    case "sandwich": spawnSandwich(); break;
+    case "refresco": spawnRefresco(); break;
+    case "honguito": spawnHonguito(); break;
+    case "amongus": spawnAmongus(); break;
+    case "pizzaguy": spawnPizzaGuy(); break;
+    default:
+      var c = COLLECTIBLES.find(function(x) { return x.id === id; });
+      if (c) makeBasicCollectible(c);
+  }
 }
 
 function trySpawnCollectible() {
@@ -2650,33 +2846,34 @@ function trySpawnCollectible() {
   spawnCollectibleById(pick.id);
 }
 
-function spawnFallingCat() {
+function spawnFalling(id) {
   if (activeCollectible) return;
+  var c = COLLECTIBLES.find(function(x) { return x.id === id; });
+  if (!c) return;
   if (!canCreate("falling-cat")) return;
-  var cat = document.createElement("div");
-  cat.className = "falling-cat collectible collectible-gato";
-  cat.innerHTML = '<img src="assets/images/gato.png" alt="gato" draggable="false">';
-  cat.style.left = (5 + Math.random() * 85) + "%";
-  document.body.appendChild(cat);
+  var el = document.createElement("div");
+  el.className = "falling-cat collectible collectible-" + id + " tier-" + c.tier;
+  el.innerHTML = '<img src="' + c.src + '" alt="' + c.name + '" draggable="false">';
+  el.style.left = (5 + Math.random() * 85) + "%";
+  document.body.appendChild(el);
 
-  var obj = { id: "gato", name: "Gato", src: "assets/images/gato.png", sound: "assets/sounds/meow.mp3", el: cat, caught: false };
+  var obj = { id: c.id, name: c.name, src: c.src, sound: c.sound, el: el, caught: false };
   activeCollectible = obj;
 
-  function clickHandler(e) {
+  el.addEventListener("click", function(e) {
     if (obj.caught) return;
     e.stopPropagation();
     collectItem(obj);
-  }
-  cat.addEventListener("click", clickHandler);
+  });
 
-  setTimeout(function() { if (!obj.caught) cat.classList.add("falling"); }, 80);
+  setTimeout(function() { if (!obj.caught) el.classList.add("falling"); }, 80);
 
   setTimeout(function() {
     if (obj.caught) return;
-    cat.classList.add("missed");
-    if (cat.parentNode) cat.parentNode.removeChild(cat);
+    el.classList.add("missed");
+    if (el.parentNode) el.parentNode.removeChild(el);
     if (obj === activeCollectible) activeCollectible = null;
-    trackedRemove(cat, "falling-cat");
+    trackedRemove(el, "falling-cat");
   }, 2500);
 }
 

@@ -4572,4 +4572,65 @@ body.boss-arena-body::before {
   .collectibles-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
+/* ===== COLLECTIBLE BEHAVIORS (movimiento) ===== */
+.collectible { transition: opacity 0.2s ease; }
+.collectible-hidden { opacity: 0; }
+
+.collectible-refresco.zigzag { animation: zigzagMove 3.5s linear infinite; }
+@keyframes zigzagMove {
+  0%   { left: 0%; top: 70%; }
+  12.5% { left: 12.5%; top: 30%; }
+  25%  { left: 25%; top: 70%; }
+  37.5% { left: 37.5%; top: 30%; }
+  50%  { left: 50%; top: 70%; }
+  62.5% { left: 62.5%; top: 30%; }
+  75%  { left: 75%; top: 70%; }
+  87.5% { left: 87.5%; top: 30%; }
+  100% { left: 100%; top: 70%; }
+}
+
+.collectible-honguito { will-change: transform; }
+.collectible-honguito.honguito-growing { animation: hongoGrow 1.2s ease-out forwards; }
+.collectible-honguito.honguito-still { transform: scale(1.5); }
+.collectible-honguito.honguito-shrinking { animation: hongoShrink 1.2s ease-in forwards; }
+@keyframes hongoGrow {
+  0%   { transform: rotate(0deg) scale(0.3); }
+  100% { transform: rotate(720deg) scale(1.5); }
+}
+@keyframes hongoShrink {
+  0%   { transform: rotate(0deg) scale(1.5); }
+  100% { transform: rotate(-720deg) scale(0.3); }
+}
+
+.collectible-amongus.amongus-move { animation: amongusMove 2.5s linear infinite; }
+@keyframes amongusMove {
+  0%   { left: -10%; }
+  100% { left: 110%; }
+}
+
+.collectible-pizzaguy.pizzaguy-move { animation: pizzaguyMove 3.5s linear infinite; }
+@keyframes pizzaguyMove {
+  0%   { left: -10%; }
+  100% { left: 110%; }
+}
+
+.collectible-house {
+  position: fixed;
+  top: -100px;
+  z-index: 7;
+  pointer-events: auto;
+  cursor: pointer;
+}
+.collectible-house img { width: 64px; height: 64px; object-fit: contain; }
+.collectible-house.house-fall { animation: houseFall 2.4s linear forwards; }
+@keyframes houseFall {
+  0%   { top: -100px; }
+  100% { top: 100vh; }
+}
+.collectible-house.house-destroyed { animation: housePop 0.3s ease forwards; }
+@keyframes housePop {
+  0%   { transform: scale(1); opacity: 1; }
+  100% { transform: scale(0.2); opacity: 0; }
+}
+
 
