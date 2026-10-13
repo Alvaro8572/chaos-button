@@ -49,13 +49,6 @@ const APP_SHELL = [
   "./assets/images/big-mac.jpg",
   "./assets/images/killian-dictador.jpg",
 
-  // Roulette collectibles
-  "./assets/images/Doge.jpg",
-  "./assets/images/Agua_en_polvo.jpg",
-  "./assets/images/Rengoku_dona.jpg",
-  "./assets/images/Ven_paca.jpg",
-  "./assets/images/Atun_con_mayonesa.jpg",
-
   // Collectibles
   "./assets/images/gato.png",
   "./assets/images/sardina.png",
@@ -66,11 +59,6 @@ const APP_SHELL = [
   "./assets/images/pizza-guy.png",
   "./assets/images/refresco-zuko.png",
   "./assets/images/vanilla-sandwich.png",
-
-  // Videos
-  "./assets/videos/Avioncito.mp4",
-  "./assets/videos/Tesla_bailando.mp4",
-  "./assets/videos/Gojo_bici.mp4",
 
   // Sounds
   "./assets/sounds/mouse-click-sound.mp3",
