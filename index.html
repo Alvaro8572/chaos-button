@@ -14,7 +14,8 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Bungee&amp;family=Monoton&amp;family=Rubik+Glitch&amp;family=Sixtyfour&amp;family=Honk&amp;family=Jersey+10&amp;family=Micro+5&amp;family=Nabla&amp;family=Orbitron:wght@400;600;900&amp;family=Press+Start+2P&amp;family=Rubik+Burned&amp;family=Smooch+Sans:wght@900&amp;family=Tilt+Prism&amp;family=UnifrakturMaguntia&amp;family=Dancing+Script:wght@400;700&amp;family=Great+Vibes&amp;family=Creepster&amp;family=Bowlby+One&amp;family=Black+Ops+One&amp;display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="styles.css?v=33-fx">
+<link rel="stylesheet" href="styles.css?v=45-mobile">
+<link rel="icon" href="assets/logo.jpg?v=45-mobile" type="image/jpeg">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#ff0055">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -26,7 +27,7 @@
 // any leftover SW before registering the new one. This makes hard-refresh
 // unnecessary after every deploy.
 (function() {
-  var CURRENT_BUILD = "33-fx";  // must match the sw.js?v= below
+  var CURRENT_BUILD = "45-mobile";  // must match the sw.js?v= below
   var savedBuild = null;
   try { savedBuild = localStorage.getItem("chaosBuildId"); } catch (e) {}
   if (savedBuild && savedBuild !== CURRENT_BUILD && "serviceWorker" in navigator) {
@@ -45,7 +46,7 @@
 <script>
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", function() {
-        navigator.serviceWorker.register("sw.js?v=33-fx").then(function(reg) {
+        navigator.serviceWorker.register("sw.js?v=45-mobile").then(function(reg) {
         console.log("[PWA] Service Worker registered:", reg.scope);
 
         // Aggressive update strategy: detect new SW and force activation
@@ -123,6 +124,14 @@
       <span class="menu-icon">🕯️</span>
       <span class="menu-label">MEMORIA</span>
       <span class="menu-state" id="menuMemoryState">0 / 8</span>
+    </button>
+    <button class="menu-item" data-section="info">
+      <span class="menu-icon">ℹ️</span>
+      <span class="menu-label">INFO</span>
+    </button>
+    <button class="menu-item" data-section="stats">
+      <span class="menu-icon">📊</span>
+      <span class="menu-label">STATS</span>
     </button>
     <div class="menu-divider"></div>
     <button class="menu-item menu-toggle-setting" id="menuSoundToggle">
@@ -484,7 +493,7 @@
 
 
 
-<script src="app.js?v=33-fx" defer></script>
+<script src="app.js?v=45-mobile" defer></script>
 
 
 
@@ -516,5 +525,80 @@
   </div>
 </div>
 
+<div id="infoPanel" role="dialog" aria-label="Información del creador">
+  <div id="infoPanelInner">
+    <div id="infoPanelHeader">
+      <span id="infoPanelTitle">CHAOS BUTTON</span>
+      <button id="infoPanelClose" class="panel-close" aria-label="Cerrar información">×</button>
+    </div>
+    <div id="infoPanelContent">
+      <p class="info-greeting">¡Hola!</p>
+      <p>He aquí <strong>Álvaro Ortega Castro</strong>. Esta idea solo empezó siendo un proyecto de pasatiempo; un botón que hiciera caos. Porque, amig@ mio, caos es mi forma de ser. Caos me define. Fue escalando y escalando y surgieron varios abandonos temporales, en un momento habían tantos bugs... Pero seguí. Así que, por ahora, seguiré con ideas y otros proyectos a parte.</p>
+      <p>Si me demoro metiendo contenido, recuerden; nunca fue un adiós, fue un: "hasta luego, soldado"</p>
+      <div class="info-credits">
+        <h3>CRÉDITOS</h3>
+        <p>Créditos a <strong>DeepSeek</strong> y a <strong>Minimax</strong> por hacer el código, sin ellos no hubiese juego.</p>
+        <p>También a mi papá, <strong>Yarán Ortega</strong>, por dame ideas y meterme a esto del vibe-coding.</p>
+        <p>Créditos a mi mamá, <strong>Mileydis Castro</strong>, por apoyarme.</p>
+        <p>Por supuesto a mi familia, y también a mis neuronas, por seguir vivas.</p>
+      </div>
+      <p class="info-gratitude">Pero sobre todo, debo darte las gracias a ti...</p>
+      <p class="info-thanks">¡Gracias por jugar Chaos Button!</p>
+    </div>
+  </div>
+</div>
+
+<div id="statsPanel" role="dialog" aria-label="Estadísticas">
+  <div id="statsPanelInner">
+    <div id="statsPanelHeader">
+      <span id="statsPanelTitle">ESTADÍSTICAS</span>
+      <button id="statsPanelClose" class="panel-close" aria-label="Cerrar estadísticas">×</button>
+    </div>
+    <div id="statsPanelContent">
+      <div class="stat-row"><span class="stat-label">Clicks totales</span><span class="stat-value" id="statClicks">0</span></div>
+      <div class="stat-row"><span class="stat-label">Monedas actuales</span><span class="stat-value" id="statCoinsCurrent">0</span></div>
+      <div class="stat-row"><span class="stat-label">Monedas totales</span><span class="stat-value" id="statCoinsTotal">0</span></div>
+      <div class="stat-row"><span class="stat-label">Boosts activados</span><span class="stat-value" id="statBoosts">0</span></div>
+      <div class="stat-row"><span class="stat-label">Veces al 100% caos</span><span class="stat-value" id="statHundred">0</span></div>
+      <div class="stat-row"><span class="stat-label">Logros</span><span class="stat-value" id="statAchievements">0 / 25</span></div>
+      <div class="stat-row stat-trueending" id="statTrueEndingRow">
+        <span class="stat-label">True Ending</span>
+        <span class="stat-value" id="statTrueEnding">NO</span>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="bossArena" class="boss-arena-body" style="display:none">
+  <div id="bossArenaRoot">
+    <div id="bossArenaHeader">
+      <div id="bossName">BOSS</div>
+      <div id="bossTimer">25</div>
+    </div>
+    <div id="bossHpBar">
+      <div id="bossHpFill"></div>
+      <div id="bossHpText">0 / 0</div>
+    </div>
+    <div id="bossImageWrap">
+      <img id="bossImage" src="assets/boss.jpg" alt="Chaos God">
+      <div id="bossImageOverlay"></div>
+    </div>
+    <button id="bossAttackBtn" aria-label="Atacar">
+      <span id="bossAttackText">CLIQUEÁ PARA ATACAR</span>
+    </button>
+    <div id="bossMessage"></div>
+  </div>
+  <audio id="bossMusic" loop preload="auto"></audio>
+</div>
+<script src="boss.js?v=45-mobile" defer></script>
+
+<div id="collectiblesPanel" role="dialog" aria-label="Coleccionables">
+  <div id="collectiblesPanelInner">
+    <div id="collectiblesPanelHeader">
+      <span id="collectiblesPanelTitle">COLECCIONABLES</span>
+      <button id="collectiblesPanelClose" class="panel-close" aria-label="Cerrar coleccionables">×</button>
+    </div>
+    <div id="collectiblesPanelContent"></div>
+  </div>
+</div>
 </body></html>
 

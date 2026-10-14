@@ -1,9 +1,10 @@
 /* ============================================
-   Chaos Button — Boss Fight
+   Chaos Button — Boss Fight (in-page overlay module)
    ============================================
-   Separate page that takes over when chaos reaches 100%.
-   Player has 25 seconds to deal enough damage to defeat the boss.
-   Each kill scales HP by +25. */
+   Loaded by index.html. The boss UI lives in #bossArena on the
+   same page (no separate tab, no navigation). startBossArena(level)
+   shows the arena and starts the fight; closeBossArena() hides it
+   and dispatches a "chaosBossEnd" event so app.js can reset the meter. */
 
 (function() {
   "use strict";
@@ -26,39 +27,34 @@
     "assets/music-boss-2.mp3",
     "assets/music-boss-3.mp3"
   ];
-
+  var BOSS_MUSIC_VOLUME = 0.5;
   var TIME_LIMIT = 25;
   var REWARD_COINS = 50;
   var SLAYER_THRESHOLD = 5;
   var SLAYER_REWARD_COINS = 100;
 
-  var bossLevel = parseInt(new URLSearchParams(window.location.search).get("level"), 10) || 1;
-  if (bossLevel < 1) bossLevel = 1;
-  if (bossLevel > BOSS_STAGES.length) bossLevel = BOSS_STAGES.length;
-
-  var currentStage = BOSS_STAGES[bossLevel - 1];
-  var bossHp = currentStage.hp;
-  var timeLeft = TIME_LIMIT;
-  var totalClicks = 0;
+  var $name, $timer, $hpFill, $hpText, $btn, $btnText, $msg, $imgWrap, $imgOverlay, $audio, $arena;
+  var bossLevel = 1;
+  var currentStage;
+  var bossHp, timeLeft, totalClicks;
   var fightActive = false;
   var timerInterval = null;
-  var returnUrl = "index.html";
+  var bossMusicFade = null;
 
-  var $name = document.getElementById("bossName");
-  var $timer = document.getElementById("bossTimer");
-  var $hpFill = document.getElementById("bossHpFill");
-  var $hpText = document.getElementById("bossHpText");
-  var $btn = document.getElementById("bossAttackBtn");
-  var $btnText = document.getElementById("bossAttackText");
-  var $msg = document.getElementById("bossMessage");
-  var $imgWrap = document.getElementById("bossImageWrap");
-  var $imgOverlay = document.getElementById("bossImageOverlay");
-  var $audio = document.getElementById("bossMusic");
-
-  function formatNum(n) {
-    if (n < 1000) return String(n);
-    if (n < 1000000) return (n / 1000).toFixed(n < 10000 ? 1 : 0) + "K";
-    return (n / 1000000).toFixed(1) + "M";
+  function fadeBossMusic(target, ms, onDone) {
+    if (!$audio) { if (onDone) onDone(); return; }
+    if (bossMusicFade) clearInterval(bossMusicFade);
+    var start = $audio.volume;
+    var t0 = Date.now();
+    bossMusicFade = setInterval(function() {
+      var k = Math.min(1, (Date.now() - t0) / ms);
+      $audio.volume = start + (target - start) * k;
+      if (k >= 1) {
+        clearInterval(bossMusicFade);
+        bossMusicFade = null;
+        if (onDone) onDone();
+      }
+    }, 40);
   }
 
   function updateHpBar() {
@@ -88,14 +84,17 @@
     fightActive = true;
     $name.textContent = "BOSS #" + bossLevel;
     $timer.textContent = timeLeft;
+    $timer.style.color = "#fff";
     updateHpBar();
     showMessage("");
 
     if ($audio) {
       var idx = Math.floor(Math.random() * MUSIC_FILES.length);
       $audio.src = MUSIC_FILES[idx];
+      $audio.volume = 0;
       var p = $audio.play();
       if (p && p.catch) p.catch(function() {});
+      fadeBossMusic(BOSS_MUSIC_VOLUME, 800);
     }
   }
 
@@ -106,36 +105,7 @@
     flashBoss();
     updateHpBar();
     if (navigator.vibrate) navigator.vibrate(15);
-
-    if (bossHp <= 0) {
-      winFight();
-    }
-  }
-
-  function winFight() {
-    fightActive = false;
-    if (timerInterval) clearInterval(timerInterval);
-    if ($audio) { $audio.pause(); $audio.currentTime = 0; }
-
-    var newKills = (parseInt(localStorage.getItem("chaosBossKills"), 10) || 0) + 1;
-    localStorage.setItem("chaosBossKills", String(newKills));
-
-    var currentCoins = parseInt(localStorage.getItem("chaosCoins"), 10) || 0;
-    localStorage.setItem("chaosCoins", String(currentCoins + REWARD_COINS));
-
-    showMessage("¡VICTORIA! +" + REWARD_COINS + " 🪙", "#00ff88");
-
-    var unlocked = false;
-    if (newKills >= SLAYER_THRESHOLD) {
-      unlocked = tryUnlockBossSlayer();
-    }
-
-    $imgWrap.classList.add("boss-defeated");
-
-    setTimeout(function() {
-      localStorage.setItem("chaosPendingReset", "1");
-      window.location.href = returnUrl + (unlocked ? "?justUnlockedBossSlayer=1" : "");
-    }, 2200);
+    if (bossHp <= 0) winFight();
   }
 
   function tryUnlockBossSlayer() {
@@ -144,7 +114,6 @@
       achievements = JSON.parse(localStorage.getItem("chaosAchievements") || "[]");
     } catch (e) { achievements = []; }
     if (achievements.indexOf("boss_slayer") !== -1) return false;
-
     achievements.push("boss_slayer");
     localStorage.setItem("chaosAchievements", JSON.stringify(achievements));
 
@@ -168,34 +137,52 @@
 
     var currentCoins = parseInt(localStorage.getItem("chaosCoins"), 10) || 0;
     localStorage.setItem("chaosCoins", String(currentCoins + SLAYER_REWARD_COINS));
-
     localStorage.setItem("chaosUnlockedBossSlayer", "1");
     return true;
+  }
+
+  function winFight() {
+    fightActive = false;
+    if (timerInterval) clearInterval(timerInterval);
+    if ($audio) {
+      fadeBossMusic(0, 400, function() {
+        $audio.pause();
+        $audio.currentTime = 0;
+        $audio.volume = BOSS_MUSIC_VOLUME;
+      });
+    }
+    var newKills = (parseInt(localStorage.getItem("chaosBossKills"), 10) || 0) + 1;
+    localStorage.setItem("chaosBossKills", String(newKills));
+    var currentCoins = parseInt(localStorage.getItem("chaosCoins"), 10) || 0;
+    localStorage.setItem("chaosCoins", String(currentCoins + REWARD_COINS));
+    showMessage("¡VICTORIA! +" + REWARD_COINS + " 🪙", "#00ff88");
+    var unlocked = false;
+    if (newKills >= SLAYER_THRESHOLD) unlocked = tryUnlockBossSlayer();
+    $imgWrap.classList.add("boss-defeated");
+    setTimeout(function() { closeBossArena(unlocked ? "boss_slayer" : "win"); }, 2200);
   }
 
   function loseFight() {
     fightActive = false;
     if (timerInterval) clearInterval(timerInterval);
-    if ($audio) { $audio.pause(); $audio.currentTime = 0; }
-
+    if ($audio) {
+      fadeBossMusic(0, 400, function() {
+        $audio.pause();
+        $audio.currentTime = 0;
+        $audio.volume = BOSS_MUSIC_VOLUME;
+      });
+    }
     showMessage("DERROTA", "#ff3333");
     $imgWrap.classList.add("boss-victor");
-
-    setTimeout(function() {
-      localStorage.setItem("chaosPendingReset", "1");
-      window.location.href = returnUrl;
-    }, 1800);
+    setTimeout(function() { closeBossArena("lose"); }, 1800);
   }
 
   function startTimer() {
     timerInterval = setInterval(function() {
       timeLeft--;
       $timer.textContent = timeLeft;
-      if (timeLeft <= 10) {
-        $timer.style.color = "#ff3333";
-      } else if (timeLeft <= 15) {
-        $timer.style.color = "#ffcc00";
-      }
+      if (timeLeft <= 10) $timer.style.color = "#ff3333";
+      else if (timeLeft <= 15) $timer.style.color = "#ffcc00";
       if (timeLeft <= 0) {
         clearInterval(timerInterval);
         loseFight();
@@ -203,25 +190,63 @@
     }, 1000);
   }
 
-  function goBackToMenu() {
+  function wireButtons() {
+    if ($btn) {
+      $btn.addEventListener("click", bossHit);
+      $btn.addEventListener("touchstart", function(e) { e.preventDefault(); bossHit(); }, { passive: false });
+    }
+  }
+
+  window.startBossArena = function(level) {
+    bossLevel = parseInt(level, 10) || 1;
+    if (bossLevel < 1) bossLevel = 1;
+    if (bossLevel > BOSS_STAGES.length) bossLevel = BOSS_STAGES.length;
+    currentStage = BOSS_STAGES[bossLevel - 1];
+    bossHp = currentStage.hp;
+    timeLeft = TIME_LIMIT;
+    totalClicks = 0;
+    $imgWrap.classList.remove("boss-defeated", "boss-victor");
+    $arena.style.display = "flex";
+    document.body.style.overflow = "hidden";
+    startFight();
+    startTimer();
+  };
+
+  window.closeBossArena = function(outcome) {
+    fightActive = false;
+    if (timerInterval) clearInterval(timerInterval);
     if ($audio) { $audio.pause(); $audio.currentTime = 0; }
-    window.location.href = returnUrl;
+    $arena.style.display = "none";
+    document.body.style.overflow = "";
+    try {
+      document.dispatchEvent(new CustomEvent("chaosBossEnd", { detail: { outcome: outcome || "" } }));
+    } catch (e) {}
+  };
+
+  function init() {
+    $arena = document.getElementById("bossArena");
+    $name = document.getElementById("bossName");
+    $timer = document.getElementById("bossTimer");
+    $hpFill = document.getElementById("bossHpFill");
+    $hpText = document.getElementById("bossHpText");
+    $btn = document.getElementById("bossAttackBtn");
+    $btnText = document.getElementById("bossAttackText");
+    $msg = document.getElementById("bossMessage");
+    $imgWrap = document.getElementById("bossImageWrap");
+    $imgOverlay = document.getElementById("bossImageOverlay");
+    $audio = document.getElementById("bossMusic");
+    if (!$arena) return;
+    wireButtons();
+    document.addEventListener("keydown", function(e) {
+      if (!$arena || $arena.style.display === "none") return;
+      if (e.key === " " || e.key === "Enter") { e.preventDefault(); bossHit(); }
+      if (e.key === "Escape") { e.preventDefault(); closeBossArena("escape"); }
+    });
   }
 
-  if ($btn) {
-    $btn.addEventListener("click", bossHit);
-    $btn.addEventListener("touchstart", function(e) { e.preventDefault(); bossHit(); }, { passive: false });
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
   }
-  document.addEventListener("keydown", function(e) {
-    if (e.key === " " || e.key === "Enter") {
-      e.preventDefault();
-      bossHit();
-    }
-    if (e.key === "Escape") {
-      goBackToMenu();
-    }
-  });
-
-  startFight();
-  startTimer();
 })();

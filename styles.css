@@ -2075,11 +2075,14 @@
   top: -100px;
   width: 70px;
   height: 70px;
-  transition: top 1.4s cubic-bezier(0.45, 0, 0.55, 1);
   filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.5));
 }
 .falling-cat.falling {
-  top: calc(100vh - 90px);
+  animation: catFall 1.4s linear forwards;
+}
+@keyframes catFall {
+  from { top: -100px; }
+  to   { top: calc(100vh - 90px); }
 }
 .falling-cat img {
   width: 100%;
@@ -3719,12 +3722,13 @@
 }
 
 /* ========================= */
-/* BOSS FIGHT (boss.html)      */
+/* BOSS FIGHT (in-page overlay) */
 /* ========================= */
 
-body.boss-arena-body {
-  margin: 0;
-  min-height: 100vh;
+#bossArena {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
   background: #000000;
   background-image:
     radial-gradient(ellipse at center, rgba(40, 0, 0, 0.4) 0%, rgba(0, 0, 0, 1) 70%),
@@ -3738,7 +3742,6 @@ body.boss-arena-body {
   color: white;
   font-family: "Orbitron", monospace;
   overflow: hidden;
-  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3746,7 +3749,7 @@ body.boss-arena-body {
   -webkit-user-select: none;
 }
 
-body.boss-arena-body::before {
+#bossArena::before {
   content: "";
   position: fixed;
   inset: 0;
@@ -4228,4 +4231,409 @@ body.boss-arena-body::before {
   --border-accent: rgba(255, 165, 0, 0.55);
   --theme-tier: 2;
 }
+
+/* ===== INFO / CRÉDITOS ===== */
+#infoPanel {
+  position: fixed;
+  inset: 0;
+  z-index: 2050;
+  background: rgba(0, 0, 0, 0.88);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+#infoPanel.open {
+  display: flex;
+}
+#infoPanelInner {
+  width: min(95vw, 580px);
+  max-height: 90vh;
+  background: rgba(8, 8, 20, 0.98);
+  border: 2px solid rgba(var(--secondary-rgb), 0.45);
+  border-radius: 12px;
+  padding: 24px;
+  overflow-y: auto;
+  font-family: "Orbitron", monospace;
+}
+#infoPanelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(var(--secondary-rgb), 0.2);
+}
+#infoPanelTitle {
+  font-size: 14px;
+  letter-spacing: 2px;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 600;
+  text-transform: none;
+}
+#infoPanelContent {
+  font-size: 13px;
+  line-height: 1.8;
+  color: rgba(255, 255, 255, 0.88);
+  letter-spacing: 0.5px;
+}
+#infoPanelContent p {
+  margin: 0 0 14px 0;
+}
+#infoPanelContent strong {
+  color: var(--secondary);
+  font-weight: 600;
+}
+.info-greeting {
+  font-size: 18px;
+  color: var(--secondary);
+  text-shadow: 0 0 10px rgba(var(--secondary-rgb), 0.5);
+  margin-bottom: 16px !important;
+}
+.info-credits {
+  margin: 20px 0 16px 0;
+  padding: 16px;
+  border-top: 1px solid rgba(var(--secondary-rgb), 0.2);
+  border-bottom: 1px solid rgba(var(--secondary-rgb), 0.2);
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 6px;
+}
+.info-credits h3 {
+  margin: 0 0 12px 0;
+  font-size: 12px;
+  letter-spacing: 4px;
+  color: var(--secondary);
+  text-align: center;
+}
+.info-credits p {
+  margin: 0 0 8px 0 !important;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.8);
+}
+.info-gratitude {
+  margin-top: 18px !important;
+  text-align: center;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.75);
+}
+.info-thanks {
+  text-align: center;
+  font-size: 16px;
+  letter-spacing: 3px;
+  color: var(--secondary);
+  text-shadow: 0 0 12px rgba(var(--secondary-rgb), 0.6);
+  margin-top: 12px !important;
+}
+
+/* ===== STATS ===== */
+#boostCounter,
+#chaos100CounterWrap {
+  display: none;
+}
+.panel-close {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 24px;
+  font-weight: normal;
+  letter-spacing: normal;
+  text-transform: none;
+  padding: 0;
+  line-height: 1;
+  font-family: inherit;
+  cursor: pointer;
+}
+.panel-close:hover { color: white; transform: none; box-shadow: none; }
+#statsPanel {
+  position: fixed;
+  inset: 0;
+  z-index: 2050;
+  background: rgba(0, 0, 0, 0.88);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+#statsPanel.open {
+  display: flex;
+}
+#statsPanelInner {
+  width: min(95vw, 520px);
+  max-height: 90vh;
+  background: rgba(8, 8, 20, 0.98);
+  border: 2px solid rgba(var(--secondary-rgb), 0.45);
+  border-radius: 12px;
+  padding: 24px;
+  overflow-y: auto;
+  font-family: "Orbitron", monospace;
+}
+#statsPanelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(var(--secondary-rgb), 0.2);
+}
+#statsPanelTitle {
+  font-size: 14px;
+  letter-spacing: 4px;
+  color: rgba(var(--secondary-rgb), 0.9);
+  font-weight: 600;
+  text-transform: none;
+}
+#statsPanelContent {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.02);
+}
+.stat-row + .stat-row { margin-top: 2px; }
+.stat-label {
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+}
+.stat-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(var(--secondary-rgb), 0.9);
+}
+.stat-row.stat-trueending {
+  margin-top: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+}
+.stat-row.stat-pending {
+  border-color: rgba(255, 0, 85, 0.45);
+  background: rgba(255, 0, 85, 0.08);
+  animation: statPendingPulse 1.8s ease-in-out infinite;
+}
+.stat-row.stat-pending .stat-value {
+  color: #ff0055;
+  text-shadow: 0 0 10px rgba(255, 0, 85, 0.5);
+}
+.stat-row.stat-done {
+  border-color: rgba(0, 255, 136, 0.35);
+  background: rgba(0, 255, 136, 0.06);
+}
+.stat-row.stat-done .stat-value {
+  color: #00ff88;
+}
+@keyframes statPendingPulse {
+  0%, 100% { box-shadow: 0 0 0 rgba(255, 0, 85, 0); }
+  50%      { box-shadow: 0 0 14px rgba(255, 0, 85, 0.35); }
+}
+
+/* ===== COLLECTIBLES (panel + elementos en pantalla) ===== */
+.collectible {
+  position: fixed;
+  z-index: 8000;
+  pointer-events: auto;
+  cursor: pointer;
+}
+.collectible img {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.35));
+  transition: transform 0.15s ease;
+}
+.collectible:hover img { transform: scale(1.12); }
+.collectible.collected img {
+  animation: collectiblePop 0.4s ease forwards;
+}
+@keyframes collectiblePop {
+  0%   { transform: scale(1); opacity: 1; }
+  50%  { transform: scale(1.5); opacity: 0.9; }
+  100% { transform: scale(0.2); opacity: 0; }
+}
+
+#collectiblesPanel {
+  position: fixed;
+  inset: 0;
+  z-index: 2060;
+  background: rgba(0, 0, 0, 0.88);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+#collectiblesPanel.open {
+  display: flex;
+}
+#collectiblesPanelInner {
+  width: min(95vw, 620px);
+  max-height: 90vh;
+  background: rgba(8, 8, 20, 0.98);
+  border: 2px solid rgba(var(--secondary-rgb), 0.45);
+  border-radius: 12px;
+  padding: 20px 24px;
+  overflow-y: auto;
+  font-family: "Orbitron", monospace;
+}
+#collectiblesPanelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(var(--secondary-rgb), 0.2);
+}
+#collectiblesPanelTitle {
+  font-size: 14px;
+  letter-spacing: 4px;
+  color: rgba(var(--secondary-rgb), 0.9);
+  font-weight: 600;
+  text-transform: none;
+}
+.collectibles-tier-header {
+  font-size: 11px;
+  letter-spacing: 3px;
+  margin: 14px 0 8px 0;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.6);
+}
+.collectibles-tier-header.tier-legendario { color: rgba(255, 215, 0, 0.9); }
+.collectibles-tier-header.tier-raro { color: rgba(170, 100, 255, 0.9); }
+.collectibles-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.collectible-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 8px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.collectible-card.locked {
+  opacity: 0.55;
+}
+.collectible-card.owned {
+  border-color: rgba(var(--secondary-rgb), 0.35);
+  background: rgba(var(--secondary-rgb), 0.06);
+}
+.collectible-card-img-wrap {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.collectible-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.collectible-card.locked .collectible-card-img {
+  filter: grayscale(1) brightness(0.4);
+}
+.collectible-card-lock {
+  position: absolute;
+  font-size: 20px;
+  pointer-events: none;
+}
+.collectible-card-name {
+  margin-top: 8px;
+  font-size: 10px;
+  text-align: center;
+  line-height: 1.3;
+  color: rgba(255, 255, 255, 0.85);
+  letter-spacing: 0.5px;
+}
+.collectible-card-count {
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(var(--secondary-rgb), 0.9);
+}
+.collectible-card.gold-glow {
+  border-color: rgba(255, 215, 0, 0.75);
+  box-shadow: 0 0 14px rgba(255, 215, 0, 0.4);
+  animation: collectibleGoldPulse 1.8s ease-in-out infinite;
+}
+@keyframes collectibleGoldPulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(255, 215, 0, 0.3); }
+  50%      { box-shadow: 0 0 20px rgba(255, 215, 0, 0.7); }
+}
+@media (max-width: 480px) {
+  .collectibles-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ===== COLLECTIBLE BEHAVIORS (movimiento) ===== */
+.collectible { transition: opacity 0.2s ease; }
+.collectible-hidden { opacity: 0; }
+
+.collectible-refresco.zigzag { animation: zigzagMove 3.5s linear infinite; }
+.collectible-refresco img { width: 120px; height: 120px; }
+@keyframes zigzagMove {
+  0%   { left: 0%; top: 70%; }
+  12.5% { left: 12.5%; top: 30%; }
+  25%  { left: 25%; top: 70%; }
+  37.5% { left: 37.5%; top: 30%; }
+  50%  { left: 50%; top: 70%; }
+  62.5% { left: 62.5%; top: 30%; }
+  75%  { left: 75%; top: 70%; }
+  87.5% { left: 87.5%; top: 30%; }
+  100% { left: 100%; top: 70%; }
+}
+
+.collectible-honguito { will-change: transform; }
+.collectible-honguito.honguito-growing { animation: hongoGrow 1.2s ease-out forwards; }
+.collectible-honguito.honguito-still { transform: scale(1.5); }
+.collectible-honguito.honguito-shrinking { animation: hongoShrink 1.2s ease-in forwards; }
+@keyframes hongoGrow {
+  0%   { transform: rotate(0deg) scale(0.3); }
+  100% { transform: rotate(720deg) scale(1.5); }
+}
+@keyframes hongoShrink {
+  0%   { transform: rotate(0deg) scale(1.5); }
+  100% { transform: rotate(-720deg) scale(0.3); }
+}
+
+.collectible-amongus.amongus-move { animation: amongusMove 3.5s linear forwards; }
+@keyframes amongusMove {
+  0%   { left: -10%; }
+  100% { left: 110%; }
+}
+
+.collectible-pizzaguy.pizzaguy-move { animation: pizzaguyMove 3s linear infinite; }
+@keyframes pizzaguyMove {
+  0%   { left: -10%; }
+  100% { left: 110%; }
+}
+
+.collectible-house {
+  position: fixed;
+  z-index: 8001;
+  pointer-events: auto;
+  cursor: pointer;
+}
+.collectible-house img { width: 64px; height: 64px; object-fit: contain; }
+.collectible-house.house-fall { animation: houseAppear 0.3s ease-out; }
+@keyframes houseAppear {
+  0%   { transform: scale(0.3); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.collectible-house.house-destroyed { animation: housePop 0.3s ease forwards; }
+@keyframes housePop {
+  0%   { transform: scale(1); opacity: 1; }
+  100% { transform: scale(0.2); opacity: 0; }
+}
+
 

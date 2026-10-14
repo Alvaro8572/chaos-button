@@ -5,14 +5,13 @@
    for runtime fetches. Aggressive caching so the game works fully offline.
 */
 
-const CACHE_VERSION = "chaos-v33-fx";
+const CACHE_VERSION = "chaos-v45-mobile";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=33-fx",
-  "./app.js?v=33-fx",
-  "./boss.html",
-  "./boss.js?v=33-fx",
+  "./styles.css?v=45-mobile",
+  "./app.js?v=45-mobile",
+  "./boss.js?v=45-mobile",
   "./manifest.json",
   "./assets/icons/icon-192.png",
   "./assets/icons/icon-512.png",
@@ -50,21 +49,16 @@ const APP_SHELL = [
   "./assets/images/big-mac.jpg",
   "./assets/images/killian-dictador.jpg",
 
-  // Roulette collectibles
-  "./assets/images/Doge.jpg",
-  "./assets/images/Agua_en_polvo.jpg",
-  "./assets/images/Rengoku_dona.jpg",
-  "./assets/images/Ven_paca.jpg",
-  "./assets/images/Atun_con_mayonesa.jpg",
-
-  // Coin events
-  "./assets/images/Gato.jpg",
-  "./assets/images/Sardina.jpg",
-
-  // Videos
-  "./assets/videos/Avioncito.mp4",
-  "./assets/videos/Tesla_bailando.mp4",
-  "./assets/videos/Gojo_bici.mp4",
+  // Collectibles
+  "./assets/images/gato.png",
+  "./assets/images/sardina.png",
+  "./assets/images/amongus.png",
+  "./assets/images/c.png",
+  "./assets/images/honguito.png",
+  "./assets/images/house.png",
+  "./assets/images/pizza-guy.png",
+  "./assets/images/refresco-zuko.png",
+  "./assets/images/vanilla-sandwich.png",
 
   // Sounds
   "./assets/sounds/mouse-click-sound.mp3",
@@ -74,6 +68,12 @@ const APP_SHELL = [
   "./assets/sounds/roulette.mp3",
   "./assets/sounds/meow.mp3",
   "./assets/sounds/splash.mp3",
+  "./assets/sounds/crunchy-bite.mp3",
+  "./assets/sounds/emergency-meeting-among-us.mp3",
+  "./assets/sounds/pizza-roblox.mp3",
+  "./assets/sounds/cola-sound-effect.mp3",
+  "./assets/sounds/mario-64-lets-a-go.mp3",
+  "./assets/sounds/magic-fairy.mp3",
   "./assets/sounds/galaxy-meme.mp3",
   "./assets/sounds/bruh.mp3",
   "./assets/sounds/ara-ara-sayonara.mp3",
@@ -124,9 +124,26 @@ self.addEventListener("fetch", function(event) {
   if (req.method !== "GET") return;
 
   var url = new URL(req.url);
-
-  // Only handle same-origin requests (skip Google Fonts CSS, etc.)
   if (url.origin !== self.location.origin) return;
+
+  var isHTML = req.mode === "navigate" || req.destination === "document" || (req.headers.get("accept") || "").indexOf("text/html") !== -1;
+
+  if (isHTML) {
+    event.respondWith(
+      fetch(req).then(function(networkRes) {
+        if (networkRes && networkRes.status === 200) {
+          var copy = networkRes.clone();
+          caches.open(CACHE_VERSION).then(function(cache) { cache.put(req, copy); });
+        }
+        return networkRes;
+      }).catch(function() {
+        return caches.match(req).then(function(cached) {
+          return cached || new Response("Offline", { status: 503, statusText: "Offline" });
+        });
+      })
+    );
+    return;
+  }
 
   event.respondWith(
     caches.match(req).then(function(cached) {
@@ -139,12 +156,8 @@ self.addEventListener("fetch", function(event) {
         }
         return networkRes;
       }).catch(function() {
-        // Offline: return cached or a basic offline response
         return cached || new Response("Offline", { status: 503, statusText: "Offline" });
       });
-
-      // Stale-while-revalidate: return cached immediately if present,
-      // otherwise wait for network
       return cached || networkFetch;
     })
   );

@@ -58,16 +58,6 @@ var SOUNDS = [
   "assets/sounds/windows-xp-donteflon.mp3"
 ];
 
-/* ========================= */
-/* VIDEO SYSTEM */
-/* ========================= */
-
-var VIDEOS = [
-  { file: "assets/videos/Avioncito.mp4", name: "Avioncito", prob: 0.5 },
-  { file: "assets/videos/Tesla_bailando.mp4", name: "Tesla Bailando", prob: 0.25 },
-  { file: "assets/videos/Gojo_bici.mp4", name: "Gojo en Bici", prob: 0.25 }
-];
-
 function safeJSON(key, fallback) {
   try {
     var raw = localStorage.getItem(key);
@@ -131,12 +121,7 @@ function clearAllChaosTimers() {
   chaosTimers.intervalIds = [];
 }
 
-var unlockedVideos = safeJSON("chaosVideos", []);
 var jesusRewardUnlocked = localStorage.getItem("chaosJesusReward") === "1";
-var collectionOpen = false;
-
-var videoOverlay = document.getElementById("videoOverlay");
-var overlayVideo = document.getElementById("overlayVideo");
 var repetidoMsg = document.getElementById("repetidoMsg");
 
 var clickSound = new Audio("assets/sounds/mouse-click-sound.mp3");
@@ -281,6 +266,7 @@ function formatNumber(n) {
 /* ========================= */
 
 var coins = safeNumber("chaosCoins", 0, true);
+var totalCoinsEarned = safeNumber("chaosTotalCoinsEarned", 0, true);
 var coinDisplayEl = document.getElementById("coinDisplay");
 var coinNumberEl = document.getElementById("coinNumber");
 var coinTickTimeout = null;
@@ -298,6 +284,8 @@ try {
 function addCoins(amount, source, isBig) {
   coins += amount;
   localStorage.setItem("chaosCoins", String(coins));
+  totalCoinsEarned += amount;
+  localStorage.setItem("chaosTotalCoinsEarned", String(totalCoinsEarned));
   coinNumberEl.textContent = formatNumber(coins);
   if (shopOpen) updateShopBalance();
 
@@ -613,131 +601,6 @@ function spawnChaosSymbol() {
 var unlockedList = document.getElementById("unlockedList");
 var unlockedCount = document.getElementById("unlockedCount");
 var unlockedPanel = document.getElementById("unlockedPanel");
-
-/* ========================= */
-/* COLLECTION PANEL */
-/* ========================= */
-
-var collectionBtn = null;
-var collectionPanel = document.getElementById("collectionPanel");
-var collectionList = document.getElementById("collectionList");
-var collectionCount = document.getElementById("collectionCount");
-var collectionCloseBtn = document.getElementById("collectionClose");
-
-if (collectionBtn) {
-  collectionBtn.addEventListener("click", function() {
-    collectionOpen = !collectionOpen;
-    if (collectionOpen) {
-      collectionPanel.classList.add("open");
-      collectionBtn.setAttribute("aria-expanded", "true");
-    } else {
-      collectionPanel.classList.remove("open");
-      collectionBtn.setAttribute("aria-expanded", "false");
-    }
-  });
-}
-
-collectionCloseBtn.addEventListener("click", function() {
-  collectionPanel.classList.remove("open");
-  collectionOpen = false;
-  if (collectionBtn) collectionBtn.setAttribute("aria-expanded", "false");
-});
-
-function buildCollection() {
-  collectionList.innerHTML = "";
-
-  var videosHeader = document.createElement("div");
-  videosHeader.className = "collection-section-header";
-  videosHeader.textContent = "VIDEOS";
-  collectionList.appendChild(videosHeader);
-
-  var videosRow = document.createElement("div");
-  videosRow.className = "collection-videos-row";
-  collectionList.appendChild(videosRow);
-
-  if (unlockedVideos.length === 0) {
-    var empty = document.createElement("div");
-    empty.className = "collection-empty-row";
-    empty.textContent = "Llega a 100% caos para desbloquear videos";
-    videosRow.appendChild(empty);
-  } else {
-    unlockedVideos.forEach(function(v, i) {
-      var item = document.createElement("div");
-      item.className = "collection-item";
-
-      var vid = document.createElement("video");
-      vid.src = v.file;
-      vid.loop = true;
-      vid.muted = true;
-      vid.addEventListener("mouseenter", function() { vid.play().catch(function(){}); });
-      vid.addEventListener("mouseleave", function() { vid.pause(); vid.currentTime = 0; });
-
-      var name = document.createElement("div");
-      name.className = "collection-item-name";
-      name.textContent = v.name;
-
-      item.appendChild(vid);
-      item.appendChild(name);
-      videosRow.appendChild(item);
-    });
-  }
-
-  var collectiblesHeader = document.createElement("div");
-  collectiblesHeader.className = "collection-section-header";
-  collectiblesHeader.textContent = "COLECCIONABLES · RULETA";
-  collectionList.appendChild(collectiblesHeader);
-
-  var collectiblesRow = document.createElement("div");
-  collectiblesRow.className = "collection-collectibles-row";
-  collectionList.appendChild(collectiblesRow);
-
-  var collectiblePrizes = (typeof ROULETTE_PRIZES !== "undefined" && ROULETTE_PRIZES)
-    ? ROULETTE_PRIZES.filter(function(p) { return p.isCollectible; })
-    : [];
-  var ownedCount = 0;
-  collectiblePrizes.forEach(function(prize) {
-    if (isCollectibleOwned(prize.id)) ownedCount++;
-    var item = document.createElement("div");
-    item.className = "collection-item collectible-item" + (isCollectibleOwned(prize.id) ? " owned" : " locked");
-
-    var imgWrap = document.createElement("div");
-    imgWrap.className = "collection-collectible-img-wrap";
-    if (isCollectibleOwned(prize.id)) {
-      var img = document.createElement("img");
-      img.src = prize.img;
-      img.alt = prize.name;
-      img.className = "collection-collectible-img";
-      img.onerror = function() {
-        this.style.background = "rgba(255,80,80,0.2)";
-        this.alt = "missing";
-      };
-      imgWrap.appendChild(img);
-    } else {
-      var lock = document.createElement("div");
-      lock.className = "collection-collectible-lock";
-      lock.textContent = "🔒";
-      imgWrap.appendChild(lock);
-    }
-
-    var tierBorder = document.createElement("div");
-    tierBorder.className = "collection-collectible-tier-border tier-" + prize.tier;
-    imgWrap.appendChild(tierBorder);
-
-    var name = document.createElement("div");
-    name.className = "collection-item-name";
-    name.textContent = isCollectibleOwned(prize.id) ? prize.name : "???";
-
-    item.appendChild(imgWrap);
-    item.appendChild(name);
-    if (isCollectibleOwned(prize.id)) {
-      item.addEventListener("click", function() { openCollectibleFullscreen(prize); });
-    }
-    collectiblesRow.appendChild(item);
-  });
-
-  var totalCollectibles = collectiblePrizes.length;
-  collectionCount.textContent = unlockedVideos.length + " / 3 · " + ownedCount + " / " + totalCollectibles;
-}
 
 function showRepetido() {
   repetidoMsg.classList.add("show");
@@ -1499,6 +1362,9 @@ function chaos() {
     spawnCoinEvent();
   }
 
+  // Collectibles (comun 0.33%, raro 0.1%, legendario 0.01% por click)
+  trySpawnCollectible();
+
   // Random sound (can play over other sounds except click)
   if (Math.random() < 0.2) {
     playRandomSound();
@@ -1512,11 +1378,12 @@ function chaos() {
     unlockFact();
   }
 
-  // Late-cycle risk: as chaos climbs past 80%, each click has a rising chance
-  // of resetting the chaos meter to 0. Caps at 15% per click at 99%.
-  // Forces the player to grind harder to actually hit 100%.
-  if (chaosLevel >= 80 && chaosLevel < 100) {
-    var lateResetChance = ((chaosLevel - 80) / 19) * 0.15;
+  // Late-cycle risk: as chaos climbs past 90%, each click has a rising chance
+  // of resetting the chaos meter to 0. Caps at 3% per click at 99%.
+  // The first 90% is a safe zone (free grinding); only the final 10%
+  // is tense, with a gentle ramp to 3%.
+  if (chaosLevel >= 90 && chaosLevel < 100) {
+    var lateResetChance = ((chaosLevel - 90) / 9) * 0.03;
     if (Math.random() < lateResetChance) {
       chaosLevel = 0;
       clicks = 0;
@@ -1552,7 +1419,9 @@ function chaos() {
       clicks = 0;
       updateChaosMeter();
       setTimeout(function() {
-        window.location.href = "boss.html?level=" + nextLevel + "&v=33-fx";
+        if (typeof window.startBossArena === "function") {
+          window.startBossArena(nextLevel);
+        }
       }, 400);
     } else {
       // 60% — keep playing, reset chaosLevel but don't teleport
@@ -1617,9 +1486,12 @@ function closeTopmostOverlay() {
   } else if (document.getElementById("achievementsPanel").classList.contains("open")) {
     document.getElementById("achievementsPanel").classList.remove("open");
     achievementsOpen = false;
-  } else if (document.getElementById("collectionPanel").classList.contains("open")) {
-    document.getElementById("collectionPanel").classList.remove("open");
-    collectionOpen = false;
+  } else if (document.getElementById("infoPanel").classList.contains("open")) {
+    closeInfo();
+  } else if (document.getElementById("statsPanel").classList.contains("open")) {
+    closeStats();
+  } else if (document.getElementById("collectiblesPanel").classList.contains("open")) {
+    closeCollectibles();
   } else if (document.getElementById("factPanel").classList.contains("visible")) {
     document.getElementById("factPanel").classList.remove("visible");
   }
@@ -1727,7 +1599,12 @@ var ACHIEVEMENTS = [
   { id: "coleccionista",tier: "gold",   name: "Coleccionista",       desc: "Desbloqueá todos los logros de Colección", category: "coleccion", reward: { type: "picture", file: "assets/images/medalla_de_oro.jpg" } },
   { id: "maratonista",  tier: "gold",   name: "Maratonista",         desc: "Activá 10 boosts",                    category: "clicks",  reward: null },
   { id: "bendecido",    tier: "gold",   name: "Bendecido",           desc: "Recibí la bendición divina",          category: "coleccion", reward: { type: "picture", file: "assets/images/Jesus_Payne.jpg" } },
-  { id: "completista",  tier: "gold",   name: "Completista",         desc: "Desbloqueá todos los logros",         category: "clicks",  reward: { type: "frame", id: "gold-complete" } }
+  { id: "completista",  tier: "gold",   name: "Completista",         desc: "Desbloqueá todos los logros",         category: "clicks",  reward: { type: "frame", id: "gold-complete" } },
+  { id: "primer_collectible", tier: "bronze", name: "Primer Collectible", desc: "Agarra tu primer collectible", category: "collectibles", reward: null },
+  { id: "coleccionista_comun", tier: "silver", name: "Coleccionista Común", desc: "Agarra los 5 Comunes al menos una vez", category: "collectibles", reward: null },
+  { id: "ojo_raro", tier: "silver", name: "Ojo Raro", desc: "Agarra los 2 Raros al menos una vez", category: "collectibles", reward: null },
+  { id: "cazador_legendario", tier: "gold", name: "Cazador Legendario", desc: "Agarra tu primer Legendario", category: "collectibles", reward: null },
+  { id: "maestro_del_caos", tier: "gold", name: "Maestro del Caos", desc: "Agarra los 2 Legendarios al menos una vez", category: "collectibles", reward: null }
 ];
 
 var achievementsUnlocked = safeJSON("chaosAchievements", []);
@@ -1855,6 +1732,11 @@ function checkAchievements() {
       case "intelectual":  unlocked = unlockedFacts.length >= FACTS.length; break;
       case "bendecido":    unlocked = jesusRewardUnlocked; break;
       case "first_blood":  unlocked = (parseInt(localStorage.getItem("chaosBossKills"), 10) || 0) >= 1; break;
+      case "primer_collectible": unlocked = Object.keys(collectedCounts).some(function(k){ return (collectedCounts[k]||0) > 0; }); break;
+      case "coleccionista_comun": unlocked = COLLECTIBLES.filter(function(c){return c.tier==="comun";}).every(function(c){ return (collectedCounts[c.id]||0) > 0; }); break;
+      case "ojo_raro": unlocked = COLLECTIBLES.filter(function(c){return c.tier==="raro";}).every(function(c){ return (collectedCounts[c.id]||0) > 0; }); break;
+      case "cazador_legendario": unlocked = COLLECTIBLES.filter(function(c){return c.tier==="legendario";}).some(function(c){ return (collectedCounts[c.id]||0) > 0; }); break;
+      case "maestro_del_caos": unlocked = COLLECTIBLES.filter(function(c){return c.tier==="legendario";}).every(function(c){ return (collectedCounts[c.id]||0) > 0; }); break;
     }
     if (unlocked) unlockAchievement(ach.id);
   });
@@ -1993,15 +1875,6 @@ achievementsPanel.addEventListener("click", function(e) {
 function migrateAssetPaths() {
   var migrated = false;
 
-  if (Array.isArray(unlockedVideos)) {
-    unlockedVideos.forEach(function(v) {
-      if (v && v.file && v.file.indexOf("assets/") !== 0 && /\.mp4$/i.test(v.file)) {
-        v.file = "assets/videos/" + v.file;
-        migrated = true;
-      }
-    });
-  }
-
   if (Array.isArray(inventory.pictures)) {
     inventory.pictures = inventory.pictures.map(function(p) {
       if (typeof p === "string" && p.indexOf("assets/") !== 0 && /\.(jpg|jpeg|png|webp)$/i.test(p)) {
@@ -2030,7 +1903,6 @@ function migrateAssetPaths() {
   }
 
   if (migrated) {
-    localStorage.setItem("chaosVideos", JSON.stringify(unlockedVideos));
     localStorage.setItem("chaosInventory", JSON.stringify(inventory));
     localStorage.setItem("chaosEquipped", JSON.stringify(equipped));
   }
@@ -2691,67 +2563,368 @@ function finishCoinEvent() {
   nextCoinEventTime = Date.now() + 8000 + Math.random() * 12000;
 }
 
-function spawnFallingCat() {
-  if (!canCreate("falling-cat")) return;
-  var cat = document.createElement("div");
-  cat.className = "falling-cat";
-  cat.innerHTML = '<img src="assets/images/Gato.jpg" alt="cat" draggable="false">';
-  cat.style.left = (5 + Math.random() * 85) + "%";
-  document.body.appendChild(cat);
+var COLLECTIBLES = [
+  { id: "gato", name: "Gato", src: "assets/images/gato.png", sound: "assets/sounds/meow.mp3", tier: "comun", desc: "Un gato que cae del cielo." },
+  { id: "sardina", name: "Sardina", src: "assets/images/sardina.png", sound: "assets/sounds/splash.mp3", tier: "comun", desc: "Una sardina que nada." },
+  { id: "sandwich", name: "Sandwich de Vainilla", src: "assets/images/vanilla-sandwich.png", sound: "assets/sounds/crunchy-bite.mp3", tier: "comun", desc: "Un sandwich crujiente." },
+  { id: "c", name: "La C del Caos", src: "assets/images/c.png", sound: "assets/sounds/magic-fairy.mp3", tier: "comun", desc: "La letra C, brillando con caos." },
+  { id: "refresco", name: "Refresco Zuko", src: "assets/images/refresco-zuko.png", sound: "assets/sounds/cola-sound-effect.mp3", tier: "raro", desc: "Un refresco en zigzag." },
+  { id: "honguito", name: "Honguito Mágico", src: "assets/images/honguito.png", sound: "assets/sounds/mario-64-lets-a-go.mp3", tier: "raro", desc: "Un hongo que gira y crece." },
+  { id: "amongus", name: "Among Us", src: "assets/images/amongus.png", sound: "assets/sounds/emergency-meeting-among-us.mp3", tier: "legendario", desc: "Un tripulante sospechoso." },
+  { id: "pizzaguy", name: "Pizza Guy", src: "assets/images/pizza-guy.png", sound: "assets/sounds/pizza-roblox.mp3", tier: "legendario", desc: "El repartidor que esquiva.", house: "assets/images/house.png" }
+];
 
-  var clicked = false;
-  function clickHandler(e) {
-    if (clicked) return;
-    clicked = true;
-    e.stopPropagation();
-    addCoins(5, "event", true);
-    playSoundSafe(COIN_EVENT_FILES.cat);
-    finishCoinEvent();
-    cat.classList.add("caught");
-    setTimeout(function() { trackedRemove(cat, "falling-cat"); }, 500);
+var activeCollectible = null;
+var collectedCounts = safeJSON("chaosCollected", {});
+
+function saveCollected() {
+  safeJSON_set("chaosCollected", collectedCounts);
+}
+
+function isCollected(id) {
+  return (collectedCounts[id] || 0) > 0;
+}
+
+function getCollectCount(id) {
+  return collectedCounts[id] || 0;
+}
+
+function collectItem(c) {
+  if (!c || c.caught) return;
+  c.caught = true;
+  var id = c.id;
+  collectedCounts[id] = (collectedCounts[id] || 0) + 1;
+  saveCollected();
+  if (c.sound) playSoundSafe(c.sound);
+  if (id === "gato" || id === "sardina") addCoins(5, "collectible-" + id, true);
+  if (typeof showToast === "function") showToast("¡" + c.name + "!", "success");
+  if (typeof checkAchievements === "function") checkAchievements();
+  if (c.el && c.el.parentNode) {
+    c.el.classList.add("collected");
+    setTimeout(function() { if (c.el.parentNode) c.el.parentNode.removeChild(c.el); }, 400);
   }
-  cat.addEventListener("click", clickHandler);
+  if (c === activeCollectible) activeCollectible = null;
+}
 
-  coinEvent = { type: "cat", el: cat, timeoutId: null };
-  setTimeout(function() { if (!clicked) cat.classList.add("falling"); }, 80);
+function makeBasicCollectible(c) {
+  if (activeCollectible) return null;
+  var el = document.createElement("div");
+  el.className = "collectible collectible-" + c.id + " tier-" + c.tier;
+  el.innerHTML = '<img src="' + c.src + '" alt="' + c.name + '" draggable="false">';
+  el.style.left = (5 + Math.random() * 85) + "%";
+  el.style.top = (20 + Math.random() * 50) + "%";
+  document.body.appendChild(el);
+  var obj = { id: c.id, name: c.name, src: c.src, sound: c.sound, el: el, caught: false };
+  activeCollectible = obj;
+  el.addEventListener("click", function(e) { e.stopPropagation(); collectItem(obj); });
+  setTimeout(function() {
+    if (!obj.caught && obj === activeCollectible) {
+      if (el.parentNode) el.parentNode.removeChild(el);
+      activeCollectible = null;
+    }
+  }, 8000);
+  return obj;
+}
 
-  coinEvent.timeoutId = setTimeout(function() {
-    if (clicked) return;
-    cat.classList.add("missed");
-    finishCoinEvent();
-    setTimeout(function() { trackedRemove(cat, "falling-cat"); }, 300);
+function spawnSandwich() {
+  if (activeCollectible) return;
+  var c = COLLECTIBLES.find(function(x) { return x.id === "sandwich"; });
+  if (!c) return;
+  var el = document.createElement("div");
+  el.className = "collectible collectible-sandwich tier-" + c.tier;
+  el.innerHTML = '<img src="' + c.src + '" alt="' + c.name + '" draggable="false">';
+  document.body.appendChild(el);
+  var obj = { id: c.id, name: c.name, src: c.src, sound: c.sound, el: el, caught: false };
+  activeCollectible = obj;
+
+  function place() {
+    el.style.left = (5 + Math.random() * 85) + "%";
+    el.style.top = (15 + Math.random() * 55) + "%";
+  }
+  place();
+  el.addEventListener("click", function(e) { e.stopPropagation(); collectItem(obj); });
+
+  var cycle = setInterval(function() {
+    if (obj.caught) { clearInterval(cycle); return; }
+    el.classList.add("collectible-hidden");
+    setTimeout(function() {
+      if (obj.caught) return;
+      place();
+      el.classList.remove("collectible-hidden");
+    }, 250);
+  }, 2000);
+
+  setTimeout(function() {
+    clearInterval(cycle);
+    if (!obj.caught && obj === activeCollectible) {
+      if (el.parentNode) el.parentNode.removeChild(el);
+      activeCollectible = null;
+    }
+  }, 12000);
+}
+
+function spawnRefresco() {
+  if (activeCollectible) return;
+  var c = COLLECTIBLES.find(function(x) { return x.id === "refresco"; });
+  if (!c) return;
+  var el = document.createElement("div");
+  el.className = "collectible collectible-refresco tier-" + c.tier + " zigzag";
+  el.innerHTML = '<img src="' + c.src + '" alt="' + c.name + '" draggable="false">';
+  document.body.appendChild(el);
+  var obj = { id: c.id, name: c.name, src: c.src, sound: c.sound, el: el, caught: false };
+  activeCollectible = obj;
+  el.addEventListener("click", function(e) { e.stopPropagation(); collectItem(obj); });
+  setTimeout(function() {
+    if (!obj.caught && obj === activeCollectible) {
+      if (el.parentNode) el.parentNode.removeChild(el);
+      activeCollectible = null;
+    }
+  }, 8000);
+}
+
+function spawnHonguito() {
+  if (activeCollectible) return;
+  var c = COLLECTIBLES.find(function(x) { return x.id === "honguito"; });
+  if (!c) return;
+  var el = document.createElement("div");
+  el.className = "collectible collectible-honguito tier-" + c.tier;
+  el.innerHTML = '<img src="' + c.src + '" alt="' + c.name + '" draggable="false">';
+  el.style.left = "50%";
+  el.style.top = "50%";
+  el.style.marginLeft = "-40px";
+  el.style.marginTop = "-40px";
+  document.body.appendChild(el);
+  var obj = { id: c.id, name: c.name, src: c.src, sound: c.sound, el: el, caught: false, catchable: false };
+  activeCollectible = obj;
+
+  el.addEventListener("click", function(e) {
+    e.stopPropagation();
+    if (!obj.catchable) return;
+    collectItem(obj);
+  });
+
+  el.classList.add("honguito-growing");
+  setTimeout(function() {
+    if (obj.caught) return;
+    el.classList.remove("honguito-growing");
+    el.classList.add("honguito-still");
+    obj.catchable = true;
+  }, 1200);
+  setTimeout(function() {
+    if (obj.caught) return;
+    el.classList.remove("honguito-still");
+    el.classList.add("honguito-shrinking");
+    obj.catchable = false;
+  }, 2200);
+  setTimeout(function() {
+    if (!obj.caught && obj === activeCollectible) {
+      if (el.parentNode) el.parentNode.removeChild(el);
+      activeCollectible = null;
+    }
+  }, 3400);
+}
+
+function spawnAmongus() {
+  if (activeCollectible) return;
+  var c = COLLECTIBLES.find(function(x) { return x.id === "amongus"; });
+  if (!c) return;
+  var el = document.createElement("div");
+  el.className = "collectible collectible-amongus tier-" + c.tier;
+  el.innerHTML = '<img src="' + c.src + '" alt="' + c.name + '" draggable="false">';
+  el.style.top = (15 + Math.random() * 55) + "%";
+  document.body.appendChild(el);
+  var obj = { id: c.id, name: c.name, src: c.src, sound: c.sound, el: el, caught: false, dodges: 0 };
+  activeCollectible = obj;
+
+  el.classList.add("amongus-move");
+  playSoundSafe(c.sound);
+
+  el.addEventListener("click", function(e) {
+    e.stopPropagation();
+    if (obj.caught) return;
+    if (obj.dodges < 2) {
+      obj.dodges++;
+      el.style.top = (15 + Math.random() * 55) + "%";
+      el.classList.remove("amongus-move");
+      void el.offsetWidth;
+  el.classList.add("amongus-move");
+    } else {
+      collectItem(obj);
+    }
+  });
+
+  setTimeout(function() {
+    if (!obj.caught && obj === activeCollectible) {
+      if (el.parentNode) el.parentNode.removeChild(el);
+      activeCollectible = null;
+    }
+  }, 5000);
+}
+
+function spawnHouse(pizzaObj) {
+  var el = document.createElement("div");
+  el.className = "collectible-house";
+  el.innerHTML = '<img src="assets/images/house.png" alt="casa" draggable="false">';
+  el.style.left = "85%";
+  el.style.top = "35%";
+  document.body.appendChild(el);
+  el.classList.add("house-fall");
+  pizzaObj.houseEl = el;
+  el.addEventListener("click", function(e) {
+    e.stopPropagation();
+    if (pizzaObj.houseDestroyed) return;
+    pizzaObj.houseDestroyed = true;
+    if (pizzaObj.arrivedTimer) clearTimeout(pizzaObj.arrivedTimer);
+    el.classList.add("house-destroyed");
+    var pizzaEl = pizzaObj.el;
+    if (pizzaEl) {
+      var rect = pizzaEl.getBoundingClientRect();
+      pizzaEl.classList.remove("pizzaguy-move");
+      pizzaEl.style.left = rect.left + "px";
+      pizzaEl.style.top = rect.top + "px";
+    }
+    setTimeout(function() { if (el.parentNode) el.parentNode.removeChild(el); }, 300);
+  });
+  setTimeout(function() {
+    if (el.parentNode) el.parentNode.removeChild(el);
+  }, 10000);
+}
+
+function spawnPizzaGuy() {
+  if (activeCollectible) return;
+  var c = COLLECTIBLES.find(function(x) { return x.id === "pizzaguy"; });
+  if (!c) return;
+  var el = document.createElement("div");
+  el.className = "collectible collectible-pizzaguy tier-" + c.tier;
+  el.innerHTML = '<img src="' + c.src + '" alt="' + c.name + '" draggable="false">';
+  el.style.top = (15 + Math.random() * 45) + "%";
+  document.body.appendChild(el);
+  var obj = { id: c.id, name: c.name, src: c.src, sound: c.sound, el: el, caught: false, houseDestroyed: false };
+  activeCollectible = obj;
+
+  el.classList.add("pizzaguy-move");
+  spawnHouse(obj);
+  playSoundSafe(c.sound);
+
+  el.addEventListener("click", function(e) {
+    e.stopPropagation();
+    if (obj.caught) return;
+    if (!obj.houseDestroyed) {
+      el.style.top = (15 + Math.random() * 45) + "%";
+    } else {
+      collectItem(obj);
+    }
+  });
+
+  obj.arrivedTimer = setTimeout(function() {
+    if (obj.caught || obj.houseDestroyed) return;
+    var rect = el.getBoundingClientRect();
+    el.classList.remove("pizzaguy-move");
+    el.style.left = rect.left + "px";
+  }, 3500);
+
+  setTimeout(function() {
+    if (obj.arrivedTimer) clearTimeout(obj.arrivedTimer);
+    if (!obj.caught && obj === activeCollectible) {
+      if (el.parentNode) el.parentNode.removeChild(el);
+      if (obj.houseEl && obj.houseEl.parentNode) obj.houseEl.parentNode.removeChild(obj.houseEl);
+      activeCollectible = null;
+    }
+  }, 10000);
+}
+
+function spawnCollectibleById(id) {
+  switch (id) {
+    case "gato":
+    case "c": spawnFalling(id); break;
+    case "sardina": spawnSardine(); break;
+    case "sandwich": spawnSandwich(); break;
+    case "refresco": spawnRefresco(); break;
+    case "honguito": spawnHonguito(); break;
+    case "amongus": spawnAmongus(); break;
+    case "pizzaguy": spawnPizzaGuy(); break;
+    default:
+      var c = COLLECTIBLES.find(function(x) { return x.id === id; });
+      if (c) makeBasicCollectible(c);
+  }
+}
+
+function trySpawnCollectible() {
+  if (activeCollectible) return;
+  var r = Math.random();
+  var comunChance = 0.0033;
+  var raroChance = 0.001;
+  var legChance = 0.0001;
+  var total = comunChance + raroChance + legChance;
+  if (r >= total) return;
+  var tier;
+  if (r < comunChance) tier = "comun";
+  else if (r < comunChance + raroChance) tier = "raro";
+  else tier = "legendario";
+  var pool = COLLECTIBLES.filter(function(c) { return c.tier === tier; });
+  if (pool.length === 0) return;
+  var pick = pool[Math.floor(Math.random() * pool.length)];
+  spawnCollectibleById(pick.id);
+}
+
+function spawnFalling(id) {
+  if (activeCollectible) return;
+  var c = COLLECTIBLES.find(function(x) { return x.id === id; });
+  if (!c) return;
+  if (!canCreate("falling-cat")) return;
+  var el = document.createElement("div");
+  el.className = "falling-cat collectible collectible-" + id + " tier-" + c.tier;
+  el.innerHTML = '<img src="' + c.src + '" alt="' + c.name + '" draggable="false">';
+  el.style.left = (5 + Math.random() * 85) + "%";
+  document.body.appendChild(el);
+
+  var obj = { id: c.id, name: c.name, src: c.src, sound: c.sound, el: el, caught: false };
+  activeCollectible = obj;
+
+  el.addEventListener("click", function(e) {
+    if (obj.caught) return;
+    e.stopPropagation();
+    collectItem(obj);
+  });
+
+  setTimeout(function() { if (!obj.caught) el.classList.add("falling"); }, 80);
+
+  setTimeout(function() {
+    if (obj.caught) return;
+    el.classList.add("missed");
+    if (el.parentNode) el.parentNode.removeChild(el);
+    if (obj === activeCollectible) activeCollectible = null;
+    trackedRemove(el, "falling-cat");
   }, 2500);
 }
 
 function spawnSardine() {
+  if (activeCollectible) return;
   if (!canCreate("sardine")) return;
   var fish = document.createElement("div");
-  fish.className = "sardine";
-  fish.innerHTML = '<img src="assets/images/Sardina.jpg" alt="sardine" draggable="false">';
+  fish.className = "sardine collectible collectible-sardine";
+  fish.innerHTML = '<img src="assets/images/sardina.png" alt="sardine" draggable="false">';
   fish.style.bottom = (8 + Math.random() * 30) + "%";
   document.body.appendChild(fish);
 
-  var clicked = false;
+  var obj = { id: "sardina", name: "Sardina", src: "assets/images/sardina.png", sound: "assets/sounds/splash.mp3", el: fish, caught: false };
+  activeCollectible = obj;
+
   function clickHandler(e) {
-    if (clicked) return;
-    clicked = true;
+    if (obj.caught) return;
     e.stopPropagation();
-    addCoins(5, "event", true);
-    playSplash();
-    finishCoinEvent();
-    fish.classList.add("caught");
-    setTimeout(function() { trackedRemove(fish, "sardine"); }, 500);
+    collectItem(obj);
   }
   fish.addEventListener("click", clickHandler);
 
-  coinEvent = { type: "sardine", el: fish, timeoutId: null };
-  setTimeout(function() { if (!clicked) fish.classList.add("swimming"); }, 80);
+  setTimeout(function() { if (!obj.caught) fish.classList.add("swimming"); }, 80);
 
-  coinEvent.timeoutId = setTimeout(function() {
-    if (clicked) return;
+  setTimeout(function() {
+    if (obj.caught) return;
     fish.classList.add("missed");
-    finishCoinEvent();
-    setTimeout(function() { trackedRemove(fish, "sardine"); }, 300);
+    if (fish.parentNode) fish.parentNode.removeChild(fish);
+    if (obj === activeCollectible) activeCollectible = null;
+    trackedRemove(fish, "sardine");
   }, 4000);
 }
 
@@ -2788,10 +2961,7 @@ function spawnCoinButton() {
 
 function spawnCoinEvent() {
   if (coinEvent) return;
-  var r = Math.random();
-  if (r < 0.30) spawnFallingCat();
-  else if (r < 0.55) spawnSardine();
-  else spawnCoinButton();
+  spawnCoinButton();
 }
 
 chaosSetInterval(function() {
@@ -3111,14 +3281,32 @@ setTimeout(renderBoost, 100);
 /* ROULETTE SYSTEM (Fase 10) */
 /* ========================= */
 
+var ROULETTE_TIPS = [
+  "Equipá un tema PRO para ver efectos exclusivos.",
+  "Los legendarios son rarísimos: paciencia.",
+  "Activá boosts para ganar el doble de monedas.",
+  "Enter o Espacio también disparan el caos.",
+  "Llegá al 100% de caos para pelear contra el boss.",
+  "Coleccioná las 8 apariciones para los logros.",
+  "El botón de caos cambia de color con el tema.",
+  "Girá la ruleta para invocar collectibles.",
+  "El jackpot te da 500 monedas.",
+  "Comprá marcos en la tienda para personalizar tu perfil."
+];
+
+function randomTip() {
+  return ROULETTE_TIPS[Math.floor(Math.random() * ROULETTE_TIPS.length)];
+}
+
 var ROULETTE_PRIZES = [
-  { id: "doge",     name: "Doge",              img: "assets/images/Doge.jpg",          weight: 25, tier: "common", isCollectible: true,  desc: "Un clásico" },
-  { id: "agua",     name: "Agua en polvo",     img: "assets/images/Agua_en_polvo.jpg", weight: 25, tier: "common", isCollectible: true,  desc: "Solo échale agua" },
-  { id: "rengoku",  name: "Rengoku dona",      img: "assets/images/Rengoku_dona.jpg",  weight: 10, tier: "rare",   isCollectible: true,  desc: "Créditos al panadero Akaza" },
-  { id: "100coins", name: "100 monedas",       img: null,                                weight: 10, tier: "rare",   isCollectible: false, desc: "", coins: 100 },
-  { id: "venpaca",  name: "Ven pa' acá",       img: "assets/images/Ven_paca.jpg",      weight: 10, tier: "rare",   isCollectible: true,  desc: "No vayas" },
-  { id: "atun",     name: "Atún con mayonesa", img: "assets/images/Atun_con_mayonesa.jpg", weight: 15, tier: "mythic", isCollectible: true, desc: "Inumaki siendo Inumaki" },
-  { id: "jackpot",  name: "Jackpot",           img: null,                                weight: 5,  tier: "jackpot", isCollectible: false, desc: "", coins: 500 }
+  { id: "nada1", type: "nada", weight: 10 },
+  { id: "nada2", type: "nada", weight: 10 },
+  { id: "nada3", type: "nada", weight: 10 },
+  { id: "nada4", type: "nada", weight: 10 },
+  { id: "collectible", type: "collectible", weight: 20 },
+  { id: "monedas", type: "monedas", weight: 20 },
+  { id: "consejo", type: "consejo", weight: 15 },
+  { id: "jackpot", type: "jackpot", weight: 5 }
 ];
 
 var ROULETTE_SPIN_COST = 50;
@@ -3134,10 +3322,6 @@ var rouletteSpinning = false;
 function saveRouletteState() {
   localStorage.setItem("chaosRouletteSpins", String(rouletteSpinsCount));
   localStorage.setItem("chaosJesusReward", jesusRewardUnlocked ? "1" : "0");
-}
-
-function isCollectibleOwned(id) {
-  return inventory.collectibles.indexOf(id) !== -1;
 }
 
 function getRouletteClicksThreshold() {
@@ -3156,11 +3340,12 @@ function rollPrize() {
   return ROULETTE_PRIZES[ROULETTE_PRIZES.length - 1];
 }
 
-function getTierColor(tier) {
-  if (tier === "common")  return "#ffc107";
-  if (tier === "rare")    return "#9c27b0";
-  if (tier === "mythic")  return "#f44336";
-  if (tier === "jackpot") return "#ff5722";
+function getTierColor(type) {
+  if (type === "nada") return "#2a2a35";
+  if (type === "collectible") return "#9c27b0";
+  if (type === "monedas") return "#ffc107";
+  if (type === "consejo") return "#00bcd4";
+  if (type === "jackpot") return "#ff5722";
   return "#666";
 }
 
@@ -3168,6 +3353,7 @@ function buildRouletteWheel() {
   var inner = document.getElementById("rouletteWheelInner");
   inner.innerHTML = "";
   var cx = 150, cy = 150, r = 140;
+  var emojiByType = { "nada": "✖", "collectible": "🎁", "monedas": "🪙", "consejo": "💡", "jackpot": "💎" };
   for (var i = 0; i < ROULETTE_PRIZES.length; i++) {
     var prize = ROULETTE_PRIZES[i];
     var startAngle = i * ROULETTE_SECTOR_ANGLE - 90;
@@ -3182,7 +3368,7 @@ function buildRouletteWheel() {
     var d = "M" + cx + "," + cy + " L" + x1 + "," + y1 + " A" + r + "," + r + " 0 " + largeArc + " 1 " + x2 + "," + y2 + " Z";
     var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
     path.setAttribute("d", d);
-    path.setAttribute("fill", getTierColor(prize.tier));
+    path.setAttribute("fill", getTierColor(prize.type));
     path.setAttribute("class", "roulette-wheel-sector-bg");
     inner.appendChild(path);
 
@@ -3190,66 +3376,14 @@ function buildRouletteWheel() {
     var midRad = midAngle * Math.PI / 180;
     var imgCx = cx + (r * 0.62) * Math.cos(midRad);
     var imgCy = cy + (r * 0.62) * Math.sin(midRad);
-    var clipId = "roul-clip-" + i;
-    var clipPath = document.createElementNS("http://www.w3.org/2000/svg", "clipPath");
-    clipPath.setAttribute("id", clipId);
-    var clipCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-    clipCircle.setAttribute("cx", imgCx);
-    clipCircle.setAttribute("cy", imgCy);
-    clipCircle.setAttribute("r", 18);
-    clipPath.appendChild(clipCircle);
-    var defs = inner.querySelector("defs") || (function() {
-      var d = document.createElementNS("http://www.w3.org/2000/svg", "defs");
-      inner.insertBefore(d, inner.firstChild);
-      return d;
-    })();
-    defs.appendChild(clipPath);
 
-    var bgCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-    bgCircle.setAttribute("cx", imgCx);
-    bgCircle.setAttribute("cy", imgCy);
-    bgCircle.setAttribute("r", 18);
-    bgCircle.setAttribute("fill", "#fff");
-    inner.appendChild(bgCircle);
-
-    if (prize.img) {
-      var image = document.createElementNS("http://www.w3.org/2000/svg", "image");
-      image.setAttributeNS("http://www.w3.org/1999/xlink", "href", prize.img);
-      image.setAttribute("href", prize.img);
-      image.setAttribute("x", imgCx - 16);
-      image.setAttribute("y", imgCy - 16);
-      image.setAttribute("width", 32);
-      image.setAttribute("height", 32);
-      image.setAttribute("clip-path", "url(#" + clipId + ")");
-      image.setAttribute("preserveAspectRatio", "xMidYMid slice");
-      inner.appendChild(image);
-    } else {
-      var bgC = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-      bgC.setAttribute("cx", imgCx);
-      bgC.setAttribute("cy", imgCy);
-      bgC.setAttribute("r", 18);
-      bgC.setAttribute("fill", prize.tier === "jackpot" ? "#ff5722" : "#9c27b0");
-      inner.appendChild(bgC);
-
-      var text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-      text.setAttribute("x", imgCx);
-      text.setAttribute("y", imgCy + (prize.tier === "jackpot" ? -1 : 4));
-      text.setAttribute("text-anchor", "middle");
-      text.setAttribute("fill", "#fff");
-      text.setAttribute("font-family", "Bungee, cursive");
-      text.setAttribute("font-size", prize.tier === "jackpot" ? "11" : "12");
-      text.setAttribute("font-weight", "bold");
-      if (prize.tier === "jackpot") {
-        text.textContent = "\u2726";
-        text.setAttribute("fill", "#ffd700");
-        text.setAttribute("font-size", "18");
-        text.setAttribute("y", imgCy + 6);
-      } else {
-        text.textContent = "\uD83E\uDE99";
-        text.setAttribute("font-size", "14");
-      }
-      inner.appendChild(text);
-    }
+    var text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    text.setAttribute("x", imgCx);
+    text.setAttribute("y", imgCy + 7);
+    text.setAttribute("text-anchor", "middle");
+    text.setAttribute("font-size", "18");
+    text.textContent = emojiByType[prize.type] || "?";
+    inner.appendChild(text);
   }
 }
 
@@ -3302,46 +3436,40 @@ function spinRoulette() {
 function deliverRoulettePrize(prize) {
   rouletteSpinsCount += 1;
   var resultEl = document.getElementById("rouletteResult");
-  var isNew = false;
-  var isDup = false;
   var divineUnlocked = false;
 
   if (typeof checkMemoryTrigger === "function") checkMemoryTrigger("roulette");
 
-  if (prize.isCollectible) {
-    if (isCollectibleOwned(prize.id)) {
-      isDup = true;
-      addCoins(25, "roulette-dup", false);
-      resultEl.textContent = prize.name + " · +25 🪙";
-      resultEl.className = "roulette-result dup";
-    } else {
-      isNew = true;
-      inventory.collectibles.push(prize.id);
-      addCoins(50, "roulette-new", true);
-      resultEl.textContent = "🎉 " + prize.name;
-      resultEl.className = "roulette-result win";
-      showToast("🎉 ¡NUEVO! " + prize.name, "success");
+  if (prize.type === "nada") {
+    resultEl.textContent = "💨 NADA";
+    resultEl.className = "roulette-result";
+  } else if (prize.type === "collectible") {
+    if (activeCollectible && activeCollectible.el && activeCollectible.el.parentNode) {
+      activeCollectible.el.parentNode.removeChild(activeCollectible.el);
+      activeCollectible = null;
     }
-  } else if (prize.id === "jackpot") {
-    addCoins(prize.coins, "roulette", true);
-    resultEl.textContent = "💎 ¡" + prize.coins + " MONEDAS!";
+    var pool = COLLECTIBLES.filter(function(c) { return c.tier !== "legendario"; });
+    var pick = pool[Math.floor(Math.random() * pool.length)];
+    spawnCollectibleById(pick.id);
+    resultEl.textContent = "🎁 ¡" + pick.name + " apareció!";
+    resultEl.className = "roulette-result win";
+  } else if (prize.type === "monedas") {
+    addCoins(100, "roulette", false);
+    resultEl.textContent = "+100 🪙";
+    resultEl.className = "roulette-result";
+  } else if (prize.type === "consejo") {
+    resultEl.textContent = "💡 " + randomTip();
+    resultEl.className = "roulette-result tip";
+  } else if (prize.type === "jackpot") {
+    addCoins(500, "roulette", true);
+    resultEl.textContent = "💎 ¡500 MONEDAS!";
     resultEl.className = "roulette-result jackpot";
     if (!jesusRewardUnlocked) {
       unlockDivineReward(prize);
       divineUnlocked = true;
     }
-  } else if (prize.coins) {
-    addCoins(prize.coins, "roulette", false);
-    resultEl.textContent = "+" + prize.coins + " 🪙";
-    resultEl.className = "roulette-result";
   }
 
-  if (prize.tier === "mythic" && isDup && !jesusRewardUnlocked) {
-    unlockDivineReward(prize);
-    divineUnlocked = true;
-  }
-
-  saveInventory();
   saveRouletteState();
   rouletteTotalSpins++;
   rouletteSpinsCount = rouletteTotalSpins;
@@ -3349,8 +3477,6 @@ function deliverRoulettePrize(prize) {
   localStorage.removeItem("chaosRouletteTotalSpins");
   rouletteSpinning = false;
   updateRouletteInfo();
-  if (typeof buildShop === "function") buildShop();
-  if (typeof buildCollection === "function") buildCollection();
   checkAchievements();
 
   if (divineUnlocked) {
@@ -3454,7 +3580,6 @@ document.getElementById("collectibleFullscreen").addEventListener("click", funct
   }
 })();
 
-buildCollection();
 checkAchievements();
 updateChaosMeter();
 
@@ -3791,6 +3916,117 @@ function closeMemory() {
   p.classList.remove("open");
 }
 
+function openInfo() {
+  var p = document.getElementById("infoPanel");
+  if (!p) return;
+  p.classList.add("open");
+}
+
+function closeInfo() {
+  var p = document.getElementById("infoPanel");
+  if (!p) return;
+  p.classList.remove("open");
+}
+
+function buildCollectiblesPanel() {
+  var content = document.getElementById("collectiblesPanelContent");
+  if (!content) return;
+  content.innerHTML = "";
+  var tiers = [
+    { key: "comun", label: "COMÚN" },
+    { key: "raro", label: "RARO" },
+    { key: "legendario", label: "LEGENDARIO" }
+  ];
+  tiers.forEach(function(tier) {
+    var header = document.createElement("div");
+    header.className = "collectibles-tier-header tier-" + tier.key;
+    header.textContent = tier.label;
+    content.appendChild(header);
+
+    var grid = document.createElement("div");
+    grid.className = "collectibles-grid";
+    COLLECTIBLES.filter(function(c) { return c.tier === tier.key; }).forEach(function(c) {
+      var card = document.createElement("div");
+      var count = getCollectCount(c.id);
+      var owned = count > 0;
+      card.className = "collectible-card tier-" + c.tier + (owned ? " owned" : " locked");
+      if (tier.key === "legendario" && owned) card.classList.add("gold-glow");
+
+      var imgWrap = document.createElement("div");
+      imgWrap.className = "collectible-card-img-wrap";
+      var img = document.createElement("img");
+      img.src = c.src;
+      img.alt = c.name;
+      img.className = "collectible-card-img";
+      img.onerror = function() { this.style.background = "rgba(255,80,80,0.2)"; };
+      imgWrap.appendChild(img);
+      if (!owned) {
+        var lock = document.createElement("div");
+        lock.className = "collectible-card-lock";
+        lock.textContent = "🔒";
+        imgWrap.appendChild(lock);
+      }
+      card.appendChild(imgWrap);
+
+      var name = document.createElement("div");
+      name.className = "collectible-card-name";
+      name.textContent = owned ? c.name : "???";
+      card.appendChild(name);
+
+      var countEl = document.createElement("div");
+      countEl.className = "collectible-card-count";
+      countEl.textContent = owned ? "x" + count : "—";
+      card.appendChild(countEl);
+
+      grid.appendChild(card);
+    });
+    content.appendChild(grid);
+  });
+}
+
+function openCollectibles() {
+  var p = document.getElementById("collectiblesPanel");
+  if (!p) return;
+  buildCollectiblesPanel();
+  p.classList.add("open");
+}
+
+function closeCollectibles() {
+  var p = document.getElementById("collectiblesPanel");
+  if (!p) return;
+  p.classList.remove("open");
+}
+
+function openStats() {
+  var p = document.getElementById("statsPanel");
+  if (!p) return;
+  document.getElementById("statClicks").textContent = String(totalClicks);
+  document.getElementById("statCoinsCurrent").textContent = String(coins);
+  document.getElementById("statCoinsTotal").textContent = String(totalCoinsEarned);
+  document.getElementById("statBoosts").textContent = String(boostActivationsCount);
+  document.getElementById("statHundred").textContent = String(chaosReachedHundredCount);
+  document.getElementById("statAchievements").textContent = achievementsUnlocked.length + " / 25";
+  var hasTrueEnding = unlockedFragments.indexOf(8) !== -1;
+  var teEl = document.getElementById("statTrueEnding");
+  var teRow = document.getElementById("statTrueEndingRow");
+  if (hasTrueEnding) {
+    teEl.textContent = "SÍ";
+    teRow.classList.add("stat-done");
+    teRow.classList.remove("stat-pending");
+  } else {
+    teEl.textContent = "NO";
+    teRow.classList.add("stat-pending");
+    teRow.classList.remove("stat-done");
+  }
+  p.classList.add("open");
+}
+
+function closeStats() {
+  var p = document.getElementById("statsPanel");
+  if (!p) return;
+  p.classList.remove("open");
+}
+
 // Initialize menu state and wire up close button
 updateMemoryMenuState();
 var memoryPanelClose = document.getElementById("memoryPanelClose");
@@ -3804,6 +4040,18 @@ if (memoryFragmentClose) {
 var memoryFinalCloseBtn = document.getElementById("memoryFinalClose");
 if (memoryFinalCloseBtn) {
   memoryFinalCloseBtn.addEventListener("click", function() { closeMemoryFinal(); });
+}
+var infoPanelCloseBtn = document.getElementById("infoPanelClose");
+if (infoPanelCloseBtn) {
+  infoPanelCloseBtn.addEventListener("click", function() { closeInfo(); });
+}
+var statsPanelCloseBtn = document.getElementById("statsPanelClose");
+if (statsPanelCloseBtn) {
+  statsPanelCloseBtn.addEventListener("click", function() { closeStats(); });
+}
+var collectiblesPanelCloseBtn = document.getElementById("collectiblesPanelClose");
+if (collectiblesPanelCloseBtn) {
+  collectiblesPanelCloseBtn.addEventListener("click", function() { closeCollectibles(); });
 }
 // Click backdrop to close fragment overlay
 var memoryFragmentEl = document.getElementById("memoryFragment");
@@ -3903,12 +4151,7 @@ function navigateToSection(section) {
       }
       break;
     case "collection":
-      collectionOpen = !collectionOpen;
-      if (collectionOpen) {
-        collectionPanel.classList.add("open");
-      } else {
-        collectionPanel.classList.remove("open");
-      }
+      if (typeof openCollectibles === "function") openCollectibles();
       break;
     case "profile":
       // Pulse the profile bar to indicate it's interactive
@@ -3921,6 +4164,12 @@ function navigateToSection(section) {
       break;
     case "memory":
       if (typeof openMemory === "function") openMemory();
+      break;
+    case "info":
+      if (typeof openInfo === "function") openInfo();
+      break;
+    case "stats":
+      if (typeof openStats === "function") openStats();
       break;
   }
 }
@@ -3974,11 +4223,23 @@ setInterval(function() {
 /* ========================= */
 
 var CHAOS_DEBUG_ENABLED = (typeof window !== "undefined") &&
-  (window.DEBUG_MODE === true || (window.location && /[?&]debug=1\b/.test(window.location.search)));
+  (window.DEBUG_MODE === true ||
+   (window.location && /[?&]debug=1\b/.test(window.location.search)) ||
+   (window.location && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")));
 
 if (CHAOS_DEBUG_ENABLED) {
 
 window.__chaosDebug = {
+  spawnGato: function() { if (typeof spawnCollectibleById === "function") spawnCollectibleById("gato"); else console.warn("spawnCollectibleById not available"); },
+  spawnSardina: function() { if (typeof spawnCollectibleById === "function") spawnCollectibleById("sardina"); },
+  spawnSandwich: function() { if (typeof spawnCollectibleById === "function") spawnCollectibleById("sandwich"); },
+  spawnC: function() { if (typeof spawnCollectibleById === "function") spawnCollectibleById("c"); },
+  spawnRefresco: function() { if (typeof spawnCollectibleById === "function") spawnCollectibleById("refresco"); },
+  spawnHonguito: function() { if (typeof spawnCollectibleById === "function") spawnCollectibleById("honguito"); },
+  spawnAmongus: function() { if (typeof spawnCollectibleById === "function") spawnCollectibleById("amongus"); },
+  spawnPizzaGuy: function() { if (typeof spawnCollectibleById === "function") spawnCollectibleById("pizzaguy"); },
+  clearCollectible: function() { if (activeCollectible && activeCollectible.el && activeCollectible.el.parentNode) activeCollectible.el.parentNode.removeChild(activeCollectible.el); activeCollectible = null; console.log("✓ collectible cleared"); },
+  getCollection: function() { console.log(JSON.stringify(collectedCounts, null, 2)); },
   giveClicks: function(n) {
     if (typeof n !== "number") n = 99999;
     localStorage.setItem("totalClicks", String(n));
@@ -4019,23 +4280,6 @@ window.__chaosDebug = {
     if (typeof checkAchievements === "function") checkAchievements();
     console.log("✓ rouletteTotalSpins = " + n);
   },
-  giveCollectibles: function() {
-    var collectibles = ["doge", "agua", "rengoku", "venpaca", "atun"];
-    inventory.collectibles = collectibles.slice();
-    localStorage.setItem("chaosInventory", JSON.stringify(inventory));
-    if (typeof checkAchievements === "function") checkAchievements();
-    console.log("✓ All 5 collectibles granted");
-  },
-  giveVideos: function() {
-    unlockedVideos = [
-      { name: "Avioncito", file: "assets/videos/Avioncito.mp4" },
-      { name: "Tesla Bailando", file: "assets/videos/Tesla_bailando.mp4" },
-      { name: "Gojo en Bici", file: "assets/videos/Gojo_bici.mp4" }
-    ];
-    localStorage.setItem("chaosVideos", JSON.stringify(unlockedVideos));
-    if (typeof checkAchievements === "function") checkAchievements();
-    console.log("✓ All 3 videos unlocked");
-  },
   giveFacts: function() {
     var FACTS_LOCAL = (typeof FACTS !== "undefined") ? FACTS : [];
     if (FACTS_LOCAL.length === 0) {
@@ -4052,8 +4296,6 @@ window.__chaosDebug = {
     this.giveCoins(99999);
     this.giveBoosts(100);
     this.giveRouletteSpins(100);
-    this.giveCollectibles();
-    this.giveVideos();
     this.giveFacts();
     // Buy all fonts (so Tipografo achievement unlocks)
     if (typeof SHOP_FONTS !== "undefined" && typeof inventory !== "undefined") {
@@ -4152,9 +4394,16 @@ window.__chaosDebug = {
       "  __chaosDebug.giveCoins(99999)       - Set coins\n" +
       "  __chaosDebug.giveBoosts(100)        - Set boost activations\n" +
       "  __chaosDebug.giveRouletteSpins(100) - Set roulette total spins\n" +
-      "  __chaosDebug.giveCollectibles()     - Get all 5 collectibles\n" +
-      "  __chaosDebug.giveVideos()           - Unlock all 3 videos\n" +
       "  __chaosDebug.giveFacts()            - Unlock all facts\n" +
+      "  __chaosDebug.spawnGato()            - Spawn Gato\n" +
+      "  __chaosDebug.spawnSardina()         - Spawn Sardina\n" +
+      "  __chaosDebug.spawnSandwich()        - Spawn Sandwich\n" +
+      "  __chaosDebug.spawnC()               - Spawn La C\n" +
+      "  __chaosDebug.spawnRefresco()        - Spawn Refresco\n" +
+      "  __chaosDebug.spawnHonguito()        - Spawn Honguito\n" +
+      "  __chaosDebug.spawnAmongus()         - Spawn Among Us\n" +
+      "  __chaosDebug.spawnPizzaGuy()        - Spawn Pizza Guy\n" +
+      "  __chaosDebug.getCollection()        - Show collected counts\n" +
       "  __chaosDebug.giveAll()              - EVERYTHING (max stats + all items)\n" +
       "  __chaosDebug.reset()                - Clear all localStorage and reload\n" +
       "  __chaosDebug.help()                 - Show this help"
@@ -4165,6 +4414,10 @@ window.__chaosDebug = {
 console.log("💡 Debug commands available: type __chaosDebug.help()");
 
 } // end if CHAOS_DEBUG_ENABLED
+
+document.addEventListener("chaosBossEnd", function() {
+  if (typeof resetEverything === "function") resetEverything();
+});
 
 })();
 
