@@ -2075,11 +2075,14 @@
   top: -100px;
   width: 70px;
   height: 70px;
-  transition: top 1.4s cubic-bezier(0.45, 0, 0.55, 1);
   filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.5));
 }
 .falling-cat.falling {
-  top: calc(100vh - 90px);
+  animation: catFall 1.4s linear forwards;
+}
+@keyframes catFall {
+  from { top: -100px; }
+  to   { top: calc(100vh - 90px); }
 }
 .falling-cat img {
   width: 100%;
@@ -4603,13 +4606,13 @@
   100% { transform: rotate(-720deg) scale(0.3); }
 }
 
-.collectible-amongus.amongus-move { animation: amongusMove 4s linear forwards; }
+.collectible-amongus.amongus-move { animation: amongusMove 3.5s linear forwards; }
 @keyframes amongusMove {
   0%   { left: -10%; }
   100% { left: 110%; }
 }
 
-.collectible-pizzaguy.pizzaguy-move { animation: pizzaguyMove 3.5s linear infinite; }
+.collectible-pizzaguy.pizzaguy-move { animation: pizzaguyMove 3s linear infinite; }
 @keyframes pizzaguyMove {
   0%   { left: -10%; }
   100% { left: 110%; }
