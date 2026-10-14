@@ -1362,7 +1362,7 @@ function chaos() {
     spawnCoinEvent();
   }
 
-  // Collectibles (comun 1.5%, raro 0.2%, legendario 0.02% por click)
+  // Collectibles (comun 0.33%, raro 0.1%, legendario 0.01% por click)
   trySpawnCollectible();
 
   // Random sound (can play over other sounds except click)
@@ -2757,26 +2757,36 @@ function spawnAmongus() {
       if (el.parentNode) el.parentNode.removeChild(el);
       activeCollectible = null;
     }
-  }, 9000);
+  }, 5000);
 }
 
 function spawnHouse(pizzaObj) {
   var el = document.createElement("div");
   el.className = "collectible-house";
   el.innerHTML = '<img src="assets/images/house.png" alt="casa" draggable="false">';
-  el.style.left = (10 + Math.random() * 70) + "%";
+  el.style.left = "85%";
+  el.style.top = "35%";
   document.body.appendChild(el);
   el.classList.add("house-fall");
+  pizzaObj.houseEl = el;
   el.addEventListener("click", function(e) {
     e.stopPropagation();
     if (pizzaObj.houseDestroyed) return;
     pizzaObj.houseDestroyed = true;
+    if (pizzaObj.arrivedTimer) clearTimeout(pizzaObj.arrivedTimer);
     el.classList.add("house-destroyed");
+    var pizzaEl = pizzaObj.el;
+    if (pizzaEl) {
+      var rect = pizzaEl.getBoundingClientRect();
+      pizzaEl.classList.remove("pizzaguy-move");
+      pizzaEl.style.left = rect.left + "px";
+      pizzaEl.style.top = rect.top + "px";
+    }
     setTimeout(function() { if (el.parentNode) el.parentNode.removeChild(el); }, 300);
   });
   setTimeout(function() {
     if (el.parentNode) el.parentNode.removeChild(el);
-  }, 2600);
+  }, 10000);
 }
 
 function spawnPizzaGuy() {
@@ -2804,9 +2814,18 @@ function spawnPizzaGuy() {
     }
   });
 
+  obj.arrivedTimer = setTimeout(function() {
+    if (obj.caught || obj.houseDestroyed) return;
+    var rect = el.getBoundingClientRect();
+    el.classList.remove("pizzaguy-move");
+    el.style.left = rect.left + "px";
+  }, 3500);
+
   setTimeout(function() {
+    if (obj.arrivedTimer) clearTimeout(obj.arrivedTimer);
     if (!obj.caught && obj === activeCollectible) {
       if (el.parentNode) el.parentNode.removeChild(el);
+      if (obj.houseEl && obj.houseEl.parentNode) obj.houseEl.parentNode.removeChild(obj.houseEl);
       activeCollectible = null;
     }
   }, 10000);
@@ -2831,9 +2850,9 @@ function spawnCollectibleById(id) {
 function trySpawnCollectible() {
   if (activeCollectible) return;
   var r = Math.random();
-  var comunChance = 0.015;
-  var raroChance = 0.002;
-  var legChance = 0.0002;
+  var comunChance = 0.0033;
+  var raroChance = 0.001;
+  var legChance = 0.0001;
   var total = comunChance + raroChance + legChance;
   if (r >= total) return;
   var tier;

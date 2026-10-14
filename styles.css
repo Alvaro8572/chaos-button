@@ -4616,16 +4616,15 @@
 
 .collectible-house {
   position: fixed;
-  top: -100px;
   z-index: 7;
   pointer-events: auto;
   cursor: pointer;
 }
 .collectible-house img { width: 64px; height: 64px; object-fit: contain; }
-.collectible-house.house-fall { animation: houseFall 2.4s linear forwards; }
-@keyframes houseFall {
-  0%   { top: -100px; }
-  100% { top: 100vh; }
+.collectible-house.house-fall { animation: houseAppear 0.3s ease-out; }
+@keyframes houseAppear {
+  0%   { transform: scale(0.3); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
 }
 .collectible-house.house-destroyed { animation: housePop 0.3s ease forwards; }
 @keyframes housePop {
