@@ -4202,7 +4202,9 @@ setInterval(function() {
 /* ========================= */
 
 var CHAOS_DEBUG_ENABLED = (typeof window !== "undefined") &&
-  (window.DEBUG_MODE === true || (window.location && /[?&]debug=1\b/.test(window.location.search)));
+  (window.DEBUG_MODE === true ||
+   (window.location && /[?&]debug=1\b/.test(window.location.search)) ||
+   (window.location && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")));
 
 if (CHAOS_DEBUG_ENABLED) {
 
