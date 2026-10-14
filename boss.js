@@ -206,7 +206,7 @@
     timeLeft = TIME_LIMIT;
     totalClicks = 0;
     $imgWrap.classList.remove("boss-defeated", "boss-victor");
-    $arena.style.display = "block";
+    $arena.style.display = "flex";
     document.body.style.overflow = "hidden";
     startFight();
     startTimer();

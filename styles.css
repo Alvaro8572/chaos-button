@@ -3719,12 +3719,13 @@
 }
 
 /* ========================= */
-/* BOSS FIGHT (boss.html)      */
+/* BOSS FIGHT (in-page overlay) */
 /* ========================= */
 
-body.boss-arena-body {
-  margin: 0;
-  min-height: 100vh;
+#bossArena {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
   background: #000000;
   background-image:
     radial-gradient(ellipse at center, rgba(40, 0, 0, 0.4) 0%, rgba(0, 0, 0, 1) 70%),
@@ -3738,7 +3739,6 @@ body.boss-arena-body {
   color: white;
   font-family: "Orbitron", monospace;
   overflow: hidden;
-  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3746,7 +3746,7 @@ body.boss-arena-body {
   -webkit-user-select: none;
 }
 
-body.boss-arena-body::before {
+#bossArena::before {
   content: "";
   position: fixed;
   inset: 0;
