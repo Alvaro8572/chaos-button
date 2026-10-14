@@ -2737,16 +2737,17 @@ function spawnAmongus() {
   activeCollectible = obj;
 
   el.classList.add("amongus-move");
+  playSoundSafe(c.sound);
 
   el.addEventListener("click", function(e) {
     e.stopPropagation();
     if (obj.caught) return;
-    if (obj.dodges < 3) {
+    if (obj.dodges < 2) {
       obj.dodges++;
       el.style.top = (15 + Math.random() * 55) + "%";
       el.classList.remove("amongus-move");
       void el.offsetWidth;
-      el.classList.add("amongus-move");
+  el.classList.add("amongus-move");
     } else {
       collectItem(obj);
     }
@@ -2803,6 +2804,7 @@ function spawnPizzaGuy() {
 
   el.classList.add("pizzaguy-move");
   spawnHouse(obj);
+  playSoundSafe(c.sound);
 
   el.addEventListener("click", function(e) {
     e.stopPropagation();

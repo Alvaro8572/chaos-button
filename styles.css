@@ -4433,7 +4433,7 @@
 /* ===== COLLECTIBLES (panel + elementos en pantalla) ===== */
 .collectible {
   position: fixed;
-  z-index: 6;
+  z-index: 8000;
   pointer-events: auto;
   cursor: pointer;
 }
@@ -4577,6 +4577,7 @@
 .collectible-hidden { opacity: 0; }
 
 .collectible-refresco.zigzag { animation: zigzagMove 3.5s linear infinite; }
+.collectible-refresco img { width: 120px; height: 120px; }
 @keyframes zigzagMove {
   0%   { left: 0%; top: 70%; }
   12.5% { left: 12.5%; top: 30%; }
@@ -4602,7 +4603,7 @@
   100% { transform: rotate(-720deg) scale(0.3); }
 }
 
-.collectible-amongus.amongus-move { animation: amongusMove 2.5s linear infinite; }
+.collectible-amongus.amongus-move { animation: amongusMove 4s linear forwards; }
 @keyframes amongusMove {
   0%   { left: -10%; }
   100% { left: 110%; }
@@ -4616,7 +4617,7 @@
 
 .collectible-house {
   position: fixed;
-  z-index: 7;
+  z-index: 8001;
   pointer-events: auto;
   cursor: pointer;
 }
