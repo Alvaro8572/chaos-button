@@ -1608,7 +1608,9 @@ var ACHIEVEMENTS = [
   { id: "maestro_del_caos", tier: "gold", name: "Maestro del Caos", desc: "Agarra los 2 Legendarios al menos una vez", category: "collectibles", reward: null },
   { id: "bien_armado", tier: "silver", name: "Bien Armado", desc: "Gana una pelea usando 2 armas distintas", category: "arsenal", reward: null },
   { id: "coleccionista_arsenal", tier: "gold", name: "Coleccionista del Arsenal", desc: "Compra al menos 1 de cada una de las 5 armas", category: "arsenal", reward: null },
-  { id: "destructor_armado", tier: "silver", name: "Destructor Armado", desc: "Inflige 200 HP de da\u00f1o total con armas", category: "arsenal", reward: null }
+  { id: "destructor_armado", tier: "silver", name: "Destructor Armado", desc: "Inflige 200 HP de da\u00f1o total con armas", category: "arsenal", reward: null },
+  { id: "racha_3", tier: "silver", name: "Racha de 3", desc: "Ingres\u00e1 3 d\u00edas seguidos", category: "daily", reward: null },
+  { id: "racha_7", tier: "gold",   name: "Racha de 7", desc: "Ingres\u00e1 7 d\u00edas seguidos", category: "daily", reward: null }
 ];
 
 var achievementsUnlocked = safeJSON("chaosAchievements", []);
@@ -1747,6 +1749,8 @@ function checkAchievements() {
         break;
       }
       case "destructor_armado": unlocked = (parseInt(localStorage.getItem("chaosWeaponDamage") || "0", 10) >= 200); break;
+      case "racha_3": unlocked = (dailyState && typeof dailyState.streak === "number" && dailyState.streak >= 3); break;
+      case "racha_7": unlocked = (dailyState && typeof dailyState.streak === "number" && dailyState.streak >= 7); break;
     }
     if (unlocked) unlockAchievement(ach.id);
   });
@@ -4126,7 +4130,7 @@ function openStats() {
   document.getElementById("statCoinsTotal").textContent = String(totalCoinsEarned);
   document.getElementById("statBoosts").textContent = String(boostActivationsCount);
   document.getElementById("statHundred").textContent = String(chaosReachedHundredCount);
-  document.getElementById("statAchievements").textContent = achievementsUnlocked.length + " / 25";
+  document.getElementById("statAchievements").textContent = achievementsUnlocked.length + " / " + (typeof ACHIEVEMENTS !== "undefined" ? ACHIEVEMENTS.length : 25);
   var hasTrueEnding = unlockedFragments.indexOf(8) !== -1;
   var teEl = document.getElementById("statTrueEnding");
   var teRow = document.getElementById("statTrueEndingRow");
