@@ -4010,6 +4010,7 @@ function closeCollectibles() {
 function getWeaponBought(id) { return (arsenal[id] && arsenal[id].bought) || 0; }
 function getWeaponUsed(id) { return (arsenal[id] && arsenal[id].used) || 0; }
 function saveArsenal() { safeJSON_set("chaosArsenal", arsenal); }
+function refreshArsenal() { arsenal = safeJSON("chaosArsenal", {}); }
 
 function buyWeapon(id) {
   var w = WEAPONS.find(function(x) { return x.id === id; });
@@ -4084,6 +4085,7 @@ function buildArsenalPanel() {
 function openArsenal() {
   var p = document.getElementById("arsenalPanel");
   if (!p) return;
+  refreshArsenal();
   buildArsenalPanel();
   p.classList.add("open");
 }

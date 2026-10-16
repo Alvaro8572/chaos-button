@@ -4725,9 +4725,11 @@
   object-fit: contain;
   filter: drop-shadow(0 0 4px rgba(255,255,255,0.3));
 }
-.boss-weapon-btn.no-stock { filter: grayscale(1) brightness(0.4); border-color: #555; }
-.boss-weapon-btn.used-this-fight { filter: grayscale(1) brightness(0.35); border-color: #555; }
-.boss-weapon-btn:disabled { cursor: not-allowed; }
+.boss-weapon-btn:disabled {
+  cursor: not-allowed;
+  filter: grayscale(1) brightness(0.4);
+  border-color: #555;
+}
 .boss-weapon-btn:not(:disabled):hover { transform: scale(1.08); }
 .boss-weapon-btn:not(:disabled):active { transform: scale(0.95); }
 .boss-weapon-count {

@@ -97,7 +97,7 @@
       btns[i].disabled = disabled;
       var countEl = btns[i].querySelector(".boss-weapon-count");
       if (countEl) {
-        if (!noStock && !alreadyUsed) {
+        if (!disabled) {
           countEl.textContent = remaining;
           countEl.style.display = "";
         } else {
