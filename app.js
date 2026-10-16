@@ -1362,7 +1362,7 @@ function chaos() {
     spawnCoinEvent();
   }
 
-  // Collectibles (comun 0.33%, raro 0.1%, legendario 0.01% por click)
+  // Collectibles (comun 0.55%, raro 0.1%, legendario 0.01% por click)
   trySpawnCollectible();
 
   // Random sound (can play over other sounds except click)
@@ -2852,7 +2852,7 @@ function spawnCollectibleById(id) {
 function trySpawnCollectible() {
   if (activeCollectible) return;
   var r = Math.random();
-  var comunChance = 0.0033;
+  var comunChance = 0.0055;
   var raroChance = 0.001;
   var legChance = 0.0001;
   var total = comunChance + raroChance + legChance;
