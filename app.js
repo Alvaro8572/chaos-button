@@ -4256,6 +4256,9 @@ function navigateToSection(section) {
     case "roulette":
       if (typeof openRoulette === "function") openRoulette();
       break;
+    case "daily-rewards":
+      if (typeof openDailyRewards === "function") openDailyRewards();
+      break;
     case "unlocked":
       sidebarOpen = !sidebarOpen;
       if (sidebarOpen) {
@@ -4546,6 +4549,310 @@ document.addEventListener("chaosBossEnd", function() {
   if (typeof checkAchievements === "function") checkAchievements();
   if (typeof checkAcumulador === "function") checkAcumulador();
 });
+
+/* ============================================
+   DAILY REWARDS — Sistema de recompensas diarias
+   ============================================
+   - Ciclo de 7 días que se reinicia si el jugador pasa más de 1 día sin ingresar.
+   - El día 1 es siempre reclamable al primer ingreso del ciclo.
+   - Días 2-7 se desbloquean conforme avanzan los días UTC.
+   - Racha (streak) se mide por ingreso consecutivo; bestStreak se guarda aparte.
+   - Logros racha_3 y racha_7 se otorgan en checkAchievements().
+*/
+
+var DAILY_REWARDS = [
+  { day: 1, type: "coins",     amount: 20,  icon: "🪙",  name: "20 monedas de bienvenida" },
+  { day: 2, type: "coins",     amount: 50,  icon: "🪙",  name: "50 monedas" },
+  { day: 3, type: "pro-theme",          icon: "🎨",  name: "Un tema PRO al azar" },
+  { day: 4, type: "clicks",     amount: 5000, icon: "👆", name: "+5,000 clicks" },
+  { day: 5, type: "picture",   file: "assets/images/deal-with-it.png", icon: "😎", name: "Foto de perfil exclusiva (Deal With It)" },
+  { day: 6, type: "combo",     coins: 75,  icon: "🪙",  name: "75 monedas" },
+  { day: 7, type: "mega",      icon: "🏆", name: "Foto exclusiva (Noob), 3 T-Rex gratis y 100 monedas", coins: 100, picture: "assets/images/noob.png" }
+];
+
+var dailyState = safeJSON("chaosDailyState", null);
+if (!dailyState || typeof dailyState !== "object") {
+  dailyState = { claimedDays: [], currentDay: 1, streak: 0, bestStreak: 0, lastLoginDay: null };
+} else {
+  if (!Array.isArray(dailyState.claimedDays)) dailyState.claimedDays = [];
+  if (typeof dailyState.currentDay !== "number") dailyState.currentDay = 1;
+  if (typeof dailyState.streak !== "number") dailyState.streak = 0;
+  if (typeof dailyState.bestStreak !== "number") dailyState.bestStreak = 0;
+}
+
+function getUTCDayKey() {
+  var d = new Date();
+  var y = d.getUTCFullYear();
+  var m = String(d.getUTCMonth() + 1);
+  if (m.length < 2) m = "0" + m;
+  var day = String(d.getUTCDate());
+  if (day.length < 2) day = "0" + day;
+  return y + "-" + m + "-" + day;
+}
+
+function diffDaysUTC(a, b) {
+  if (!a) return Infinity;
+  var da = new Date(a + "T00:00:00Z").getTime();
+  var db = new Date(b + "T00:00:00Z").getTime();
+  return Math.round((db - da) / 86400000);
+}
+
+function persistDailyState() {
+  safeJSON_set("chaosDailyState", dailyState);
+}
+
+function rolloverDailyCycleOnLogin() {
+  var today = getUTCDayKey();
+  var last = dailyState.lastLoginDay;
+  if (!last) {
+    dailyState.streak = 1;
+  } else {
+    var diff = diffDaysUTC(last, today);
+    if (diff === 0) {
+      // Mismo día: no pasa nada
+    } else if (diff === 1) {
+      // Día consecutivo: avanza streak y desbloquea el siguiente día del ciclo
+      dailyState.streak += 1;
+      dailyState.currentDay = Math.min(7, dailyState.currentDay + 1);
+    } else {
+      // Más de 1 día: se rompió la racha, empieza nuevo ciclo desde día 1
+      dailyState.streak = 1;
+      dailyState.currentDay = 1;
+      dailyState.claimedDays = [];
+    }
+    if (dailyState.streak > dailyState.bestStreak) {
+      dailyState.bestStreak = dailyState.streak;
+    }
+  }
+  dailyState.lastLoginDay = today;
+  persistDailyState();
+}
+
+// Inicializa el ciclo al cargar la página
+rolloverDailyCycleOnLogin();
+
+function pickRandomProTheme() {
+  // PRO tier (tier 2) excluding rewardOnly (fire, BOSS SLAYER) — listamos void/gold/blood
+  var pool = ["void", "gold", "blood"];
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function grantDailyReward(reward) {
+  switch (reward.type) {
+    case "coins":
+      coins += reward.amount;
+      totalCoinsEarned = (typeof totalCoinsEarned === "number" ? totalCoinsEarned : 0) + reward.amount;
+      safeJSON_set("chaosCoins", coins);
+      safeNumber_set("chaosTotalCoinsEarned", totalCoinsEarned);
+      break;
+    case "combo":
+      coins += reward.coins;
+      totalCoinsEarned = (typeof totalCoinsEarned === "number" ? totalCoinsEarned : 0) + reward.coins;
+      safeJSON_set("chaosCoins", coins);
+      safeNumber_set("chaosTotalCoinsEarned", totalCoinsEarned);
+      break;
+    case "clicks":
+      totalClicks += reward.amount;
+      try { localStorage.setItem("totalClicks", String(totalClicks)); } catch (e) {}
+      break;
+    case "picture":
+      if (inventory.pictures.indexOf(reward.file) === -1) {
+        inventory.pictures.push(reward.file);
+        safeJSON_set("chaosInventory", inventory);
+      }
+      break;
+    case "pro-theme":
+      var t = pickRandomProTheme();
+      if (ownedThemes.indexOf(t) === -1) {
+        ownedThemes.push(t);
+        safeJSON_set("chaosOwnedThemes", ownedThemes);
+      }
+      return { type: "pro-theme", themeKey: t };
+    case "mega": {
+      var coinsToAdd = reward.coins || 0;
+      coins += coinsToAdd;
+      totalCoinsEarned = (typeof totalCoinsEarned === "number" ? totalCoinsEarned : 0) + coinsToAdd;
+      safeJSON_set("chaosCoins", coins);
+      safeNumber_set("chaosTotalCoinsEarned", totalCoinsEarned);
+      if (reward.picture && inventory.pictures.indexOf(reward.picture) === -1) {
+        inventory.pictures.push(reward.picture);
+        safeJSON_set("chaosInventory", inventory);
+      }
+      // 3 T-Rex gratis al arsenal (stock)
+      if (!arsenal.trex) arsenal.trex = { bought: 0, used: 0 };
+      arsenal.trex.bought = (arsenal.trex.bought || 0) + 3;
+      saveArsenal();
+      return { type: "mega" };
+    }
+  }
+}
+
+function safeNumber_set(key, value) {
+  // Mirror of safeNumber's persistence pattern for writeable integer counters
+  try { localStorage.setItem(key, String(value)); } catch (e) {}
+}
+
+function isDailyRewardClaimed(day) {
+  return dailyState.claimedDays.indexOf(day) !== -1;
+}
+
+function claimDailyReward(day) {
+  if (isDailyRewardClaimed(day)) return false;
+  if (day !== dailyState.currentDay) return false;
+  var reward = DAILY_REWARDS[day - 1];
+  if (!reward) return false;
+  var extra = grantDailyReward(reward);
+  dailyState.claimedDays.push(day);
+  persistDailyState();
+  var msg;
+  if (reward.type === "pro-theme" && extra && extra.themeKey) {
+    var th = SHOP_THEMES.filter(function(t){ return t.key === extra.themeKey; })[0];
+    msg = "¡Tema PRO desbloqueado: " + (th ? th.name : extra.themeKey.toUpperCase()) + "!";
+  } else if (reward.type === "mega") {
+    msg = "¡DÍA 7! Noob + 3 T-Rex + 100 🪙";
+  } else if (reward.type === "coins") {
+    msg = "¡+" + reward.amount + " 🪙!";
+  } else if (reward.type === "clicks") {
+    msg = "¡+" + reward.amount.toLocaleString() + " clicks!";
+  } else if (reward.type === "picture") {
+    msg = "¡Foto exclusiva desbloqueada!";
+  } else if (reward.type === "combo") {
+    msg = "¡+" + reward.coins + " 🪙!";
+  } else {
+    msg = "¡Recompensa reclamada!";
+  }
+  showToast(msg, "success");
+  if (typeof checkAchievements === "function") checkAchievements();
+  updateDailyRewardsMenuBadge();
+  buildDailyRewardsPanel();
+  return true;
+}
+
+function buildDailyRewardsPanel() {
+  var grid = document.getElementById("dailyRewardsGrid");
+  var info = document.getElementById("dailyRewardsStreakInfo");
+  if (!grid) return;
+  grid.innerHTML = "";
+  if (info) {
+    info.textContent = "Racha actual: " + dailyState.streak + " día(s) · Récord: " + dailyState.bestStreak + " día(s)";
+  }
+  DAILY_REWARDS.forEach(function(r) {
+    var card = document.createElement("div");
+    card.className = "daily-reward-card";
+    if (r.day === 7) card.classList.add("full-width", "final");
+    var claimed = isDailyRewardClaimed(r.day);
+    var isCurrent = (r.day === dailyState.currentDay);
+    if (claimed) card.classList.add("claimed");
+    else if (!isCurrent) card.classList.add("locked");
+    if (isCurrent && !claimed) card.classList.add("current");
+
+    var dayLabel = document.createElement("div");
+    dayLabel.className = "daily-reward-day";
+    dayLabel.textContent = "DÍA " + r.day;
+    card.appendChild(dayLabel);
+
+    var iconWrap = document.createElement("div");
+    iconWrap.className = "daily-reward-icon-wrap";
+    var iconEl;
+    if (r.type === "picture") {
+      iconEl = document.createElement("img");
+      iconEl.className = "daily-reward-icon";
+      iconEl.src = r.file;
+      iconEl.alt = r.name;
+      iconEl.onerror = function() {
+        iconEl.style.display = "none";
+        var fallback = document.createElement("div");
+        fallback.className = "daily-reward-icon emoji";
+        fallback.textContent = r.icon;
+        iconWrap.appendChild(fallback);
+      };
+    } else if (r.type === "mega") {
+      iconEl = document.createElement("img");
+      iconEl.className = "daily-reward-icon";
+      iconEl.src = r.picture;
+      iconEl.alt = r.name;
+      iconEl.onerror = function() {
+        iconEl.style.display = "none";
+        var fallback = document.createElement("div");
+        fallback.className = "daily-reward-icon emoji";
+        fallback.textContent = r.icon;
+        iconWrap.appendChild(fallback);
+      };
+    } else {
+      iconEl = document.createElement("div");
+      iconEl.className = "daily-reward-icon emoji";
+      iconEl.textContent = r.icon;
+    }
+    iconWrap.appendChild(iconEl);
+    card.appendChild(iconWrap);
+
+    var nameEl = document.createElement("div");
+    nameEl.className = "daily-reward-name";
+    nameEl.textContent = r.name;
+    card.appendChild(nameEl);
+
+    var btn = document.createElement("button");
+    btn.className = "daily-reward-claim";
+    if (claimed) {
+      btn.textContent = "RECLAMADO";
+      btn.disabled = true;
+    } else if (isCurrent) {
+      if (r.day === 7) {
+        btn.textContent = "RECLAMAR";
+        btn.classList.add("gold");
+        btn.onclick = function() { claimDailyReward(r.day); };
+      } else {
+        btn.textContent = "RECLAMAR";
+        btn.classList.add("green");
+        btn.onclick = function() { claimDailyReward(r.day); };
+      }
+    } else {
+      btn.textContent = "BLOQUEADO";
+      btn.disabled = true;
+    }
+    card.appendChild(btn);
+    grid.appendChild(card);
+  });
+}
+
+function openDailyRewards() {
+  rolloverDailyCycleOnLogin();
+  var p = document.getElementById("dailyRewardsPanel");
+  if (!p) return;
+  buildDailyRewardsPanel();
+  p.classList.add("open");
+}
+
+function closeDailyRewards() {
+  var p = document.getElementById("dailyRewardsPanel");
+  if (p) p.classList.remove("open");
+}
+
+function updateDailyRewardsMenuBadge() {
+  var badge = document.getElementById("menuDailyRewardsState");
+  if (!badge) return;
+  if (dailyState.currentDay <= 7 && !isDailyRewardClaimed(dailyState.currentDay)) {
+    badge.textContent = "D" + dailyState.currentDay;
+  } else {
+    badge.textContent = "";
+  }
+}
+
+updateDailyRewardsMenuBadge();
+
+var dailyRewardsClose = document.getElementById("dailyRewardsPanelClose");
+if (dailyRewardsClose) {
+  dailyRewardsClose.addEventListener("click", closeDailyRewards);
+}
+
+// Re-evaluar cada minuto para refrescar el ciclo si cambia el día UTC
+setInterval(function() {
+  var today = getUTCDayKey();
+  if (dailyState.lastLoginDay !== today) {
+    rolloverDailyCycleOnLogin();
+    updateDailyRewardsMenuBadge();
+  }
+}, 60000);
 
 })();
 
