@@ -5,7 +5,7 @@
    for runtime fetches. Aggressive caching so the game works fully offline.
 */
 
-const CACHE_VERSION = "chaos-v50-acumulador";
+const CACHE_VERSION = "chaos-v51-daily-rewards";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -66,6 +66,10 @@ const APP_SHELL = [
   "./assets/images/pizza-guy.png",
   "./assets/images/refresco-zuko.png",
   "./assets/images/vanilla-sandwich.png",
+
+  // Daily rewards
+  "./assets/images/deal-with-it.png",
+  "./assets/images/noob.png",
 
   // Sounds
   "./assets/sounds/mouse-click-sound.mp3",
