@@ -68,6 +68,13 @@
     try { localStorage.setItem("chaosArsenal", JSON.stringify(a)); } catch (e) {}
   }
 
+  function addWeaponDamage(n) {
+    var d = 0;
+    try { d = parseInt(localStorage.getItem("chaosWeaponDamage") || "0", 10) || 0; } catch (e) {}
+    d += n;
+    try { localStorage.setItem("chaosWeaponDamage", String(d)); } catch (e) {}
+  }
+
   function buildWeaponButtons() {
     if (!$weapons) return;
     $weapons.innerHTML = "";
@@ -130,19 +137,21 @@
       $imgWrap.classList.add("boss-hit");
     } else if (id === "bazooka") {
       bossHp = Math.max(0, bossHp - 25);
+      addWeaponDamage(25);
       flashBoss();
       updateHpBar();
       if (bossHp <= 0) { updateWeaponButtons(); winFight(); return; }
     } else if (id === "katana") {
-      weaponTimers.push(setInterval(function() { if (fightActive) bossHit(); }, 1000));
+      weaponTimers.push(setInterval(function() { if (fightActive) { bossHit(); addWeaponDamage(1); } }, 1000));
     } else if (id === "trex") {
       bossHp = Math.max(0, bossHp - 50);
+      addWeaponDamage(50);
       flashBoss();
       updateHpBar();
       if (bossHp <= 0) { updateWeaponButtons(); winFight(); return; }
-      weaponTimers.push(setInterval(function() { if (fightActive) bossHit(); }, 1000));
+      weaponTimers.push(setInterval(function() { if (fightActive) { bossHit(); addWeaponDamage(1); } }, 1000));
     } else if (id === "plus4") {
-      weaponTimers.push(setInterval(function() { if (fightActive) bossHit(); }, 250));
+      weaponTimers.push(setInterval(function() { if (fightActive) { bossHit(); addWeaponDamage(1); } }, 250));
     }
     updateWeaponButtons();
   }
@@ -264,6 +273,8 @@
     }
     var newKills = (parseInt(localStorage.getItem("chaosBossKills"), 10) || 0) + 1;
     localStorage.setItem("chaosBossKills", String(newKills));
+    if (usedCount >= 2) { try { localStorage.setItem("chaosWonWithTwoWeapons", "1"); } catch (e) {} }
+    if (bossLevel === 10) { try { localStorage.setItem("chaosDefeatedBossLevel10", "1"); } catch (e) {} }
     var currentCoins = parseInt(localStorage.getItem("chaosCoins"), 10) || 0;
     localStorage.setItem("chaosCoins", String(currentCoins + REWARD_COINS));
     showMessage("¡VICTORIA! +" + REWARD_COINS + " 🪙", "#00ff88");

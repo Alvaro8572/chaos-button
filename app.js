@@ -1405,6 +1405,7 @@ function chaos() {
       hasCountedHundredThisCycle = true;
       if (chaos100NumberEl) chaos100NumberEl.textContent = chaosReachedHundredCount;
       logEl.innerText = "🔥 100% caos alcanzado por " + (chaosReachedHundredCount === 1 ? "primera" : chaosReachedHundredCount + "ª") + " vez";
+      if (typeof checkAcumulador === "function") checkAcumulador();
     }
     // 40% chance to trigger boss fight, 60% chance to just reset (harder to enter boss)
     if (Math.random() < 0.4) {
@@ -1604,7 +1605,10 @@ var ACHIEVEMENTS = [
   { id: "coleccionista_comun", tier: "silver", name: "Coleccionista Común", desc: "Agarra los 5 Comunes al menos una vez", category: "collectibles", reward: null },
   { id: "ojo_raro", tier: "silver", name: "Ojo Raro", desc: "Agarra los 2 Raros al menos una vez", category: "collectibles", reward: null },
   { id: "cazador_legendario", tier: "gold", name: "Cazador Legendario", desc: "Agarra tu primer Legendario", category: "collectibles", reward: null },
-  { id: "maestro_del_caos", tier: "gold", name: "Maestro del Caos", desc: "Agarra los 2 Legendarios al menos una vez", category: "collectibles", reward: null }
+  { id: "maestro_del_caos", tier: "gold", name: "Maestro del Caos", desc: "Agarra los 2 Legendarios al menos una vez", category: "collectibles", reward: null },
+  { id: "bien_armado", tier: "silver", name: "Bien Armado", desc: "Gana una pelea usando 2 armas distintas", category: "arsenal", reward: null },
+  { id: "coleccionista_arsenal", tier: "gold", name: "Coleccionista del Arsenal", desc: "Compra al menos 1 de cada una de las 5 armas", category: "arsenal", reward: null },
+  { id: "destructor_armado", tier: "silver", name: "Destructor Armado", desc: "Inflige 200 HP de da\u00f1o total con armas", category: "arsenal", reward: null }
 ];
 
 var achievementsUnlocked = safeJSON("chaosAchievements", []);
@@ -1635,10 +1639,7 @@ function unlockAchievement(id) {
   // Memory fragment: first achievement
   if (typeof checkMemoryTrigger === "function") checkMemoryTrigger("achievement");
 
-  // Memory fragment: loco_completo (3 cycles of 100% chaos)
-  if (id === "loco_completo" && typeof unlockMemoryFragment === "function") {
-    unlockMemoryFragment(8);
-  }
+  if (typeof checkAcumulador === "function") checkAcumulador();
 
   if (ach.tier === "bronze") playSoundSafe("assets/sounds/powerup.mp3");
   else if (ach.tier === "silver") playSoundSafe("assets/sounds/equip.mp3");
@@ -1737,6 +1738,15 @@ function checkAchievements() {
       case "ojo_raro": unlocked = COLLECTIBLES.filter(function(c){return c.tier==="raro";}).every(function(c){ return (collectedCounts[c.id]||0) > 0; }); break;
       case "cazador_legendario": unlocked = COLLECTIBLES.filter(function(c){return c.tier==="legendario";}).some(function(c){ return (collectedCounts[c.id]||0) > 0; }); break;
       case "maestro_del_caos": unlocked = COLLECTIBLES.filter(function(c){return c.tier==="legendario";}).every(function(c){ return (collectedCounts[c.id]||0) > 0; }); break;
+      case "bien_armado": unlocked = (localStorage.getItem("chaosWonWithTwoWeapons") === "1"); break;
+      case "coleccionista_arsenal": {
+        var ars = {};
+        try { ars = JSON.parse(localStorage.getItem("chaosArsenal") || "{}"); } catch (e) {}
+        var arsIds = ["pollo","bazooka","katana","trex","plus4"];
+        unlocked = arsIds.every(function(id){ return ars[id] && (ars[id].bought||0) >= 1; });
+        break;
+      }
+      case "destructor_armado": unlocked = (parseInt(localStorage.getItem("chaosWeaponDamage") || "0", 10) >= 200); break;
     }
     if (unlocked) unlockAchievement(ach.id);
   });
@@ -2609,6 +2619,7 @@ function collectItem(c) {
   if (id === "gato" || id === "sardina") addCoins(5, "collectible-" + id, true);
   if (typeof showToast === "function") showToast("¡" + c.name + "!", "success");
   if (typeof checkAchievements === "function") checkAchievements();
+  if (typeof checkAcumulador === "function") checkAcumulador();
   if (c.el && c.el.parentNode) {
     c.el.classList.add("collected");
     setTimeout(function() { if (c.el.parentNode) c.el.parentNode.removeChild(c.el); }, 400);
@@ -3590,6 +3601,9 @@ document.getElementById("collectibleFullscreen").addEventListener("click", funct
   }
 })();
 
+var unlockedFragments = safeJSON("chaosMemoryFragments", []);
+var MEMORY_FRAGMENTS = [];
+
 checkAchievements();
 updateChaosMeter();
 
@@ -3761,8 +3775,6 @@ var MEMORY_FRAGMENTS = [
   }
 ];
 
-var unlockedFragments = safeJSON("chaosMemoryFragments", []);
-
 function hasFragment(id) {
   return unlockedFragments.indexOf(id) !== -1;
 }
@@ -3773,6 +3785,17 @@ function unlockMemoryFragment(id) {
   safeJSON_set("chaosMemoryFragments", unlockedFragments);
   showMemoryFragment(id);
   updateMemoryMenuState();
+}
+
+function checkAcumulador() {
+  if (typeof unlockedFragments !== "undefined" && unlockedFragments.indexOf(8) !== -1) return;
+  var cao100 = chaosReachedHundredCount >= 1;
+  var allCol = COLLECTIBLES.every(function(c){ return (collectedCounts[c.id]||0) > 0; });
+  var boss10 = false;
+  try { boss10 = localStorage.getItem("chaosDefeatedBossLevel10") === "1"; } catch (e) {}
+  if (cao100 && allCol && boss10 && typeof unlockMemoryFragment === "function") {
+    unlockMemoryFragment(8);
+  }
 }
 
 function updateMemoryMenuState() {
@@ -4520,6 +4543,8 @@ console.log("💡 Debug commands available: type __chaosDebug.help()");
 
 document.addEventListener("chaosBossEnd", function() {
   if (typeof resetEverything === "function") resetEverything();
+  if (typeof checkAchievements === "function") checkAchievements();
+  if (typeof checkAcumulador === "function") checkAcumulador();
 });
 
 })();
