@@ -2574,6 +2574,16 @@ var COLLECTIBLES = [
   { id: "pizzaguy", name: "Pizza Guy", src: "assets/images/pizza-guy.png", sound: "assets/sounds/pizza-roblox.mp3", tier: "legendario", desc: "El repartidor que esquiva.", house: "assets/images/house.png" }
 ];
 
+var WEAPONS = [
+  { id: "pollo", name: "Pollo Kentucky", src: "assets/images/pollo-kentucky.png", price: 50, tier: "comun", effect: "time", value: 5, desc: "+5s al reloj del boss." },
+  { id: "bazooka", name: "Bazooka", src: "assets/images/bazooka.png", price: 100, tier: "comun", effect: "burst", value: 25, desc: "-25 HP instantáneo al boss." },
+  { id: "katana", name: "Katana", src: "assets/images/katana.png", price: 120, tier: "comun", effect: "autoclick", rate: 1, duration: 5000, desc: "+1 click/seg automático por 5s." },
+  { id: "trex", name: "T-Rex", src: "assets/images/t-rex.png", price: 220, tier: "mitico", effect: "combo", burst: 50, rate: 1, duration: 3000, desc: "-50 HP + +1 click/seg por 3s." },
+  { id: "plus4", name: "+4", src: "assets/images/plus4.png", price: 240, tier: "mitico", effect: "autoclick", rate: 4, duration: 1000, desc: "+4 clicks/seg por 1s." }
+];
+
+var arsenal = safeJSON("chaosArsenal", {});
+
 var activeCollectible = null;
 var collectedCounts = safeJSON("chaosCollected", {});
 
@@ -3997,6 +4007,92 @@ function closeCollectibles() {
   p.classList.remove("open");
 }
 
+function getWeaponBought(id) { return (arsenal[id] && arsenal[id].bought) || 0; }
+function getWeaponUsed(id) { return (arsenal[id] && arsenal[id].used) || 0; }
+function saveArsenal() { safeJSON_set("chaosArsenal", arsenal); }
+
+function buyWeapon(id) {
+  var w = WEAPONS.find(function(x) { return x.id === id; });
+  if (!w) return;
+  if (coins < w.price) return;
+  coins -= w.price;
+  try { localStorage.setItem("chaosCoins", String(coins)); } catch (e) {}
+  var cn = document.getElementById("coinNumber");
+  if (cn) cn.textContent = coins;
+  if (!arsenal[id]) arsenal[id] = { bought: 0, used: 0 };
+  arsenal[id].bought += 1;
+  saveArsenal();
+  buildArsenalPanel();
+}
+
+function buildArsenalPanel() {
+  var content = document.getElementById("arsenalPanelContent");
+  if (!content) return;
+  content.innerHTML = "";
+  var tiers = [{ key: "comun", label: "COMÚN" }, { key: "mitico", label: "MÍTICO" }];
+  tiers.forEach(function(tier) {
+    var header = document.createElement("div");
+    header.className = "collectibles-tier-header tier-" + tier.key;
+    header.textContent = tier.label;
+    content.appendChild(header);
+    var grid = document.createElement("div");
+    grid.className = "collectibles-grid";
+    WEAPONS.filter(function(w) { return w.tier === tier.key; }).forEach(function(w) {
+      var bought = getWeaponBought(w.id);
+      var used = getWeaponUsed(w.id);
+      var owned = bought > 0;
+      var card = document.createElement("div");
+      card.className = "collectible-card tier-" + w.tier + (owned ? " owned" : " locked");
+      if (tier.key === "mitico" && owned) card.classList.add("gold-glow");
+      var imgWrap = document.createElement("div");
+      imgWrap.className = "collectible-card-img-wrap";
+      var img = document.createElement("img");
+      img.src = w.src; img.alt = w.name; img.className = "collectible-card-img";
+      img.onerror = function() { this.style.background = "rgba(255,80,80,0.2)"; };
+      imgWrap.appendChild(img);
+      if (!owned) {
+        var lock = document.createElement("div");
+        lock.className = "collectible-card-lock";
+        lock.textContent = "🔒";
+        imgWrap.appendChild(lock);
+      }
+      card.appendChild(imgWrap);
+      var name = document.createElement("div");
+      name.className = "collectible-card-name";
+      name.textContent = owned ? w.name : "???";
+      card.appendChild(name);
+      var counts = document.createElement("div");
+      counts.className = "collectible-card-count";
+      counts.textContent = owned ? (bought + " comprada, " + used + " usada") : "—";
+      card.appendChild(counts);
+      var buy = document.createElement("button");
+      buy.className = "weapon-buy-btn";
+      buy.textContent = "Comprar (" + w.price + " 🪙)";
+      buy.disabled = coins < w.price;
+      buy.addEventListener("click", function(e) { e.stopPropagation(); buyWeapon(w.id); });
+      card.appendChild(buy);
+      var desc = document.createElement("div");
+      desc.className = "weapon-desc";
+      desc.textContent = w.desc;
+      card.appendChild(desc);
+      grid.appendChild(card);
+    });
+    content.appendChild(grid);
+  });
+}
+
+function openArsenal() {
+  var p = document.getElementById("arsenalPanel");
+  if (!p) return;
+  buildArsenalPanel();
+  p.classList.add("open");
+}
+
+function closeArsenal() {
+  var p = document.getElementById("arsenalPanel");
+  if (p) p.classList.remove("open");
+}
+
 function openStats() {
   var p = document.getElementById("statsPanel");
   if (!p) return;
@@ -4052,6 +4148,8 @@ if (statsPanelCloseBtn) {
 var collectiblesPanelCloseBtn = document.getElementById("collectiblesPanelClose");
 if (collectiblesPanelCloseBtn) {
   collectiblesPanelCloseBtn.addEventListener("click", function() { closeCollectibles(); });
+var arsenalPanelCloseBtn = document.getElementById("arsenalPanelClose");
+if (arsenalPanelCloseBtn) arsenalPanelCloseBtn.addEventListener("click", closeArsenal);
 }
 // Click backdrop to close fragment overlay
 var memoryFragmentEl = document.getElementById("memoryFragment");
@@ -4167,6 +4265,9 @@ function navigateToSection(section) {
       break;
     case "info":
       if (typeof openInfo === "function") openInfo();
+      break;
+    case "arsenal":
+      if (typeof openArsenal === "function") openArsenal();
       break;
     case "stats":
       if (typeof openStats === "function") openStats();

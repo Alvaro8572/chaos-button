@@ -5,13 +5,13 @@
    for runtime fetches. Aggressive caching so the game works fully offline.
 */
 
-const CACHE_VERSION = "chaos-v46-pacing";
+const CACHE_VERSION = "chaos-v47-arsenal";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=46-pacing",
-  "./app.js?v=46-pacing",
-  "./boss.js?v=46-pacing",
+  "./styles.css?v=47-arsenal",
+  "./app.js?v=47-arsenal",
+  "./boss.js?v=47-arsenal",
   "./manifest.json",
   "./assets/icons/icon-192.png",
   "./assets/icons/icon-512.png",
@@ -19,6 +19,13 @@ const APP_SHELL = [
   "./assets/music-boss-1.mp3",
   "./assets/music-boss-2.mp3",
   "./assets/music-boss-3.mp3",
+
+  // Weapons
+  "./assets/images/pollo-kentucky.png",
+  "./assets/images/bazooka.png",
+  "./assets/images/katana.png",
+  "./assets/images/t-rex.png",
+  "./assets/images/plus4.png",
 
   // Fonts
   "./assets/fonts/KittyKatt.ttf",
