@@ -41,6 +41,112 @@
   var timerInterval = null;
   var bossMusicFade = null;
 
+  var BOSS_WEAPONS = [
+    { id: "pollo", src: "assets/images/pollo-kentucky.png", name: "Pollo" },
+    { id: "bazooka", src: "assets/images/bazooka.png", name: "Bazooka" },
+    { id: "katana", src: "assets/images/katana.png", name: "Katana" },
+    { id: "trex", src: "assets/images/t-rex.png", name: "T-Rex" },
+    { id: "plus4", src: "assets/images/plus4.png", name: "+4" }
+  ];
+  var usedThisFight = {};
+  var usedCount = 0;
+  var weaponTimers = [];
+  var $weapons = null;
+
+  function getWeaponRemaining(id) {
+    var a = {};
+    try { a = JSON.parse(localStorage.getItem("chaosArsenal") || "{}"); } catch (e) {}
+    var w = a[id] || { bought: 0, used: 0 };
+    return Math.max(0, (w.bought || 0) - (w.used || 0));
+  }
+
+  function bumpWeaponUsed(id) {
+    var a = {};
+    try { a = JSON.parse(localStorage.getItem("chaosArsenal") || "{}"); } catch (e) {}
+    if (!a[id]) a[id] = { bought: 0, used: 0 };
+    a[id].used = (a[id].used || 0) + 1;
+    try { localStorage.setItem("chaosArsenal", JSON.stringify(a)); } catch (e) {}
+  }
+
+  function buildWeaponButtons() {
+    if (!$weapons) return;
+    $weapons.innerHTML = "";
+    BOSS_WEAPONS.forEach(function(w) {
+      var btn = document.createElement("button");
+      btn.className = "boss-weapon-btn";
+      btn.setAttribute("data-weapon", w.id);
+      btn.setAttribute("aria-label", w.name);
+      btn.innerHTML = '<img src="' + w.src + '" alt="' + w.name + '"><span class="boss-weapon-count"></span>';
+      btn.addEventListener("click", function() { activateWeapon(w.id); });
+      $weapons.appendChild(btn);
+    });
+  }
+
+  function updateWeaponButtons() {
+    if (!$weapons) return;
+    var btns = $weapons.querySelectorAll(".boss-weapon-btn");
+    for (var i = 0; i < btns.length; i++) {
+      var id = btns[i].getAttribute("data-weapon");
+      var remaining = getWeaponRemaining(id);
+      var capReached = usedCount >= 2;
+      var alreadyUsed = !!usedThisFight[id];
+      var noStock = remaining <= 0;
+      var disabled = noStock || alreadyUsed || capReached;
+      btns[i].classList.toggle("no-stock", noStock);
+      btns[i].classList.toggle("used-this-fight", alreadyUsed);
+      btns[i].disabled = disabled;
+      var countEl = btns[i].querySelector(".boss-weapon-count");
+      if (countEl) {
+        if (!noStock && !alreadyUsed) {
+          countEl.textContent = remaining;
+          countEl.style.display = "";
+        } else {
+          countEl.textContent = "";
+          countEl.style.display = "none";
+        }
+      }
+    }
+  }
+
+  function clearWeaponTimers() {
+    for (var i = 0; i < weaponTimers.length; i++) clearInterval(weaponTimers[i]);
+    weaponTimers = [];
+  }
+
+  function activateWeapon(id) {
+    if (!fightActive) return;
+    if (usedCount >= 2) return;
+    if (usedThisFight[id]) return;
+    if (getWeaponRemaining(id) <= 0) return;
+    usedThisFight[id] = true;
+    usedCount++;
+    bumpWeaponUsed(id);
+    if (id === "pollo") {
+      timeLeft += 5;
+      $timer.textContent = timeLeft;
+      $timer.style.color = "#fff";
+      $imgWrap.classList.remove("boss-hit");
+      void $imgWrap.offsetWidth;
+      $imgWrap.classList.add("boss-hit");
+    } else if (id === "bazooka") {
+      bossHp = Math.max(0, bossHp - 25);
+      flashBoss();
+      updateHpBar();
+      if (bossHp <= 0) { updateWeaponButtons(); winFight(); return; }
+    } else if (id === "katana") {
+      weaponTimers.push(setInterval(function() { if (fightActive) bossHit(); }, 1000));
+    } else if (id === "trex") {
+      bossHp = Math.max(0, bossHp - 50);
+      flashBoss();
+      updateHpBar();
+      if (bossHp <= 0) { updateWeaponButtons(); winFight(); return; }
+      weaponTimers.push(setInterval(function() { if (fightActive) bossHit(); }, 1000));
+    } else if (id === "plus4") {
+      weaponTimers.push(setInterval(function() { if (fightActive) bossHit(); }, 250));
+    }
+    updateWeaponButtons();
+  }
+
   function fadeBossMusic(target, ms, onDone) {
     if (!$audio) { if (onDone) onDone(); return; }
     if (bossMusicFade) clearInterval(bossMusicFade);
@@ -92,9 +198,13 @@
       var idx = Math.floor(Math.random() * MUSIC_FILES.length);
       $audio.src = MUSIC_FILES[idx];
       $audio.volume = 0;
-      var p = $audio.play();
-      if (p && p.catch) p.catch(function() {});
-      fadeBossMusic(BOSS_MUSIC_VOLUME, 800);
+      var bossMuted = false;
+      try { bossMuted = JSON.parse(localStorage.getItem("chaosSoundEnabled") || "true") === false; } catch (e) {}
+      if (!bossMuted) {
+        var p = $audio.play();
+        if (p && p.catch) p.catch(function() {});
+      }
+      fadeBossMusic(bossMuted ? 0 : BOSS_MUSIC_VOLUME, 800);
     }
   }
 
@@ -144,6 +254,7 @@
   function winFight() {
     fightActive = false;
     if (timerInterval) clearInterval(timerInterval);
+    clearWeaponTimers();
     if ($audio) {
       fadeBossMusic(0, 400, function() {
         $audio.pause();
@@ -165,6 +276,7 @@
   function loseFight() {
     fightActive = false;
     if (timerInterval) clearInterval(timerInterval);
+    clearWeaponTimers();
     if ($audio) {
       fadeBossMusic(0, 400, function() {
         $audio.pause();
@@ -208,6 +320,11 @@
     $imgWrap.classList.remove("boss-defeated", "boss-victor");
     $arena.style.display = "flex";
     document.body.style.overflow = "hidden";
+    usedThisFight = {};
+    usedCount = 0;
+    clearWeaponTimers();
+    buildWeaponButtons();
+    updateWeaponButtons();
     startFight();
     startTimer();
   };
@@ -215,6 +332,7 @@
   window.closeBossArena = function(outcome) {
     fightActive = false;
     if (timerInterval) clearInterval(timerInterval);
+    clearWeaponTimers();
     if ($audio) { $audio.pause(); $audio.currentTime = 0; }
     $arena.style.display = "none";
     document.body.style.overflow = "";
@@ -235,8 +353,10 @@
     $imgWrap = document.getElementById("bossImageWrap");
     $imgOverlay = document.getElementById("bossImageOverlay");
     $audio = document.getElementById("bossMusic");
+    $weapons = document.getElementById("bossWeapons");
     if (!$arena) return;
     wireButtons();
+    buildWeaponButtons();
     document.addEventListener("keydown", function(e) {
       if (!$arena || $arena.style.display === "none") return;
       if (e.key === " " || e.key === "Enter") { e.preventDefault(); bossHit(); }
