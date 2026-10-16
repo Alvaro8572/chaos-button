@@ -4646,13 +4646,13 @@ function grantDailyReward(reward) {
     case "coins":
       coins += reward.amount;
       totalCoinsEarned = (typeof totalCoinsEarned === "number" ? totalCoinsEarned : 0) + reward.amount;
-      safeJSON_set("chaosCoins", coins);
+      try { localStorage.setItem("chaosCoins", String(coins)); } catch (e) {}
       safeNumber_set("chaosTotalCoinsEarned", totalCoinsEarned);
       break;
     case "combo":
       coins += reward.coins;
       totalCoinsEarned = (typeof totalCoinsEarned === "number" ? totalCoinsEarned : 0) + reward.coins;
-      safeJSON_set("chaosCoins", coins);
+      try { localStorage.setItem("chaosCoins", String(coins)); } catch (e) {}
       safeNumber_set("chaosTotalCoinsEarned", totalCoinsEarned);
       break;
     case "clicks":
@@ -4676,7 +4676,7 @@ function grantDailyReward(reward) {
       var coinsToAdd = reward.coins || 0;
       coins += coinsToAdd;
       totalCoinsEarned = (typeof totalCoinsEarned === "number" ? totalCoinsEarned : 0) + coinsToAdd;
-      safeJSON_set("chaosCoins", coins);
+      try { localStorage.setItem("chaosCoins", String(coins)); } catch (e) {}
       safeNumber_set("chaosTotalCoinsEarned", totalCoinsEarned);
       if (reward.picture && inventory.pictures.indexOf(reward.picture) === -1) {
         inventory.pictures.push(reward.picture);
@@ -4708,6 +4708,15 @@ function claimDailyReward(day) {
   var extra = grantDailyReward(reward);
   dailyState.claimedDays.push(day);
   persistDailyState();
+  // Refresh UI
+  if (typeof coinNumberEl !== "undefined" && coinNumberEl) {
+    coinNumberEl.textContent = formatNumber(coins);
+  }
+  if (typeof coinDisplayEl !== "undefined" && coinDisplayEl) {
+    coinDisplayEl.classList.remove("tick");
+    void coinDisplayEl.offsetWidth;
+    coinDisplayEl.classList.add("tick");
+  }
   var msg;
   if (reward.type === "pro-theme" && extra && extra.themeKey) {
     var th = SHOP_THEMES.filter(function(t){ return t.key === extra.themeKey; })[0];
