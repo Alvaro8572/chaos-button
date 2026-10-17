@@ -4618,25 +4618,23 @@ function rolloverDailyCycleOnLogin() {
     if (diff === 0) {
       // Mismo día: no pasa nada
     } else {
-      // Pasó al menos 1 día: avanzar el ciclo saltando los días no reclamados
-      // La racha crece en 1 por cada día que pasó (saltar un día no la rompe, solo se "saltea" la recompensa)
-      var daysPassed = diff;
-      dailyState.streak += daysPassed;
-      // Marcar como skip todos los días intermedios que no fueron reclamados
-      // (incluyendo el currentDay actual si no estaba reclamado)
-      var startDay = dailyState.currentDay;
-      for (var skipDay = startDay; skipDay < startDay + daysPassed; skipDay++) {
-        // skipDay puede exceder 7, pero como rotamos después, los días "rotados" se descartan igual
-        if (skipDay <= 7 && !isDailyRewardClaimed(skipDay)) {
-          dailyState.claimedDays.push(skipDay);
+      // Pasó al menos 1 día
+      if (diff === 1) {
+        // Día consecutivo: racha +1, el día anterior se salta si no se reclamó
+        dailyState.streak += 1;
+        if (!isDailyRewardClaimed(dailyState.currentDay)) {
+          dailyState.claimedDays.push(dailyState.currentDay);
         }
-      }
-      // Avanzar currentDay
-      dailyState.currentDay = startDay + daysPassed;
-      // Si supera 7, rotar el ciclo (puede rotar varias veces si pasaron muchos días)
-      while (dailyState.currentDay > 7) {
-        dailyState.currentDay -= 7;
+        dailyState.currentDay += 1;
+        if (dailyState.currentDay > 7) {
+          dailyState.currentDay -= 7;
+          dailyState.claimedDays = [];
+        }
+      } else {
+        // Se pasó más de un día sin login: se rompe la racha, reinicia ciclo
+        dailyState.streak = 1;
         dailyState.claimedDays = [];
+        dailyState.currentDay = 1;
       }
       if (dailyState.streak > dailyState.bestStreak) {
         dailyState.bestStreak = dailyState.streak;
