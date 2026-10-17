@@ -4219,16 +4219,18 @@ function openMenu() {
   menuToggle.setAttribute("aria-expanded", "true");
 
   renderMenu();
-
-  // Stagger animation for items
-  var items = menuPanel.querySelectorAll(".menu-item");
-  items.forEach(function(item, i) {
-    item.classList.remove("show");
-    setTimeout(function() { item.classList.add("show"); }, 50 + i * 50);
-  });
+  staggerMenu();
 
   updateMenuSoundState();
   updateMenuStats();
+}
+
+function staggerMenu() {
+  var items = menuPanel.querySelectorAll(".menu-item");
+  items.forEach(function(item) { item.classList.remove("show"); });
+  items.forEach(function(item, i) {
+    setTimeout(function() { item.classList.add("show"); }, 50 + i * 50);
+  });
 }
 
 function renderMenu() {
@@ -4260,20 +4262,20 @@ function renderMenu() {
 
     sub.innerHTML = "";
     var back = document.createElement("button");
-    back.className = "menu-item menu-back";
+    back.className = "menu-item menu-back show";
     back.setAttribute("aria-label", "Volver al menú principal");
     back.innerHTML = '<span class="menu-icon">←</span><span class="menu-label">VOLVER</span>';
     back.addEventListener("click", function(e) {
       e.stopPropagation();
       menuCategory = null;
       renderMenu();
-      reStagger();
+      staggerMenu();
     });
     sub.appendChild(back);
 
     items.forEach(function(it) {
       var b = document.createElement("button");
-      b.className = "menu-item";
+      b.className = "menu-item show";
       b.setAttribute("data-section", it.section);
       b.innerHTML = '<span class="menu-icon">' + it.icon + '</span><span class="menu-label">' + it.label + '</span>';
       b.addEventListener("click", function(e) {
@@ -4288,14 +4290,6 @@ function renderMenu() {
     list.querySelectorAll(".menu-item.menu-category").forEach(function(el){ el.style.display = ""; });
     sub.innerHTML = "";
   }
-}
-
-function reStagger() {
-  var items = menuPanel.querySelectorAll(".menu-item.show");
-  items.forEach(function(item, i) {
-    item.classList.remove("show");
-    setTimeout(function() { item.classList.add("show"); }, 50 + i * 50);
-  });
 }
 
 function closeMenu() {
@@ -4339,7 +4333,7 @@ function navigateToSection(section) {
         menuCategory = "progreso";
       }
       renderMenu();
-      reStagger();
+      staggerMenu();
     }
     return;
   }
