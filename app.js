@@ -4609,23 +4609,38 @@ function rolloverDailyCycleOnLogin() {
   var today = getUTCDayKey();
   var last = dailyState.lastLoginDay;
   if (!last) {
+    // Primer login: arranca el ciclo en día 1
     dailyState.streak = 1;
+    dailyState.currentDay = 1;
+    dailyState.claimedDays = [];
   } else {
     var diff = diffDaysUTC(last, today);
     if (diff === 0) {
       // Mismo día: no pasa nada
-    } else if (diff === 1) {
-      // Día consecutivo: avanza streak y desbloquea el siguiente día del ciclo
-      dailyState.streak += 1;
-      dailyState.currentDay = Math.min(7, dailyState.currentDay + 1);
     } else {
-      // Más de 1 día: se rompió la racha, empieza nuevo ciclo desde día 1
-      dailyState.streak = 1;
-      dailyState.currentDay = 1;
-      dailyState.claimedDays = [];
-    }
-    if (dailyState.streak > dailyState.bestStreak) {
-      dailyState.bestStreak = dailyState.streak;
+      // Pasó al menos 1 día: avanzar el ciclo saltando los días no reclamados
+      // La racha crece en 1 por cada día que pasó (saltar un día no la rompe, solo se "saltea" la recompensa)
+      var daysPassed = diff;
+      dailyState.streak += daysPassed;
+      // Marcar como skip todos los días intermedios que no fueron reclamados
+      // (incluyendo el currentDay actual si no estaba reclamado)
+      var startDay = dailyState.currentDay;
+      for (var skipDay = startDay; skipDay < startDay + daysPassed; skipDay++) {
+        // skipDay puede exceder 7, pero como rotamos después, los días "rotados" se descartan igual
+        if (skipDay <= 7 && !isDailyRewardClaimed(skipDay)) {
+          dailyState.claimedDays.push(skipDay);
+        }
+      }
+      // Avanzar currentDay
+      dailyState.currentDay = startDay + daysPassed;
+      // Si supera 7, rotar el ciclo (puede rotar varias veces si pasaron muchos días)
+      while (dailyState.currentDay > 7) {
+        dailyState.currentDay -= 7;
+        dailyState.claimedDays = [];
+      }
+      if (dailyState.streak > dailyState.bestStreak) {
+        dailyState.bestStreak = dailyState.streak;
+      }
     }
   }
   dailyState.lastLoginDay = today;
@@ -4700,6 +4715,15 @@ function isDailyRewardClaimed(day) {
   return dailyState.claimedDays.indexOf(day) !== -1;
 }
 
+function isCycleComplete() {
+  // Ciclo actual = las 7 recompensas reclamadas (currentDay puede ser 7 o menos)
+  if (dailyState.claimedDays.length < 7) return false;
+  for (var i = 1; i <= 7; i++) {
+    if (!isDailyRewardClaimed(i)) return false;
+  }
+  return true;
+}
+
 function claimDailyReward(day) {
   if (isDailyRewardClaimed(day)) return false;
   if (day !== dailyState.currentDay) return false;
@@ -4749,6 +4773,18 @@ function buildDailyRewardsPanel() {
   if (info) {
     info.textContent = "Racha actual: " + dailyState.streak + " día(s) · Récord: " + dailyState.bestStreak + " día(s)";
   }
+  if (isCycleComplete()) {
+    grid.classList.add("cycle-complete");
+    var done = document.createElement("div");
+    done.className = "daily-cycle-complete";
+    done.innerHTML =
+      '<div class="daily-cycle-complete-emoji">🏆</div>' +
+      '<div class="daily-cycle-complete-title">¡Ya reclamaste todas las recompensas!</div>' +
+      '<div class="daily-cycle-complete-sub">Volvé mañana para un nuevo ciclo.</div>';
+    grid.appendChild(done);
+    return;
+  }
+  grid.classList.remove("cycle-complete");
   DAILY_REWARDS.forEach(function(r) {
     var card = document.createElement("div");
     card.className = "daily-reward-card";
@@ -4858,12 +4894,31 @@ if (dailyRewardsClose) {
   dailyRewardsClose.addEventListener("click", closeDailyRewards);
 }
 
+var _dailyAutoOpenedThisSession = false;
+function autoOpenDailyRewardsIfNeeded() {
+  if (_dailyAutoOpenedThisSession) return;
+  // Auto-abrir si hay una recompensa pendiente (día actual no reclamada) o si el ciclo está completo
+  var hasPending = dailyState.currentDay >= 1 && dailyState.currentDay <= 7 && !isDailyRewardClaimed(dailyState.currentDay);
+  var cycleDone = isCycleComplete();
+  if (hasPending || cycleDone) {
+    _dailyAutoOpenedThisSession = true;
+    openDailyRewards();
+  }
+}
+// Llamar después de un pequeño delay para que la UI principal termine de inicializar
+setTimeout(autoOpenDailyRewardsIfNeeded, 600);
+
 // Re-evaluar cada minuto para refrescar el ciclo si cambia el día UTC
+var _lastSeenDay = getUTCDayKey();
 setInterval(function() {
   var today = getUTCDayKey();
-  if (dailyState.lastLoginDay !== today) {
+  if (today !== _lastSeenDay) {
+    _lastSeenDay = today;
+    // Resetear el flag para que el auto-open se dispare si hay nueva recompensa
+    _dailyAutoOpenedThisSession = false;
     rolloverDailyCycleOnLogin();
     updateDailyRewardsMenuBadge();
+    autoOpenDailyRewardsIfNeeded();
   }
 }, 60000);
 
