@@ -1608,7 +1608,9 @@ var ACHIEVEMENTS = [
   { id: "maestro_del_caos", tier: "gold", name: "Maestro del Caos", desc: "Agarra los 2 Legendarios al menos una vez", category: "collectibles", reward: null },
   { id: "bien_armado", tier: "silver", name: "Bien Armado", desc: "Gana una pelea usando 2 armas distintas", category: "arsenal", reward: null },
   { id: "coleccionista_arsenal", tier: "gold", name: "Coleccionista del Arsenal", desc: "Compra al menos 1 de cada una de las 5 armas", category: "arsenal", reward: null },
-  { id: "destructor_armado", tier: "silver", name: "Destructor Armado", desc: "Inflige 200 HP de da\u00f1o total con armas", category: "arsenal", reward: null }
+  { id: "destructor_armado", tier: "silver", name: "Destructor Armado", desc: "Inflige 200 HP de da\u00f1o total con armas", category: "arsenal", reward: null },
+  { id: "racha_3", tier: "silver", name: "Racha de 3", desc: "Ingres\u00e1 3 d\u00edas seguidos", category: "daily", reward: null },
+  { id: "racha_7", tier: "gold",   name: "Racha de 7", desc: "Ingres\u00e1 7 d\u00edas seguidos", category: "daily", reward: null }
 ];
 
 var achievementsUnlocked = safeJSON("chaosAchievements", []);
@@ -1747,6 +1749,8 @@ function checkAchievements() {
         break;
       }
       case "destructor_armado": unlocked = (parseInt(localStorage.getItem("chaosWeaponDamage") || "0", 10) >= 200); break;
+      case "racha_3": unlocked = (dailyState && typeof dailyState.streak === "number" && dailyState.streak >= 3); break;
+      case "racha_7": unlocked = (dailyState && typeof dailyState.streak === "number" && dailyState.streak >= 7); break;
     }
     if (unlocked) unlockAchievement(ach.id);
   });
@@ -4126,7 +4130,7 @@ function openStats() {
   document.getElementById("statCoinsTotal").textContent = String(totalCoinsEarned);
   document.getElementById("statBoosts").textContent = String(boostActivationsCount);
   document.getElementById("statHundred").textContent = String(chaosReachedHundredCount);
-  document.getElementById("statAchievements").textContent = achievementsUnlocked.length + " / 25";
+  document.getElementById("statAchievements").textContent = achievementsUnlocked.length + " / " + (typeof ACHIEVEMENTS !== "undefined" ? ACHIEVEMENTS.length : 25);
   var hasTrueEnding = unlockedFragments.indexOf(8) !== -1;
   var teEl = document.getElementById("statTrueEnding");
   var teRow = document.getElementById("statTrueEndingRow");
@@ -4255,6 +4259,9 @@ function navigateToSection(section) {
       break;
     case "roulette":
       if (typeof openRoulette === "function") openRoulette();
+      break;
+    case "daily-rewards":
+      if (typeof openDailyRewards === "function") openDailyRewards();
       break;
     case "unlocked":
       sidebarOpen = !sidebarOpen;
@@ -4546,6 +4553,372 @@ document.addEventListener("chaosBossEnd", function() {
   if (typeof checkAchievements === "function") checkAchievements();
   if (typeof checkAcumulador === "function") checkAcumulador();
 });
+
+/* ============================================
+   DAILY REWARDS — Sistema de recompensas diarias
+   ============================================
+   - Ciclo de 7 días que se reinicia si el jugador pasa más de 1 día sin ingresar.
+   - El día 1 es siempre reclamable al primer ingreso del ciclo.
+   - Días 2-7 se desbloquean conforme avanzan los días UTC.
+   - Racha (streak) se mide por ingreso consecutivo; bestStreak se guarda aparte.
+   - Logros racha_3 y racha_7 se otorgan en checkAchievements().
+*/
+
+var DAILY_REWARDS = [
+  { day: 1, type: "coins",     amount: 20,  icon: "🪙",  name: "20 monedas de bienvenida" },
+  { day: 2, type: "coins",     amount: 50,  icon: "🪙",  name: "50 monedas" },
+  { day: 3, type: "pro-theme",          icon: "🎨",  name: "Un tema PRO al azar" },
+  { day: 4, type: "clicks",     amount: 5000, icon: "👆", name: "+5,000 clicks" },
+  { day: 5, type: "picture",   file: "assets/images/deal-with-it.png", icon: "😎", name: "Foto de perfil exclusiva (Deal With It)" },
+  { day: 6, type: "combo",     coins: 75,  icon: "🪙",  name: "75 monedas" },
+  { day: 7, type: "mega",      icon: "🏆", name: "Foto exclusiva (Noob), 3 T-Rex gratis y 100 monedas", coins: 100, picture: "assets/images/noob.png" }
+];
+
+var dailyState = safeJSON("chaosDailyState", null);
+if (!dailyState || typeof dailyState !== "object") {
+  dailyState = { claimedDays: [], currentDay: 1, streak: 0, bestStreak: 0, lastLoginDay: null };
+} else {
+  if (!Array.isArray(dailyState.claimedDays)) dailyState.claimedDays = [];
+  if (typeof dailyState.currentDay !== "number") dailyState.currentDay = 1;
+  if (typeof dailyState.streak !== "number") dailyState.streak = 0;
+  if (typeof dailyState.bestStreak !== "number") dailyState.bestStreak = 0;
+}
+
+function getUTCDayKey() {
+  var d = new Date();
+  var y = d.getUTCFullYear();
+  var m = String(d.getUTCMonth() + 1);
+  if (m.length < 2) m = "0" + m;
+  var day = String(d.getUTCDate());
+  if (day.length < 2) day = "0" + day;
+  return y + "-" + m + "-" + day;
+}
+
+function diffDaysUTC(a, b) {
+  if (!a) return Infinity;
+  var da = new Date(a + "T00:00:00Z").getTime();
+  var db = new Date(b + "T00:00:00Z").getTime();
+  return Math.round((db - da) / 86400000);
+}
+
+function persistDailyState() {
+  safeJSON_set("chaosDailyState", dailyState);
+}
+
+function rolloverDailyCycleOnLogin() {
+  var today = getUTCDayKey();
+  var last = dailyState.lastLoginDay;
+  if (!last) {
+    // Primer login: arranca el ciclo en día 1
+    dailyState.streak = 1;
+    dailyState.currentDay = 1;
+    dailyState.claimedDays = [];
+  } else {
+    var diff = diffDaysUTC(last, today);
+    if (diff === 0) {
+      // Mismo día: no pasa nada
+    } else {
+      // Pasó al menos 1 día
+      if (diff === 1) {
+        // Día consecutivo: racha +1, el día anterior se salta si no se reclamó
+        dailyState.streak += 1;
+        if (!isDailyRewardClaimed(dailyState.currentDay)) {
+          dailyState.claimedDays.push(dailyState.currentDay);
+        }
+        dailyState.currentDay += 1;
+        if (dailyState.currentDay > 7) {
+          dailyState.currentDay -= 7;
+          dailyState.claimedDays = [];
+        }
+      } else {
+        // Se pasó más de un día sin login: se rompe la racha, reinicia ciclo
+        dailyState.streak = 1;
+        dailyState.claimedDays = [];
+        dailyState.currentDay = 1;
+      }
+      if (dailyState.streak > dailyState.bestStreak) {
+        dailyState.bestStreak = dailyState.streak;
+      }
+    }
+  }
+  dailyState.lastLoginDay = today;
+  persistDailyState();
+}
+
+// Inicializa el ciclo al cargar la página
+rolloverDailyCycleOnLogin();
+
+function pickRandomProTheme() {
+  // PRO tier (tier 2) excluding rewardOnly (fire, BOSS SLAYER) — listamos void/gold/blood
+  var pool = ["void", "gold", "blood"];
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function grantDailyReward(reward) {
+  switch (reward.type) {
+    case "coins":
+      coins += reward.amount;
+      totalCoinsEarned = (typeof totalCoinsEarned === "number" ? totalCoinsEarned : 0) + reward.amount;
+      try { localStorage.setItem("chaosCoins", String(coins)); } catch (e) {}
+      safeNumber_set("chaosTotalCoinsEarned", totalCoinsEarned);
+      break;
+    case "combo":
+      coins += reward.coins;
+      totalCoinsEarned = (typeof totalCoinsEarned === "number" ? totalCoinsEarned : 0) + reward.coins;
+      try { localStorage.setItem("chaosCoins", String(coins)); } catch (e) {}
+      safeNumber_set("chaosTotalCoinsEarned", totalCoinsEarned);
+      break;
+    case "clicks":
+      totalClicks += reward.amount;
+      try { localStorage.setItem("totalClicks", String(totalClicks)); } catch (e) {}
+      break;
+    case "picture":
+      if (inventory.pictures.indexOf(reward.file) === -1) {
+        inventory.pictures.push(reward.file);
+        safeJSON_set("chaosInventory", inventory);
+      }
+      break;
+    case "pro-theme":
+      var t = pickRandomProTheme();
+      if (ownedThemes.indexOf(t) === -1) {
+        ownedThemes.push(t);
+        safeJSON_set("chaosOwnedThemes", ownedThemes);
+      }
+      return { type: "pro-theme", themeKey: t };
+    case "mega": {
+      var coinsToAdd = reward.coins || 0;
+      coins += coinsToAdd;
+      totalCoinsEarned = (typeof totalCoinsEarned === "number" ? totalCoinsEarned : 0) + coinsToAdd;
+      try { localStorage.setItem("chaosCoins", String(coins)); } catch (e) {}
+      safeNumber_set("chaosTotalCoinsEarned", totalCoinsEarned);
+      if (reward.picture && inventory.pictures.indexOf(reward.picture) === -1) {
+        inventory.pictures.push(reward.picture);
+        safeJSON_set("chaosInventory", inventory);
+      }
+      // 3 T-Rex gratis al arsenal (stock)
+      if (!arsenal.trex) arsenal.trex = { bought: 0, used: 0 };
+      arsenal.trex.bought = (arsenal.trex.bought || 0) + 3;
+      saveArsenal();
+      return { type: "mega" };
+    }
+  }
+}
+
+function safeNumber_set(key, value) {
+  // Mirror of safeNumber's persistence pattern for writeable integer counters
+  try { localStorage.setItem(key, String(value)); } catch (e) {}
+}
+
+function isDailyRewardClaimed(day) {
+  return dailyState.claimedDays.indexOf(day) !== -1;
+}
+
+function isCycleComplete() {
+  // Ciclo actual = las 7 recompensas reclamadas (currentDay puede ser 7 o menos)
+  if (dailyState.claimedDays.length < 7) return false;
+  for (var i = 1; i <= 7; i++) {
+    if (!isDailyRewardClaimed(i)) return false;
+  }
+  return true;
+}
+
+function claimDailyReward(day) {
+  if (isDailyRewardClaimed(day)) return false;
+  if (day !== dailyState.currentDay) return false;
+  var reward = DAILY_REWARDS[day - 1];
+  if (!reward) return false;
+  var extra = grantDailyReward(reward);
+  dailyState.claimedDays.push(day);
+  persistDailyState();
+  // Refresh UI
+  if (typeof coinNumberEl !== "undefined" && coinNumberEl) {
+    coinNumberEl.textContent = formatNumber(coins);
+  }
+  if (typeof coinDisplayEl !== "undefined" && coinDisplayEl) {
+    coinDisplayEl.classList.remove("tick");
+    void coinDisplayEl.offsetWidth;
+    coinDisplayEl.classList.add("tick");
+  }
+  var msg;
+  if (reward.type === "pro-theme" && extra && extra.themeKey) {
+    var th = SHOP_THEMES.filter(function(t){ return t.key === extra.themeKey; })[0];
+    msg = "¡Tema PRO desbloqueado: " + (th ? th.name : extra.themeKey.toUpperCase()) + "!";
+  } else if (reward.type === "mega") {
+    msg = "¡DÍA 7! Noob + 3 T-Rex + 100 🪙";
+  } else if (reward.type === "coins") {
+    msg = "¡+" + reward.amount + " 🪙!";
+  } else if (reward.type === "clicks") {
+    msg = "¡+" + reward.amount.toLocaleString() + " clicks!";
+  } else if (reward.type === "picture") {
+    msg = "¡Foto exclusiva desbloqueada!";
+  } else if (reward.type === "combo") {
+    msg = "¡+" + reward.coins + " 🪙!";
+  } else {
+    msg = "¡Recompensa reclamada!";
+  }
+  showToast(msg, "success");
+  if (typeof checkAchievements === "function") checkAchievements();
+  updateDailyRewardsMenuBadge();
+  buildDailyRewardsPanel();
+  return true;
+}
+
+function buildDailyRewardsPanel() {
+  var grid = document.getElementById("dailyRewardsGrid");
+  var info = document.getElementById("dailyRewardsStreakInfo");
+  if (!grid) return;
+  grid.innerHTML = "";
+  if (info) {
+    info.textContent = "Racha actual: " + dailyState.streak + " día(s) · Récord: " + dailyState.bestStreak + " día(s)";
+  }
+  if (isCycleComplete()) {
+    grid.classList.add("cycle-complete");
+    var done = document.createElement("div");
+    done.className = "daily-cycle-complete";
+    done.innerHTML =
+      '<div class="daily-cycle-complete-emoji">🏆</div>' +
+      '<div class="daily-cycle-complete-title">¡Ya reclamaste todas las recompensas!</div>' +
+      '<div class="daily-cycle-complete-sub">Volvé mañana para un nuevo ciclo.</div>';
+    grid.appendChild(done);
+    return;
+  }
+  grid.classList.remove("cycle-complete");
+  DAILY_REWARDS.forEach(function(r) {
+    var card = document.createElement("div");
+    card.className = "daily-reward-card";
+    if (r.day === 7) card.classList.add("full-width", "final");
+    var claimed = isDailyRewardClaimed(r.day);
+    var isCurrent = (r.day === dailyState.currentDay);
+    if (claimed) card.classList.add("claimed");
+    else if (!isCurrent) card.classList.add("locked");
+    if (isCurrent && !claimed) card.classList.add("current");
+
+    var dayLabel = document.createElement("div");
+    dayLabel.className = "daily-reward-day";
+    dayLabel.textContent = "DÍA " + r.day;
+    card.appendChild(dayLabel);
+
+    var iconWrap = document.createElement("div");
+    iconWrap.className = "daily-reward-icon-wrap";
+    var iconEl;
+    if (r.type === "picture") {
+      iconEl = document.createElement("img");
+      iconEl.className = "daily-reward-icon";
+      iconEl.src = r.file;
+      iconEl.alt = r.name;
+      iconEl.onerror = function() {
+        iconEl.style.display = "none";
+        var fallback = document.createElement("div");
+        fallback.className = "daily-reward-icon emoji";
+        fallback.textContent = r.icon;
+        iconWrap.appendChild(fallback);
+      };
+    } else if (r.type === "mega") {
+      iconEl = document.createElement("img");
+      iconEl.className = "daily-reward-icon";
+      iconEl.src = r.picture;
+      iconEl.alt = r.name;
+      iconEl.onerror = function() {
+        iconEl.style.display = "none";
+        var fallback = document.createElement("div");
+        fallback.className = "daily-reward-icon emoji";
+        fallback.textContent = r.icon;
+        iconWrap.appendChild(fallback);
+      };
+    } else {
+      iconEl = document.createElement("div");
+      iconEl.className = "daily-reward-icon emoji";
+      iconEl.textContent = r.icon;
+    }
+    iconWrap.appendChild(iconEl);
+    card.appendChild(iconWrap);
+
+    var nameEl = document.createElement("div");
+    nameEl.className = "daily-reward-name";
+    nameEl.textContent = r.name;
+    card.appendChild(nameEl);
+
+    var btn = document.createElement("button");
+    btn.className = "daily-reward-claim";
+    if (claimed) {
+      btn.textContent = "RECLAMADO";
+      btn.disabled = true;
+    } else if (isCurrent) {
+      if (r.day === 7) {
+        btn.textContent = "RECLAMAR";
+        btn.classList.add("gold");
+        btn.onclick = function() { claimDailyReward(r.day); };
+      } else {
+        btn.textContent = "RECLAMAR";
+        btn.classList.add("green");
+        btn.onclick = function() { claimDailyReward(r.day); };
+      }
+    } else {
+      btn.textContent = "BLOQUEADO";
+      btn.disabled = true;
+    }
+    card.appendChild(btn);
+    grid.appendChild(card);
+  });
+}
+
+function openDailyRewards() {
+  rolloverDailyCycleOnLogin();
+  var p = document.getElementById("dailyRewardsPanel");
+  if (!p) return;
+  buildDailyRewardsPanel();
+  p.classList.add("open");
+}
+
+function closeDailyRewards() {
+  var p = document.getElementById("dailyRewardsPanel");
+  if (p) p.classList.remove("open");
+}
+
+function updateDailyRewardsMenuBadge() {
+  var badge = document.getElementById("menuDailyRewardsState");
+  if (!badge) return;
+  if (dailyState.currentDay <= 7 && !isDailyRewardClaimed(dailyState.currentDay)) {
+    badge.textContent = "D" + dailyState.currentDay;
+  } else {
+    badge.textContent = "";
+  }
+}
+
+updateDailyRewardsMenuBadge();
+
+var dailyRewardsClose = document.getElementById("dailyRewardsPanelClose");
+if (dailyRewardsClose) {
+  dailyRewardsClose.addEventListener("click", closeDailyRewards);
+}
+
+var _dailyAutoOpenedThisSession = false;
+function autoOpenDailyRewardsIfNeeded() {
+  if (_dailyAutoOpenedThisSession) return;
+  // Auto-abrir si hay una recompensa pendiente (día actual no reclamada) o si el ciclo está completo
+  var hasPending = dailyState.currentDay >= 1 && dailyState.currentDay <= 7 && !isDailyRewardClaimed(dailyState.currentDay);
+  var cycleDone = isCycleComplete();
+  if (hasPending || cycleDone) {
+    _dailyAutoOpenedThisSession = true;
+    openDailyRewards();
+  }
+}
+// Llamar después de un pequeño delay para que la UI principal termine de inicializar
+setTimeout(autoOpenDailyRewardsIfNeeded, 600);
+
+// Re-evaluar cada minuto para refrescar el ciclo si cambia el día UTC
+var _lastSeenDay = getUTCDayKey();
+setInterval(function() {
+  var today = getUTCDayKey();
+  if (today !== _lastSeenDay) {
+    _lastSeenDay = today;
+    // Resetear el flag para que el auto-open se dispare si hay nueva recompensa
+    _dailyAutoOpenedThisSession = false;
+    rolloverDailyCycleOnLogin();
+    updateDailyRewardsMenuBadge();
+    autoOpenDailyRewardsIfNeeded();
+  }
+}, 60000);
 
 })();
 
