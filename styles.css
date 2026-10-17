@@ -3436,6 +3436,30 @@
   margin: 8px 20px;
 }
 
+.menu-category {
+  border-left: 3px solid rgba(var(--secondary-rgb), 0.5);
+}
+.menu-category:hover {
+  border-left-color: rgba(var(--secondary-rgb), 0.9);
+}
+
+#menuSubList {
+  display: flex;
+  flex-direction: column;
+}
+#menuSubList .menu-item {
+  padding-left: 44px;
+}
+.menu-back {
+  border-left: 3px solid rgba(255, 255, 255, 0.25);
+  color: rgba(var(--secondary-rgb), 0.9);
+}
+.menu-back:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(var(--secondary-rgb), 1);
+  border-left-color: rgba(var(--secondary-rgb), 0.9);
+}
+
 #menuFooter {
   padding: 14px 20px;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
