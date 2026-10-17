@@ -96,58 +96,28 @@
     <button id="menuClose" aria-label="Cerrar menú">×</button>
   </div>
   <div id="menuList">
-    <button class="menu-item" data-section="shop">
-      <span class="menu-icon">⚡</span>
+    <button class="menu-item menu-category" data-category="tienda" data-section="shop">
+      <span class="menu-icon">🛒</span>
       <span class="menu-label">TIENDA</span>
     </button>
-    <button class="menu-item" data-section="roulette">
-      <span class="menu-icon">🎰</span>
-      <span class="menu-label">RULETA</span>
+    <button class="menu-item menu-category" data-category="progreso" data-section="achievements">
+      <span class="menu-icon">📈</span>
+      <span class="menu-label">PROGRESO</span>
     </button>
     <button class="menu-item" data-section="daily-rewards">
       <span class="menu-icon">🎁</span>
       <span class="menu-label">DIARIAS</span>
       <span class="menu-state" id="menuDailyRewardsState"></span>
     </button>
-    <button class="menu-item" data-section="unlocked">
-      <span class="menu-icon">📋</span>
-      <span class="menu-label">HECHOS</span>
-    </button>
-    <button class="menu-item" data-section="achievements">
-      <span class="menu-icon">🏆</span>
-      <span class="menu-label">LOGROS</span>
-    </button>
-    <button class="menu-item" data-section="collection">
-      <span class="menu-icon">📦</span>
-      <span class="menu-label">COLECCION</span>
-    </button>
-    <button class="menu-item" data-section="arsenal">
-      <span class="menu-icon">⚔️</span>
-      <span class="menu-label">ARSENAL</span>
-    </button>
     <button class="menu-item" data-section="profile">
       <span class="menu-icon">??</span>
       <span class="menu-label">PERFIL</span>
-    </button>
-    <button class="menu-item" data-section="memory">
-      <span class="menu-icon">🕯️</span>
-      <span class="menu-label">MEMORIA</span>
-      <span class="menu-state" id="menuMemoryState">0 / 8</span>
     </button>
     <button class="menu-item" data-section="info">
       <span class="menu-icon">ℹ️</span>
       <span class="menu-label">INFO</span>
     </button>
-    <button class="menu-item" data-section="stats">
-      <span class="menu-icon">📊</span>
-      <span class="menu-label">STATS</span>
-    </button>
-    <div class="menu-divider"></div>
-    <button class="menu-item menu-toggle-setting" id="menuSoundToggle">
-      <span class="menu-icon">🔊</span>
-      <span class="menu-label">SONIDO</span>
-      <span class="menu-state" id="menuSoundState">ON</span>
-    </button>
+    <div id="menuSubList"></div>
   </div>
   <div id="menuFooter">
     <span id="menuStats">0 CLICKS · 0 🪙</span>

@@ -4206,15 +4206,19 @@ var menuSoundToggle = document.getElementById("menuSoundToggle");
 var menuSoundState = document.getElementById("menuSoundState");
 var menuStats = document.getElementById("menuStats");
 var menuOpen = false;
+var menuCategory = null;
 
 function isMenuOpen() { return menuOpen; }
 
 function openMenu() {
   if (menuOpen) return;
   menuOpen = true;
+  menuCategory = null;
   menuPanel.classList.add("open");
   menuBackdrop.classList.add("show");
   menuToggle.setAttribute("aria-expanded", "true");
+
+  renderMenu();
 
   // Stagger animation for items
   var items = menuPanel.querySelectorAll(".menu-item");
@@ -4227,9 +4231,77 @@ function openMenu() {
   updateMenuStats();
 }
 
+function renderMenu() {
+  var list = document.getElementById("menuList");
+  var sub = document.getElementById("menuSubList");
+  if (!list || !sub) return;
+
+  if (menuCategory) {
+    // Mostrar subcategorías de la categoría activa
+    list.querySelectorAll(".menu-item[data-section]").forEach(function(el){ el.style.display = "none"; });
+    list.querySelectorAll(".menu-item.menu-category").forEach(function(el){ el.style.display = "none"; });
+
+    var items = [];
+    if (menuCategory === "tienda") {
+      items = [
+        { section: "shop", icon: "⚡", label: "TIENDA" },
+        { section: "arsenal", icon: "⚔️", label: "ARSENAL" },
+        { section: "roulette", icon: "🎰", label: "RULETA" }
+      ];
+    } else if (menuCategory === "progreso") {
+      items = [
+        { section: "achievements", icon: "🏆", label: "LOGROS" },
+        { section: "collection", icon: "📦", label: "COLECCION" },
+        { section: "memory", icon: "🕯️", label: "MEMORIA" },
+        { section: "stats", icon: "📊", label: "STATS" },
+        { section: "unlocked", icon: "📋", label: "HECHOS" }
+      ];
+    }
+
+    sub.innerHTML = "";
+    var back = document.createElement("button");
+    back.className = "menu-item menu-back";
+    back.setAttribute("aria-label", "Volver al menú principal");
+    back.innerHTML = '<span class="menu-icon">←</span><span class="menu-label">VOLVER</span>';
+    back.addEventListener("click", function(e) {
+      e.stopPropagation();
+      menuCategory = null;
+      renderMenu();
+      reStagger();
+    });
+    sub.appendChild(back);
+
+    items.forEach(function(it) {
+      var b = document.createElement("button");
+      b.className = "menu-item";
+      b.setAttribute("data-section", it.section);
+      b.innerHTML = '<span class="menu-icon">' + it.icon + '</span><span class="menu-label">' + it.label + '</span>';
+      b.addEventListener("click", function(e) {
+        e.stopPropagation();
+        navigateToSection(it.section);
+      });
+      sub.appendChild(b);
+    });
+  } else {
+    // Menú principal
+    list.querySelectorAll(".menu-item[data-section]").forEach(function(el){ el.style.display = ""; });
+    list.querySelectorAll(".menu-item.menu-category").forEach(function(el){ el.style.display = ""; });
+    sub.innerHTML = "";
+  }
+}
+
+function reStagger() {
+  var items = menuPanel.querySelectorAll(".menu-item.show");
+  items.forEach(function(item, i) {
+    item.classList.remove("show");
+    setTimeout(function() { item.classList.add("show"); }, 50 + i * 50);
+  });
+}
+
 function closeMenu() {
   if (!menuOpen) return;
   menuOpen = false;
+  menuCategory = null;
   menuPanel.classList.remove("open");
   menuBackdrop.classList.remove("show");
   menuToggle.setAttribute("aria-expanded", "false");
@@ -4252,6 +4324,26 @@ function updateMenuSoundState() {
 
 // Map data-section to actual action
 function navigateToSection(section) {
+  var tiendaSections = ["shop", "arsenal", "roulette"];
+  var progresoSections = ["achievements", "collection", "memory", "stats", "unlocked"];
+
+  if (tiendaSections.indexOf(section) !== -1 || progresoSections.indexOf(section) !== -1) {
+    // Si ya estamos dentro de la categoría, abrir la sección y cerrar menú
+    if (menuCategory) {
+      closeMenu();
+    } else {
+      // Abrir la categoría correspondiente y mostrar sus subcategorías
+      if (tiendaSections.indexOf(section) !== -1) {
+        menuCategory = "tienda";
+      } else {
+        menuCategory = "progreso";
+      }
+      renderMenu();
+      reStagger();
+    }
+    return;
+  }
+
   closeMenu();
   switch (section) {
     case "shop":
