@@ -4322,10 +4322,7 @@ function navigateToSection(section) {
   var progresoSections = ["achievements", "collection", "memory", "stats", "unlocked"];
 
   if (tiendaSections.indexOf(section) !== -1 || progresoSections.indexOf(section) !== -1) {
-    // Si ya estamos dentro de la categoría, abrir la sección y cerrar menú
-    if (menuCategory) {
-      closeMenu();
-    } else {
+    if (!menuCategory) {
       // Abrir la categoría correspondiente y mostrar sus subcategorías
       if (tiendaSections.indexOf(section) !== -1) {
         menuCategory = "tienda";
@@ -4334,8 +4331,12 @@ function navigateToSection(section) {
       }
       renderMenu();
       staggerMenu();
+      return;
     }
-    return;
+    // Ya estamos dentro de la categoría: cerrar menú y abrir la sección abajo
+    closeMenu();
+  } else {
+    closeMenu();
   }
 
   closeMenu();
