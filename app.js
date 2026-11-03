@@ -1197,6 +1197,63 @@ var PRO_THEME_EFFECTS = {
         }, idx * 25);
       })(i);
     }
+  },
+  neon: function() {
+    // Destellos de neón en coloresPrintf
+    var colors = ["#ff00e5", "#00ffe0", "#00ff9d", "#ffea00"];
+    for (var i = 0; i < 14; i++) {
+      (function(idx) {
+        setTimeout(function() {
+          var bar = document.createElement("div");
+          bar.className = "fx-neon-bar";
+          bar.style.left = (Math.random() * 100) + "%";
+          bar.style.background = colors[Math.floor(Math.random() * colors.length)];
+          bar.style.setProperty("--h", (20 + Math.random() * 60).toFixed(0) + "px");
+          var dur = 0.6 + Math.random() * 0.8;
+          bar.style.animationDuration = dur + "s";
+          document.body.appendChild(bar);
+          fxCleanup(bar, dur * 1000 + 200);
+        }, idx * 45);
+      })(i);
+    }
+  },
+  glitch: function() {
+    // Fragmentos de texto que se deforman y desaparecen
+    var chars = "ABCDEFGHJKLMNPRSTUVXYZ01#@%&";
+    for (var i = 0; i < 10; i++) {
+      (function(idx) {
+        setTimeout(function() {
+          var el = document.createElement("div");
+          el.className = "fx-glitch-block";
+          var text = "";
+          var len = 3 + Math.floor(Math.random() * 5);
+          for (var c = 0; c < len; c++) text += chars[Math.floor(Math.random() * chars.length)];
+          el.textContent = text;
+          el.style.left = (Math.random() * 90) + "%";
+          el.style.top = (Math.random() * 80) + "%";
+          el.style.color = idx % 2 === 0 ? "#00ff9d" : "#ff00ff";
+          document.body.appendChild(el);
+          fxCleanup(el, 900);
+        }, idx * 70);
+      })(i);
+    }
+  },
+  precipitacion: function() {
+    // Gotas de lluvia que caen desde arriba
+    for (var i = 0; i < 30; i++) {
+      (function(idx) {
+        setTimeout(function() {
+          var drop = document.createElement("div");
+          drop.className = "fx-rain-drop";
+          drop.style.left = (Math.random() * 100) + "%";
+          drop.style.setProperty("--len", (12 + Math.random() * 26).toFixed(0) + "px");
+          var dur = 0.5 + Math.random() * 0.6;
+          drop.style.animationDuration = dur + "s";
+          document.body.appendChild(drop);
+          fxCleanup(drop, dur * 1000 + 200);
+        }, idx * 30);
+      })(i);
+    }
   }
 };
 
@@ -1279,6 +1336,9 @@ function chaos() {
 
   // XP por clicks manuales (bufferizado)
   accumulatePathXp();
+
+  // Collectible automatico (si esta desbloqueado)
+  checkAutoCollectible();
 
   var rect = chaosBtn.getBoundingClientRect();
   var cx = rect.left + rect.width / 2;
@@ -3088,6 +3148,20 @@ function updateProfile() {
   var s = getEquippedSlogan();
   profileSloganEl.textContent = s ? "\u201C" + s.name + "\u201D" : "";
 
+  // Titulo de ruta (desbloqueado en la Ruta V) — se muestra sobre el nombre
+  var pathTitle = null;
+  try { pathTitle = localStorage.getItem("chaosPathTitle"); } catch (e) {}
+  var pathTitleEl = document.getElementById("profilePathTitle");
+  if (pathTitleEl) {
+    if (pathTitle) {
+      pathTitleEl.textContent = PATH_TITLES[pathTitle] || "";
+      pathTitleEl.style.display = "";
+    } else {
+      pathTitleEl.textContent = "";
+      pathTitleEl.style.display = "none";
+    }
+  }
+
   profileNameEl.textContent = playerName;
 
   var wrap = document.getElementById("profilePhotoWrap");
@@ -3687,7 +3761,10 @@ var SHOP_THEMES = [
   { key: "fire",      name: "FUEGO",       price: 0,  tier: 2, swatch: ["#ff4500", "#ffcc00"], rewardOnly: true, rewardHint: "BOSS SLAYER" },
   { key: "void",      name: "VOID",        price: 50, tier: 2, swatch: ["#b026ff", "#00f0ff"] },
   { key: "gold",      name: "GOLD RUSH",   price: 50, tier: 2, swatch: ["#ffd700", "#ffaa00"] },
-  { key: "blood",     name: "BLOOD MOON",  price: 50, tier: 2, swatch: ["#dc143c", "#8b0000"] }
+  { key: "blood",     name: "BLOOD MOON",  price: 50, tier: 2, swatch: ["#dc143c", "#8b0000"] },
+  { key: "neon",      name: "NEÓN",        price: 0,  tier: 2, swatch: ["#ff00e5", "#00ffe0"], rewardOnly: true, rewardHint: "RUTA II" },
+  { key: "glitch",    name: "GLITCH",      price: 0,  tier: 2, swatch: ["#00ff9d", "#ff00ff"], rewardOnly: true, rewardHint: "RUTA IV" },
+  { key: "precipitacion", name: "PRECIPITACIÓN", price: 0, tier: 2, swatch: ["#4fc3f7", "#0288d1"], rewardOnly: true, rewardHint: "RUTA IV" }
 ];
 
 var ownedThemes = safeJSON("chaosOwnedThemes", ["chaos"]);
@@ -5396,6 +5473,21 @@ function pathTotalXpNeeded() {
   return total;
 }
 
+// Auto-collectible: cada N clicks acumulados, spawnea un collectible automaticamente.
+var _autoCollectibleCounter = 0;
+function checkAutoCollectible() {
+  var every = getAutoCollectible();
+  if (!every) return;
+  _autoCollectibleCounter++;
+  if (_autoCollectibleCounter < every) return;
+  _autoCollectibleCounter = 0;
+  if (activeCollectible) return;
+  // Spawnea un collectible aleatorio de cualquier tier
+  var pool = COLLECTIBLES.slice();
+  var pick = pool[Math.floor(Math.random() * pool.length)];
+  spawnCollectibleById(pick.id);
+}
+
 // Buffer de XP: evita escribir en localStorage en cada click
 var _pathClickBuffer = 0;
 function accumulatePathXp() {
@@ -5478,6 +5570,11 @@ function selectPath(pathId) {
 }
 
 /* ===== Recompensas de ruta ===== */
+// Titulos que se desbloquean como recompensa de ruta
+var PATH_TITLES = {
+  insaciable: "EL QUE NO SE RINDE"
+};
+
 function grantPathReward(r) {
   switch (r.type) {
     case "coins":
@@ -5525,6 +5622,7 @@ function grantPathReward(r) {
       return "Collectible automatico cada " + r.value;
     case "passiveCoins":
       setPassiveCoins(r.value);
+      startPassiveCoins();
       return "Monedas pasivas activadas";
     case "title":
       setPathTitle(r.id);
@@ -5573,6 +5671,20 @@ function setPassiveCoins(value) {
   if (value > current) localStorage.setItem("chaosPassiveCoins", String(value));
 }
 function getPassiveCoins() { return safeNumber("chaosPassiveCoins", 0, true); }
+
+// Monedas pasivas: +1 cada 30 segundos (o el intervalo configurado).
+// Solo corren si el juego esta abierto (es idle-in-page, no idle-real).
+var _passiveCoinTimer = null;
+function startPassiveCoins() {
+  if (_passiveCoinTimer) return;
+  var interval = getPassiveCoins();
+  if (!interval) return;
+  _passiveCoinTimer = setInterval(function() {
+    if (getPassiveCoins() > 0) {
+      addCoins(1, "passive", false);
+    }
+  }, interval);
+}
 function setPathTitle(id) {
   try { localStorage.setItem("chaosPathTitle", id); } catch (e) {}
 }
@@ -5791,6 +5903,9 @@ if (pathsPanelClose) {
   pathsPanelClose.addEventListener("click", closePaths);
 }
 updatePathsMenuBadge();
+
+// Arrancar monedas pasivas si ya estan desbloqueadas
+if (getPassiveCoins() > 0) startPassiveCoins();
 
 })();
 

@@ -284,8 +284,83 @@
     --text-dim: rgba(139, 0, 0, 0.5);
     --border-subtle: rgba(220, 20, 60, 0.2);
     --border-accent: rgba(220, 20, 60, 0.5);
-    
+
     --button-gradient: linear-gradient(90deg, #dc143c, #8b0000, #ff1744, #8b0000, #dc143c);
+    --theme-tier: 2;
+  }
+
+  /* ========================= */
+  /* THEME: NEON (PRO - RUTA II)  */
+  /* ========================= */
+  [data-theme="neon"] {
+    --primary: #ff00e5;
+    --primary-rgb: 255, 0, 229;
+    --secondary: #00ffe0;
+    --secondary-rgb: 0, 255, 224;
+    --accent: #ffea00;
+    --accent-rgb: 255, 234, 0;
+    --bg-dark: #04010a;
+    --bg-dark-rgb: 4, 1, 10;
+    --bg-deep: rgba(12, 0, 24, 0.95);
+    --glow-primary: rgba(255, 0, 229, 0.65);
+    --glow-secondary: rgba(0, 255, 224, 0.6);
+    --text-primary: #ffe6fb;
+    --text-muted: rgba(0, 255, 224, 0.8);
+    --text-dim: rgba(255, 0, 229, 0.5);
+    --border-subtle: rgba(255, 0, 229, 0.2);
+    --border-accent: rgba(0, 255, 224, 0.5);
+
+    --button-gradient: linear-gradient(90deg, #ff00e5, #00ffe0, #ffea00, #00ffe0, #ff00e5);
+    --theme-tier: 2;
+  }
+
+  /* ========================= */
+  /* THEME: GLITCH (PRO - RUTA IV) */
+  /* ========================= */
+  [data-theme="glitch"] {
+    --primary: #00ff9d;
+    --primary-rgb: 0, 255, 157;
+    --secondary: #ff00ff;
+    --secondary-rgb: 255, 0, 255;
+    --accent: #00e5ff;
+    --accent-rgb: 0, 229, 255;
+    --bg-dark: #00110a;
+    --bg-dark-rgb: 0, 17, 10;
+    --bg-deep: rgba(0, 20, 14, 0.95);
+    --glow-primary: rgba(0, 255, 157, 0.6);
+    --glow-secondary: rgba(255, 0, 255, 0.55);
+    --text-primary: #dcffe9;
+    --text-muted: rgba(255, 0, 255, 0.8);
+    --text-dim: rgba(0, 255, 157, 0.45);
+    --border-subtle: rgba(0, 255, 157, 0.2);
+    --border-accent: rgba(255, 0, 255, 0.5);
+
+    --button-gradient: linear-gradient(90deg, #00ff9d, #ff00ff, #00e5ff, #ff00ff, #00ff9d);
+    --theme-tier: 2;
+  }
+
+  /* ========================= */
+  /* THEME: PRECIPITACION (RUTA IV) */
+  /* ========================= */
+  [data-theme="precipitacion"] {
+    --primary: #4fc3f7;
+    --primary-rgb: 79, 195, 247;
+    --secondary: #0288d1;
+    --secondary-rgb: 2, 136, 209;
+    --accent: #b3e5fc;
+    --accent-rgb: 179, 229, 252;
+    --bg-dark: #001018;
+    --bg-dark-rgb: 0, 16, 24;
+    --bg-deep: rgba(0, 18, 28, 0.95);
+    --glow-primary: rgba(79, 195, 247, 0.6);
+    --glow-secondary: rgba(2, 136, 209, 0.5);
+    --text-primary: #e1f5fe;
+    --text-muted: rgba(179, 229, 252, 0.8);
+    --text-dim: rgba(79, 195, 247, 0.45);
+    --border-subtle: rgba(79, 195, 247, 0.2);
+    --border-accent: rgba(2, 136, 209, 0.5);
+
+    --button-gradient: linear-gradient(90deg, #4fc3f7, #0288d1, #b3e5fc, #0288d1, #4fc3f7);
     --theme-tier: 2;
   }
 
@@ -4125,7 +4200,10 @@
 [data-theme="void"] .theme-swatch.tier-2 .theme-preview::before,
 [data-theme="gold"] .theme-swatch.tier-2 .theme-preview::before,
 [data-theme="blood"] .theme-swatch.tier-2 .theme-preview::before,
-[data-theme="fire"] .theme-swatch.tier-2 .theme-preview::before {
+[data-theme="fire"] .theme-swatch.tier-2 .theme-preview::before,
+[data-theme="neon"] .theme-swatch.tier-2 .theme-preview::before,
+[data-theme="glitch"] .theme-swatch.tier-2 .theme-preview::before,
+[data-theme="precipitacion"] .theme-swatch.tier-2 .theme-preview::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -4193,6 +4271,66 @@
   0%   { transform: translateY(0) rotate(0deg); opacity: 0; }
   10%  { opacity: 1; }
   100% { transform: translateY(115vh) rotate(540deg); opacity: 0.85; }
+}
+
+/* ===== THEME EFFECTS: NEON / GLITCH / PRECIPITACION ===== */
+.fx-neon-bar {
+  position: fixed;
+  top: -20px;
+  width: 3px;
+  height: var(--h, 40px);
+  border-radius: 0 0 2px 2px;
+  pointer-events: none;
+  z-index: 4;
+  opacity: 0.9;
+  animation-name: fxNeonDrop;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+@keyframes fxNeonDrop {
+  0%   { transform: translateY(0) scaleY(0.4); opacity: 0; }
+  15%  { opacity: 1; transform: translateY(6vh) scaleY(1); }
+  100% { transform: translateY(115vh) scaleY(1); opacity: 0; }
+}
+
+.fx-glitch-block {
+  position: fixed;
+  font-family: "Press Start 2P", monospace;
+  font-size: 14px;
+  letter-spacing: 2px;
+  pointer-events: none;
+  z-index: 4;
+  text-shadow: 2px 0 #ff00ff, -2px 0 #00ff9d;
+  animation-name: fxGlitchFlicker;
+  animation-timing-function: steps(3, end);
+  animation-fill-mode: forwards;
+}
+@keyframes fxGlitchFlicker {
+  0%   { transform: translate(0, 0); opacity: 0; clip-path: inset(0 0 0 0); }
+  10%  { opacity: 1; transform: translate(-3px, 2px); clip-path: inset(20% 0 40% 0); }
+  30%  { transform: translate(4px, -2px); clip-path: inset(60% 0 10% 0); }
+  50%  { transform: translate(-2px, 3px); clip-path: inset(10% 0 70% 0); }
+  70%  { transform: translate(3px, -1px); clip-path: inset(45% 0 30% 0); }
+  100% { transform: translate(0, 0); opacity: 0; clip-path: inset(0 0 100% 0); }
+}
+
+.fx-rain-drop {
+  position: fixed;
+  top: -30px;
+  width: 2px;
+  height: var(--len, 20px);
+  border-radius: 0 0 50% 50%;
+  background: linear-gradient(180deg, rgba(79, 195, 247, 0), rgba(79, 195, 247, 0.85));
+  pointer-events: none;
+  z-index: 4;
+  animation-name: fxRainFall;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+@keyframes fxRainFall {
+  0%   { transform: translateY(0); opacity: 0; }
+  10%  { opacity: 1; }
+  100% { transform: translateY(115vh); opacity: 0.7; }
 }
 
 .fx-blood {
@@ -5053,6 +5191,16 @@
 }
 
 /* ===== PATHS PANEL (RUTAS) ===== */
+#profilePathTitle {
+  font-family: "Orbitron", monospace;
+  font-size: 8px;
+  letter-spacing: 2.5px;
+  color: rgba(255, 200, 0, 0.9);
+  text-shadow: 0 0 8px rgba(255, 180, 0, 0.6);
+  margin-bottom: 2px;
+  font-weight: 700;
+}
+
 #pathsPanel {
   position: fixed;
   inset: 0;
