@@ -639,6 +639,15 @@
   opacity: 0.85;
   transform: translateX(0);
 }
+.unlocked-item.knowledge-empty {
+  opacity: 0.5;
+  transform: none;
+  font-style: italic;
+  font-family: Georgia, serif;
+  border-left-color: rgba(var(--secondary-rgb), 0.4);
+  text-align: center;
+  padding: 20px 14px;
+}
 #toggleUnlocked {
   position: fixed;
   top: 20px;

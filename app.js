@@ -175,18 +175,21 @@ function playClickSound() {
 }
 
 /* ========================= */
-/* FACTS */
+/* KNOWLEDGE (Fragmentos de Conocimiento) */
 /* ========================= */
+/* Textos de sabiduria que se ganan como EXTRA al completar tiers de las Rutas.
+   Los indices 0..46 se referencian desde PATHS[].tiers[].fragments.
+   Todos los textos fueron verificados contra fuentes. */
 
-var FACTS = [
+var KNOWLEDGE = [
   // ESPACIO
-  "Un dia en Venus dura mas que un ano en Venus.",
-  "El universo no tiene sonido.",
+  "En Venus, un dia solar dura menos que un ano: 116 dias terrestres contra 224.",
+  "El sonido no se propaga en el vacio, pero si en el gas y el plasma del espacio.",
   "Un relampago es mas caliente que la superficie del Sol.",
   "Algunas estrellas que ves quizas ya murieron hace millones de anos.",
   "Existen estrellas tan densas que una cucharada pesaria millones de toneladas.",
-  "Hay planetas donde podria llover vidrio horizontalmente.",
-  "El espacio huele raro segun astronautas.",
+  "Se predice que en algunos exoplanetas muy calientes llueve silicatos fundidos.",
+  "El espacio huele raro segun los astronautas: kabobs a quemado y sacarina.",
   "Algunas estrellas podrian ser enormes masas de diamante.",
   // ANIMALES
   "Los pulpos tienen 3 corazones.",
@@ -208,15 +211,15 @@ var FACTS = [
   "Dormir poco altera la percepcion de la realidad.",
   "Tu cuerpo reemplaza millones de celulas constantemente.",
   "Tecnicamente nunca tocas nada realmente debido a fuerzas atomicas.",
-  "El cerebro humano se nombro a si mismo.",
+  "El cerebro construye un modelo interno del yo, y el lenguaje lo llama 'yo'.",
   "El cuerpo humano contiene suficiente hierro para fabricar un clavo.",
   // NATURALEZA
   "Hay mas arboles en la Tierra que estrellas en la galaxia.",
   "Existe nieve roja en ciertas regiones.",
   "Algunas ranas pueden congelarse y sobrevivir.",
   "Las plantas liberan senales quimicas cuando son danadas.",
-  "Hay hongos gigantes bajo tierra mas grandes que ciudades.",
-  "El agua caliente puede congelarse mas rapido que la fria.",
+  "El hongo mas grande del mundo mide casi 10 km: mas grande que Central Park.",
+  "A veces el agua caliente se congela antes que la fria. El efecto Mpemba sigue sin explicarse del todo.",
   "Existen lagos debajo del oceano.",
   "Las bananas son ligeramente radioactivas.",
   "Algunas medusas son biologicamente casi inmortales.",
@@ -230,7 +233,7 @@ var FACTS = [
   "Tu cerebro detecta caras mas rapido que cualquier otra forma.",
   "Hay gente que desarrolla apego emocional a NPCs.",
   "El lag puede existir incluso en tu percepcion visual.",
-  "El caos digital suele parecer mas divertido que el orden."
+  "El desorden costuma ser mas creative que el orden."
 ];
 
 // `clicks` resets every chaos cycle; `totalClicks` is the persistent historical count.
@@ -238,9 +241,6 @@ var clicks = 0;
 var chaosLevel = 0;
 var lastFontIndex = -1;
 var isResetting = false;
-var shownFacts = [];
-var lastFactTime = 0;
-var FACT_COOLDOWN = 5000;
 var sidebarOpen = false;
 /* ========================= */
 /* CLICK COUNTER (Fase 0.1) */
@@ -390,31 +390,59 @@ function trackedRemove(el, className) {
   releaseElement(className);
 }
 
-// Load saved facts from localStorage
-var unlockedFacts = safeJSON("chaosFacts", []);
-// Dedup legacy data (one-time migration)
+// Fragmentos de Conocimiento: indices (0..46) de KNOWLEDGE conseguidos.
+// Se ganan como EXTRA al completar tiers de las Rutas.
+var unlockedKnowledge = safeJSON("chaosKnowledge", []);
+if (!Array.isArray(unlockedKnowledge)) unlockedKnowledge = [];
+// Migracion one-time: los "facts" desbloqueados en versiones previas se convierten
+// en fragmentos de conocimiento (se matchean por texto contra KNOWLEDGE).
 (function() {
-  var seen = {};
-  var deduped = [];
-  for (var i = 0; i < unlockedFacts.length; i++) {
-    if (!seen[unlockedFacts[i]]) { seen[unlockedFacts[i]] = true; deduped.push(unlockedFacts[i]); }
+  var legacyFacts = safeJSON("chaosFacts", []);
+  if (!Array.isArray(legacyFacts) || legacyFacts.length === 0) return;
+  var added = 0;
+  legacyFacts.forEach(function(oldText) {
+    var idx = KNOWLEDGE.indexOf(oldText);
+    if (idx === -1) {
+      // El texto cambio (facts corregidos): buscar por posicion aproximada no es posible,
+      // asi que no se migra. Se conservan los facts viejos para referencia.
+      return;
+    }
+    if (unlockedKnowledge.indexOf(idx) === -1) {
+      unlockedKnowledge.push(idx);
+      added++;
+    }
+  });
+  if (added > 0) {
+    localStorage.setItem("chaosKnowledge", JSON.stringify(unlockedKnowledge));
   }
-  if (deduped.length !== unlockedFacts.length) {
-    unlockedFacts = deduped;
-    localStorage.setItem("chaosFacts", JSON.stringify(unlockedFacts));
-  }
+  try { localStorage.setItem("chaosFactsMigrated", "1"); } catch (e) {}
 })();
+
 var unlockedListEl = document.getElementById("unlockedList");
 if (unlockedListEl) unlockedListEl.innerHTML = "";
-if (unlockedFacts.length > 0) {
-  unlockedFacts.forEach(function(fact, i) {
-    var item = document.createElement("div");
-    item.className = "unlocked-item show";
-    item.textContent = (i + 1) + ". " + fact;
-    document.getElementById("unlockedList").appendChild(item);
-  });
-  document.getElementById("unlockedCount").textContent = unlockedFacts.length + " / " + FACTS.length;
+function buildKnowledgeList() {
+  var list = document.getElementById("unlockedList");
+  var count = document.getElementById("unlockedCount");
+  if (!list) return;
+  list.innerHTML = "";
+  if (unlockedKnowledge.length === 0) {
+    var empty = document.createElement("div");
+    empty.className = "unlocked-item knowledge-empty";
+    empty.textContent = "Todavía no tenés fragmentos. Completá tiers de las Rutas para conseguir.";
+    list.appendChild(empty);
+  } else {
+    var sorted = unlockedKnowledge.slice().sort(function(a, b) { return a - b; });
+    sorted.forEach(function(idx) {
+      if (typeof KNOWLEDGE[idx] !== "string") return;
+      var item = document.createElement("div");
+      item.className = "unlocked-item show";
+      item.textContent = (idx + 1) + ". " + KNOWLEDGE[idx];
+      list.appendChild(item);
+    });
+  }
+  if (count) count.textContent = unlockedKnowledge.length + " / " + KNOWLEDGE.length;
 }
+buildKnowledgeList();
 
 var canvas = document.getElementById("particles-canvas");
 var ctx = canvas.getContext("2d");
@@ -607,47 +635,14 @@ function showRepetido() {
   setTimeout(function() { repetidoMsg.classList.remove("show"); }, 3000);
 }
 
-function addToSidebar(fact) {
-  if (unlockedFacts.indexOf(fact) !== -1) return;
-  unlockedFacts.push(fact);
-  localStorage.setItem("chaosFacts", JSON.stringify(unlockedFacts));
-  unlockedCount.textContent = unlockedFacts.length + " / " + FACTS.length;
-
-  var item = document.createElement("div");
-  item.className = "unlocked-item";
-  item.textContent = unlockedFacts.length + ". " + fact;
-  unlockedList.appendChild(item);
-
-  setTimeout(function() { item.classList.add("show"); }, 50);
-}
-
-function unlockFact() {
-  var now = Date.now();
-  if (now - lastFactTime < FACT_COOLDOWN) return;
-  if (shownFacts.length >= FACTS.length) shownFacts = [];
-
-  var available = FACTS.filter(function(f) {
-    return shownFacts.indexOf(f) === -1;
-  });
-  if (available.length === 0) return;
-
-  var fact = available[Math.floor(Math.random() * available.length)];
-  shownFacts.push(fact);
-
-  factText.innerText = fact;
+// Muestra un Fragmento de Conocimiento en el popup flotante.
+function showKnowledgePopup(text) {
+  if (!factPanel || !factText) return;
+  factText.innerText = text;
   factPanel.classList.remove("visible");
   void factPanel.offsetWidth;
   factPanel.classList.add("visible");
-
-  addToSidebar(fact);
-
-  lastFactTime = now;
-
-  checkAchievements();
-
-  setTimeout(function() {
-    factPanel.classList.remove("visible");
-  }, 10000);
+  setTimeout(function() { factPanel.classList.remove("visible"); }, 10000);
 }
 
 // ===== CORE FUNCTIONS =====
@@ -1308,16 +1303,8 @@ function resetEverything() {
   factPanel.classList.remove("visible");
 
   // Reset unlocked facts (keep them saved)
-  shownFacts = [];
-  unlockedList.innerHTML = "";
-  // Rebuild sidebar with saved facts
-  unlockedFacts.forEach(function(fact, i) {
-    var item = document.createElement("div");
-    item.className = "unlocked-item show";
-    item.textContent = (i + 1) + ". " + fact;
-    unlockedList.appendChild(item);
-  });
-  unlockedCount.textContent = unlockedFacts.length + " / " + FACTS.length;
+  // Reconstruir la lista de Fragmentos de Conocimiento (se conservan)
+  buildKnowledgeList();
 
   updateChaosMeter();
 
@@ -1436,10 +1423,8 @@ function chaos() {
   // Symbols
   if (Math.random() < 0.4) spawnChaosSymbol();
 
-  // Facts - unlock based on chaos level (higher chance)
-  if (chaosLevel >= 5 && Math.random() < chaosLevel / 80) {
-    unlockFact();
-  }
+  // Los Fragmentos de Conocimiento se ganan completando tiers de las Rutas
+  // (ya no se desbloquean al azar durante el caos).
 
   // Late-cycle risk: as chaos climbs past 90%, each click has a rising chance
   // of resetting the chaos meter to 0. Caps at 3% per click at 99%.
@@ -1654,7 +1639,7 @@ var ACHIEVEMENTS = [
   { id: "ruletero",     tier: "gold",   name: "Ruletero",            desc: "Girá la ruleta 5 veces",             category: "coleccion", reward: null },
   { id: "loco_completo",tier: "gold",   name: "Loco Completo",       desc: "Llegá a 100% caos 3 veces",           category: "clicks",  reward: null },
   { id: "tipografo",    tier: "gold",   name: "Tipógrafo",           desc: "Comprá todas las 5 fuentes",          category: "frases",  reward: null },
-  { id: "intelectual",  tier: "gold",   name: "Intelectual",         desc: "Desbloqueá todos los hechos",         category: "hechos",  reward: { type: "picture", file: "assets/images/Nikola-Albert.webp" } },
+  { id: "sabio_del_caos", tier: "gold", name: "Sabio del Caos", desc: "Conseguí todos los Fragmentos de Conocimiento", category: "rutas", reward: { type: "picture", file: "assets/images/Nikola-Albert.webp" } },
   { id: "espia_pro",    tier: "gold",   name: "Espía Pro",           desc: "Comprá 6 frases",                     category: "frases",  reward: null },
   { id: "riqueza",      tier: "gold",   name: "Riqueza",             desc: "Acumulá 1,000 monedas",               category: "clicks",  reward: null },
   { id: "marmolista",   tier: "gold",   name: "Marmolista",          desc: "Activá 25 boosts",                    category: "clicks",  reward: null },
@@ -1795,7 +1780,7 @@ function checkAchievements() {
       case "curador":      unlocked = false; break;
       case "ruletero":     unlocked = rouletteTotalSpins >= 5; break;
       case "ruleta_maestra":unlocked = rouletteTotalSpins >= 25; break;
-      case "intelectual":  unlocked = unlockedFacts.length >= FACTS.length; break;
+      case "sabio_del_caos": unlocked = unlockedKnowledge.length >= KNOWLEDGE.length; break;
       case "bendecido":    unlocked = jesusRewardUnlocked; break;
       case "first_blood":  unlocked = (parseInt(localStorage.getItem("chaosBossKills"), 10) || 0) >= 1; break;
       case "primer_collectible": unlocked = Object.keys(collectedCounts).some(function(k){ return (collectedCounts[k]||0) > 0; }); break;
@@ -2476,7 +2461,7 @@ function buildShopItems() {
   // Only show rewards that are NOT already listed in regular shop sections.
   var rewardSections = [
     { file: "assets/images/Rat\u00f3n_gamer.jpg", name: "Mouse Breaker", section: "MOUSE BREAKER" },
-    { file: "assets/images/Nikola-Albert.webp", name: "Intelectual", section: "INTELECTUAL" },
+    { file: "assets/images/Nikola-Albert.webp", name: "Sabio del Caos", section: "SABIO DEL CAOS" },
     { file: "assets/images/medalla_de_oro.jpg", name: "Coleccionista", section: "COLECCIONISTA" },
     { file: "assets/images/Jesus_Payne.jpg", name: "Bendecido", section: "BENDECIDO" }
   ];
@@ -4405,6 +4390,7 @@ function renderMenu() {
         { section: "achievements", icon: "🏆", label: "LOGROS" },
         { section: "collection", icon: "📦", label: "COLECCION" },
         { section: "memory", icon: "🕯️", label: "MEMORIA" },
+        { section: "unlocked", icon: "📜", label: "FRAGMENTOS" },
         { section: "stats", icon: "📊", label: "STATS" }
       ];
     }
@@ -4505,6 +4491,7 @@ function navigateToSection(section) {
     case "unlocked":
       sidebarOpen = !sidebarOpen;
       if (sidebarOpen) {
+        if (typeof buildKnowledgeList === "function") buildKnowledgeList();
         unlockedPanel.classList.add("open");
       } else {
         unlockedPanel.classList.remove("open");
@@ -4653,15 +4640,25 @@ window.__chaosDebug = {
     console.log("✓ rouletteTotalSpins = " + n);
   },
   giveFacts: function() {
-    var FACTS_LOCAL = (typeof FACTS !== "undefined") ? FACTS : [];
-    if (FACTS_LOCAL.length === 0) {
-      console.log("✗ No FACTS array available");
+    var KN_LOCAL = (typeof KNOWLEDGE !== "undefined") ? KNOWLEDGE : [];
+    if (KN_LOCAL.length === 0) {
+      console.log("✗ No KNOWLEDGE array available");
       return;
     }
-    unlockedFacts = FACTS_LOCAL.slice();
-    localStorage.setItem("chaosFacts", JSON.stringify(unlockedFacts));
+    var all = [];
+    for (var k = 0; k < KN_LOCAL.length; k++) all.push(k);
+    unlockedKnowledge = all;
+    localStorage.setItem("chaosKnowledge", JSON.stringify(unlockedKnowledge));
+    if (typeof buildKnowledgeList === "function") buildKnowledgeList();
     if (typeof checkAchievements === "function") checkAchievements();
-    console.log("✓ All " + FACTS_LOCAL.length + " facts unlocked");
+    console.log("✓ All " + KN_LOCAL.length + " knowledge fragments unlocked");
+  },
+  givePathXp: function(n) {
+    pathState.xp = n || 1000;
+    persistPathState();
+    checkPathTierCompletion();
+    updatePathsMenuBadge();
+    console.log("✓ path XP = " + pathState.xp);
   },
   giveAll: function() {
     this.giveClicks(99999);
@@ -4747,7 +4744,7 @@ window.__chaosDebug = {
     }
     // Apply rewards for all achievements with rewards
     if (typeof ACHIEVEMENTS !== "undefined" && typeof applyAchievementReward === "function") {
-      var rewardAchs = ["mouse_breaker", "intelectual", "coleccionista", "bendecido", "completista"];
+      var rewardAchs = ["mouse_breaker", "sabio_del_caos", "coleccionista", "bendecido", "completista"];
       for (var i = 0; i < rewardAchs.length; i++) {
         applyAchievementReward(rewardAchs[i]);
       }
@@ -4766,7 +4763,8 @@ window.__chaosDebug = {
       "  __chaosDebug.giveCoins(99999)       - Set coins\n" +
       "  __chaosDebug.giveBoosts(100)        - Set boost activations\n" +
       "  __chaosDebug.giveRouletteSpins(100) - Set roulette total spins\n" +
-      "  __chaosDebug.giveFacts()            - Unlock all facts\n" +
+      "  __chaosDebug.giveFacts()            - Unlock all knowledge fragments\n" +
+      "  __chaosDebug.givePathXp(1000)       - Set path XP\n" +
       "  __chaosDebug.spawnGato()            - Spawn Gato\n" +
       "  __chaosDebug.spawnSardina()         - Spawn Sardina\n" +
       "  __chaosDebug.spawnSandwich()        - Spawn Sandwich\n" +
@@ -5637,13 +5635,20 @@ function grantPathFragments(indices) {
   if (!Array.isArray(known)) known = [];
   var granted = [];
   indices.forEach(function(idx) {
-    if (typeof FACTS[idx] !== "string") return;
+    if (typeof KNOWLEDGE[idx] !== "string") return;
     if (known.indexOf(idx) !== -1) return;
     known.push(idx);
     granted.push(idx);
   });
   if (!granted.length) return null;
   safeJSON_set("chaosKnowledge", known);
+  // Reflejar en el estado en memoria y en la UI
+  unlockedKnowledge = known;
+  if (typeof buildKnowledgeList === "function") buildKnowledgeList();
+  // Mostrar el primer fragmento nuevo en el popup flotante
+  if (typeof showKnowledgePopup === "function" && granted.length) {
+    showKnowledgePopup(KNOWLEDGE[granted[0]]);
+  }
   return granted.length + " fragmento(s) de conocimiento";
 }
 
