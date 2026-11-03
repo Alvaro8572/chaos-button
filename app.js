@@ -1277,6 +1277,9 @@ function chaos() {
   updateChaosMeter();
   updateClickCounter();
 
+  // XP por clicks manuales (bufferizado)
+  accumulatePathXp();
+
   var rect = chaosBtn.getBoundingClientRect();
   var cx = rect.left + rect.width / 2;
   var cy = rect.top + rect.height / 2;
@@ -2585,7 +2588,8 @@ var COLLECTIBLES = [
   { id: "refresco", name: "Refresco Zuko", src: "assets/images/refresco-zuko.png", sound: "assets/sounds/cola-sound-effect.mp3", tier: "raro", desc: "Un refresco en zigzag." },
   { id: "honguito", name: "Honguito Mágico", src: "assets/images/honguito.png", sound: "assets/sounds/mario-64-lets-a-go.mp3", tier: "raro", desc: "Un hongo que gira y crece." },
   { id: "amongus", name: "Among Us", src: "assets/images/amongus.png", sound: "assets/sounds/emergency-meeting-among-us.mp3", tier: "legendario", desc: "Un tripulante sospechoso." },
-  { id: "pizzaguy", name: "Pizza Guy", src: "assets/images/pizza-guy.png", sound: "assets/sounds/pizza-roblox.mp3", tier: "legendario", desc: "El repartidor que esquiva.", house: "assets/images/house.png" }
+  { id: "pizzaguy", name: "Pizza Guy", src: "assets/images/pizza-guy.png", sound: "assets/sounds/pizza-roblox.mp3", tier: "legendario", desc: "El repartidor que esquiva.", house: "assets/images/house.png" },
+  { id: "spiderman", name: "Spiderman", src: "assets/images/spider-man.png", sound: "assets/sounds/powerup.mp3", tier: "legendario", desc: "Cruza la pantalla en diagonal. Rapido." }
 ];
 
 var WEAPONS = [
@@ -2593,7 +2597,9 @@ var WEAPONS = [
   { id: "bazooka", name: "Bazooka", src: "assets/images/bazooka.png", price: 100, tier: "comun", effect: "burst", value: 25, desc: "-25 HP instantáneo al boss." },
   { id: "katana", name: "Katana", src: "assets/images/katana.png", price: 120, tier: "comun", effect: "autoclick", rate: 1, duration: 5000, desc: "+1 click/seg automático por 5s." },
   { id: "trex", name: "T-Rex", src: "assets/images/t-rex.png", price: 220, tier: "mitico", effect: "combo", burst: 50, rate: 1, duration: 3000, desc: "-50 HP + +1 click/seg por 3s." },
-  { id: "plus4", name: "+4", src: "assets/images/plus4.png", price: 240, tier: "mitico", effect: "autoclick", rate: 4, duration: 1000, desc: "+4 clicks/seg por 1s." }
+  { id: "plus4", name: "+4", src: "assets/images/plus4.png", price: 240, tier: "mitico", effect: "autoclick", rate: 4, duration: 1000, desc: "+4 clicks/seg por 1s." },
+  { id: "laser", name: "Laser Gun", src: "assets/images/laser-gun.png", price: 0, tier: "mitico", effect: "combo", burst: 35, rate: 1, duration: 2000, rewardOnly: true, desc: "-35 HP + +1 click/seg por 2s." },
+  { id: "thor", name: "Martillo de Thor", src: "assets/images/martillo-de-Thor.png", price: 0, tier: "mitico", effect: "stun", burst: 30, stun: 2000, rewardOnly: true, desc: "-30 HP instantaneo + aturde al boss 2s." }
 ];
 
 var arsenal = safeJSON("chaosArsenal", {});
@@ -2868,10 +2874,42 @@ function spawnCollectibleById(id) {
     case "honguito": spawnHonguito(); break;
     case "amongus": spawnAmongus(); break;
     case "pizzaguy": spawnPizzaGuy(); break;
+    case "spiderman": spawnSpiderman(); break;
     default:
       var c = COLLECTIBLES.find(function(x) { return x.id === id; });
       if (c) makeBasicCollectible(c);
   }
+}
+
+// Spiderman: cruza de la esquina izquierda a la inferior derecha en diagonal, rapido.
+function spawnSpiderman() {
+  if (activeCollectible) return;
+  var c = COLLECTIBLES.find(function(x) { return x.id === "spiderman"; });
+  if (!c) return;
+  var el = document.createElement("div");
+  el.className = "collectible collectible-spiderman tier-" + c.tier;
+  el.innerHTML = '<img src="' + c.src + '" alt="' + c.name + '" draggable="false">';
+  el.style.left = "0%";
+  el.style.top = "0%";
+  document.body.appendChild(el);
+
+  var obj = { id: c.id, name: c.name, src: c.src, sound: c.sound, el: el, caught: false };
+  activeCollectible = obj;
+
+  el.addEventListener("click", function(e) {
+    e.stopPropagation();
+    if (obj.caught) return;
+    collectItem(obj);
+  });
+
+  playSoundSafe(c.sound);
+  el.classList.add("spiderman-fly");
+
+  setTimeout(function() {
+    if (obj.caught) return;
+    if (el.parentNode) el.parentNode.removeChild(el);
+    if (obj === activeCollectible) activeCollectible = null;
+  }, 1600);
 }
 
 function trySpawnCollectible() {
@@ -2880,8 +2918,14 @@ function trySpawnCollectible() {
   var comunChance = 0.0055;
   var raroChance = 0.001;
   var legChance = 0.0001;
-  var total = comunChance + raroChance + legChance;
+  // Spiderman: probabilidad similar a los legendarios
+  var spidermanChance = 0.0002;
+  var total = comunChance + raroChance + legChance + spidermanChance;
   if (r >= total) return;
+  if (r >= comunChance + raroChance + legChance) {
+    spawnCollectibleById("spiderman");
+    return;
+  }
   var tier;
   if (r < comunChance) tier = "comun";
   else if (r < comunChance + raroChance) tier = "raro";
@@ -3776,6 +3820,27 @@ var MEMORY_FRAGMENTS = [
     req: "Logro 'Loco Completo' (3 ciclos de 100% caos)",
     icon: "🕯️",
     text: "Botón. Si me estás leyendo, hacé un último click por mí. Te lo pido. Por favor."
+  },
+  {
+    id: 9,
+    trigger: "path_servidor_ii",
+    req: "Ruta IV — T II: Señal Recibida",
+    icon: "📡",
+    text: "El Chaos God no ataca. Espera. Mientras espera, el mundo cambia solo. Y vos seguís ahí, haciéndome click. Eso también es una forma de esperar."
+  },
+  {
+    id: 10,
+    trigger: "path_acumulador_i",
+    req: "Ruta V — T I: El Umbral",
+    icon: "🚪",
+    text: "Después del nivel 10 no hubo un nivel 11. Hubo un pasillo. Y del otro lado, alguien que ya te estaba esperando. Resultó que eras vos."
+  },
+  {
+    id: 11,
+    trigger: "path_acumulador_iv",
+    req: "Ruta V — T IV: El Que No Se Rinde",
+    icon: "♾️",
+    text: "Ya no jugás. El juego juega por vos. Y cuando por fin dejaste el dedo, el botón siguió latiendo solo. Un click. Otro. Otro. Nadie los cuenta."
   }
 ];
 
@@ -3804,7 +3869,7 @@ function checkAcumulador() {
 
 function updateMemoryMenuState() {
   var el = document.getElementById("menuMemoryState");
-  if (el) el.textContent = unlockedFragments.length + " / 8";
+  if (el) el.textContent = unlockedFragments.length + " / " + MEMORY_FRAGMENTS.length;
 }
 
 function showMemoryFragment(id) {
@@ -3895,7 +3960,7 @@ function buildMemory() {
   if (!list) return;
 
   list.innerHTML = "";
-  if (progress) progress.textContent = unlockedFragments.length + " / 8";
+  if (progress) progress.textContent = unlockedFragments.length + " / " + MEMORY_FRAGMENTS.length;
 
   MEMORY_FRAGMENTS.forEach(function(frag) {
     var card = document.createElement("div");
@@ -4042,6 +4107,7 @@ function refreshArsenal() { arsenal = safeJSON("chaosArsenal", {}); }
 function buyWeapon(id) {
   var w = WEAPONS.find(function(x) { return x.id === id; });
   if (!w) return;
+  if (w.rewardOnly) return;
   if (coins < w.price) return;
   coins -= w.price;
   try { localStorage.setItem("chaosCoins", String(coins)); } catch (e) {}
@@ -4095,9 +4161,15 @@ function buildArsenalPanel() {
       card.appendChild(counts);
       var buy = document.createElement("button");
       buy.className = "weapon-buy-btn";
-      buy.textContent = "Comprar (" + w.price + " 🪙)";
-      buy.disabled = coins < w.price;
-      buy.addEventListener("click", function(e) { e.stopPropagation(); buyWeapon(w.id); });
+      if (w.rewardOnly) {
+        buy.textContent = owned ? "EN TU INVENTARIO" : "SOLO POR RUTAS";
+        buy.disabled = true;
+        if (!owned) buy.classList.add("reward-only");
+      } else {
+        buy.textContent = "Comprar (" + w.price + " monedas)";
+        buy.disabled = coins < w.price;
+        buy.addEventListener("click", function(e) { e.stopPropagation(); buyWeapon(w.id); });
+      }
       card.appendChild(buy);
       var desc = document.createElement("div");
       desc.className = "weapon-desc";
@@ -4252,11 +4324,11 @@ function renderMenu() {
       ];
     } else if (menuCategory === "progreso") {
       items = [
+        { section: "paths", icon: "🗺️", label: "RUTAS" },
         { section: "achievements", icon: "🏆", label: "LOGROS" },
         { section: "collection", icon: "📦", label: "COLECCION" },
         { section: "memory", icon: "🕯️", label: "MEMORIA" },
-        { section: "stats", icon: "📊", label: "STATS" },
-        { section: "unlocked", icon: "📋", label: "HECHOS" }
+        { section: "stats", icon: "📊", label: "STATS" }
       ];
     }
 
@@ -4349,6 +4421,9 @@ function navigateToSection(section) {
       break;
     case "daily-rewards":
       if (typeof openDailyRewards === "function") openDailyRewards();
+      break;
+    case "paths":
+      if (typeof openPaths === "function") openPaths();
       break;
     case "unlocked":
       sidebarOpen = !sidebarOpen;
@@ -5006,6 +5081,716 @@ setInterval(function() {
     autoOpenDailyRewardsIfNeeded();
   }
 }, 60000);
+
+/* ============================================
+   PATHS (RUTAS) — Progresión por XP
+   ============================================
+   - XP global: 10 clicks manuales = 1 XP.
+   - Solo una ruta activa a la vez. Cambiar de ruta conserva el XP.
+   - Ruta completada = one-shot: al completarla, el XP se reinicia.
+   - Tiers en romanos (I, II, III, IV). Se completan al alcanzar el XP.
+   - Los Fragmentos de Conocimiento son un EXTRA de cada tier.
+*/
+
+var CLICKS_PER_XP = 10;
+
+// --- Lectura fresca del estado real del juego ---
+function pathTotalClicks() { return safeNumber("totalClicks", 0, true); }
+function pathBossKills() { return safeNumber("chaosBossKills", 0, true); }
+function pathHundredCount() { return safeNumber("chaosReachedHundredCount", 0, true); }
+function pathBoostCount() { return safeNumber("chaosBoostActivationsCount", 0, true); }
+function pathRouletteSpins() { return safeNumber("chaosRouletteSpins", 0, true); }
+function pathAchievementsUnlocked() { return safeJSON("chaosAchievements", []).length; }
+function pathArsenalBought(id) {
+  var a = safeJSON("chaosArsenal", {});
+  return (a[id] && a[id].bought) || 0;
+}
+function pathArsenalUsed(id) {
+  var a = safeJSON("chaosArsenal", {});
+  return (a[id] && a[id].used) || 0;
+}
+function pathCollected(id) { return (safeJSON("chaosCollected", {})[id] || 0); }
+function pathCollectedTier(tier) {
+  var counts = safeJSON("chaosCollected", {});
+  return COLLECTIBLES.filter(function(c) { return c.tier === tier; })
+    .filter(function(c) { return (counts[c.id] || 0) > 0; }).length;
+}
+function pathCollectedTotal() {
+  var counts = safeJSON("chaosCollected", {});
+  return COLLECTIBLES.filter(function(c) { return (counts[c.id] || 0) > 0; }).length;
+}
+function pathWeaponDamage() { return safeNumber("chaosWeaponDamage", 0, true); }
+function pathAllWeaponsBought() {
+  return ["pollo", "bazooka", "katana", "trex", "plus4"].every(function(id) {
+    return pathArsenalBought(id) >= 1;
+  });
+}
+
+// --- Datos de las rutas ---
+var PATHS = [
+  {
+    id: "caminante",
+    name: "EL CAMINANTE DEL CAOS",
+    icon: "🚶",
+    desc: "Los primeros pasos. Aprende a desatar el caos.",
+    xp: 100,
+    tiers: [
+      {
+        roman: "I", name: "PRIMEROS PASOS", xp: 30,
+        objectives: [
+          { text: "Alcanza 100 clicks", done: function() { return pathTotalClicks() >= 100; } },
+          { text: "Llega al 100% de caos", done: function() { return pathHundredCount() >= 1; } },
+          { text: "Activa tu primer boost", done: function() { return pathBoostCount() >= 1; } },
+          { text: "Atrapa un collectible", done: function() { return pathCollectedTotal() >= 1; } }
+        ],
+        rewards: [{ type: "coins", amount: 100 }],
+        fragments: [0, 1, 2]
+      },
+      {
+        roman: "II", name: "TOMANDO RITMO", xp: 30,
+        objectives: [
+          { text: "Alcanza 5,000 clicks", done: function() { return pathTotalClicks() >= 5000; } },
+          { text: "Gana una pelea contra el Chaos God", done: function() { return pathBossKills() >= 1; } },
+          { text: "Atrapa 3 collectibles", done: function() { return pathCollectedTotal() >= 3; } },
+          { text: "Gira la ruleta 5 veces", done: function() { return pathRouletteSpins() >= 5; } }
+        ],
+        rewards: [{ type: "coins", amount: 250 }],
+        fragments: [3, 4, 5]
+      },
+      {
+        roman: "III", name: "CAOS VETERANO", xp: 40,
+        objectives: [
+          { text: "Alcanza 25,000 clicks", done: function() { return pathTotalClicks() >= 25000; } },
+          { text: "Derrota al Chaos God 5 veces", done: function() { return pathBossKills() >= 5; } },
+          { text: "Atrapa un collectible legendario", done: function() { return pathCollectedTier("legendario") >= 1; } },
+          { text: "Compra las 5 armas del arsenal", done: function() { return pathAllWeaponsBought(); } }
+        ],
+        rewards: [{ type: "coins", amount: 500 }, { type: "frame", id: "explorador" }, { type: "boostPermanent", value: 2.5 }],
+        fragments: [6, 7, 8]
+      }
+    ]
+  },
+  {
+    id: "coleccionista",
+    name: "EL COLECCIONISTA OBSESIVO",
+    icon: "📦",
+    desc: "Nada se escapa. Atrapa todo lo que hay.",
+    xp: 400,
+    tiers: [
+      {
+        roman: "I", name: "CAZADOR", xp: 120,
+        objectives: [
+          { text: "Atrapa los 5 Comunes", done: function() { return pathCollectedTier("comun") >= 5; } },
+          { text: "Alcanza 5,000 clicks", done: function() { return pathTotalClicks() >= 5000; } },
+          { text: "Completa 5 logros", done: function() { return pathAchievementsUnlocked() >= 5; } }
+        ],
+        rewards: [{ type: "coins", amount: 150 }],
+        fragments: [9, 10, 11]
+      },
+      {
+        roman: "II", name: "RASTRO FRIO", xp: 120,
+        objectives: [
+          { text: "Atrapa los 2 Raros", done: function() { return pathCollectedTier("raro") >= 2; } },
+          { text: "Atrapa los 8 collectibles", done: function() { return pathCollectedTotal() >= 8; } },
+          { text: "Alcanza 20,000 clicks", done: function() { return pathTotalClicks() >= 20000; } }
+        ],
+        rewards: [{ type: "coins", amount: 400 }, { type: "collectible", id: "spiderman" }],
+        fragments: [12, 13, 14]
+      },
+      {
+        roman: "III", name: "OBSESION TOTAL", xp: 160,
+        objectives: [
+          { text: "Atrapa los 2 Legendarios", done: function() { return pathCollectedTier("legendario") >= 2; } },
+          { text: "Alcanza 50,000 clicks", done: function() { return pathTotalClicks() >= 50000; } },
+          { text: "Derrota al Chaos God 25 veces", done: function() { return pathBossKills() >= 25; } }
+        ],
+        rewards: [{ type: "coins", amount: 1000 }, { type: "theme", key: "neon" }],
+        fragments: [15, 16, 17, 18]
+      }
+    ]
+  },
+  {
+    id: "armero",
+    name: "EL ARMERO DEL APOCALIPSIS",
+    icon: "⚔️",
+    desc: "Domina el arsenal. Derrota al Chaos God en combate.",
+    xp: 1600,
+    tiers: [
+      {
+        roman: "I", name: "PRIMERA SANGRE", xp: 480,
+        objectives: [
+          { text: "Compra 2 armas", done: function() { return ["pollo", "bazooka", "katana", "trex", "plus4"].filter(function(id) { return pathArsenalBought(id) >= 1; }).length >= 2; } },
+          { text: "Infliges 50 de dano con armas", done: function() { return pathWeaponDamage() >= 50; } },
+          { text: "Gana una pelea usando 2 armas", done: function() { return localStorage.getItem("chaosWonWithTwoWeapons") === "1"; } }
+        ],
+        rewards: [{ type: "weapon", id: "laser" }],
+        fragments: [19, 20, 21]
+      },
+      {
+        roman: "II", name: "ARSENAL COMPLETO", xp: 480,
+        objectives: [
+          { text: "Compra las 5 armas", done: function() { return pathAllWeaponsBought(); } },
+          { text: "Infliges 200 de dano con armas", done: function() { return pathWeaponDamage() >= 200; } },
+          { text: "Alcanza 100,000 clicks", done: function() { return pathTotalClicks() >= 100000; } }
+        ],
+        rewards: [{ type: "weapon", id: "thor" }, { type: "weaponSlots", value: 3 }],
+        fragments: [22, 23, 24]
+      },
+      {
+        roman: "III", name: "MAESTRO DE LA GUERRA", xp: 640,
+        objectives: [
+          { text: "Usa el T-Rex 50 veces", done: function() { return pathArsenalUsed("trex") >= 50; } },
+          { text: "Derrota al Chaos God 40 veces", done: function() { return pathBossKills() >= 40; } },
+          { text: "Alcanza 250,000 clicks", done: function() { return pathTotalClicks() >= 250000; } }
+        ],
+        rewards: [{ type: "weaponSlots", value: 4 }, { type: "coins", amount: 2000 }],
+        fragments: [25, 26, 27, 28]
+      }
+    ]
+  },
+  {
+    id: "servidor",
+    name: "EL SERVIDOR DEL CHAOS GOD",
+    icon: "🕯️",
+    desc: "El Chaos God no ataca. Espera. Y mientras espera, el mundo cambia.",
+    xp: 6400,
+    tiers: [
+      {
+        roman: "I", name: "PROTOCOLO OCULTO", xp: 1920,
+        objectives: [
+          { text: "Alcanza 100,000 clicks", done: function() { return pathTotalClicks() >= 100000; } },
+          { text: "Completa 15 logros", done: function() { return pathAchievementsUnlocked() >= 15; } },
+          { text: "Gira la ruleta 25 veces", done: function() { return pathRouletteSpins() >= 25; } }
+        ],
+        rewards: [{ type: "coins", amount: 1500 }, { type: "theme", key: "glitch" }],
+        fragments: [29, 30, 31]
+      },
+      {
+        roman: "II", name: "SENAL RECIBIDA", xp: 1920,
+        objectives: [
+          { text: "Alcanza 250,000 clicks", done: function() { return pathTotalClicks() >= 250000; } },
+          { text: "Derrota al Chaos God 40 veces", done: function() { return pathBossKills() >= 40; } },
+          { text: "Atrapa los 8 collectibles 3 veces cada uno", done: function() { return COLLECTIBLES.every(function(c) { return pathCollected(c.id) >= 3; }); } }
+        ],
+        rewards: [{ type: "memory", fragment: 9 }],
+        fragments: [32, 33, 34]
+      },
+      {
+        roman: "III", name: "EL ARCHIVO", xp: 1920,
+        objectives: [
+          { text: "Alcanza 500,000 clicks", done: function() { return pathTotalClicks() >= 500000; } },
+          { text: "Completa 25 logros", done: function() { return pathAchievementsUnlocked() >= 25; } },
+          { text: "Infliges 1,000 de dano con armas", done: function() { return pathWeaponDamage() >= 1000; } }
+        ],
+        rewards: [{ type: "coins", amount: 2500 }, { type: "collectible", id: "spiderman" }],
+        fragments: [35, 36, 37]
+      },
+      {
+        roman: "IV", name: "LA VOZ DEL CAOS", xp: 640,
+        objectives: [
+          { text: "Alcanza 1,000,000 clicks", done: function() { return pathTotalClicks() >= 1000000; } },
+          { text: "Derrota al Chaos God 60 veces", done: function() { return pathBossKills() >= 60; } },
+          { text: "Completa todos los logros", done: function() { return pathAchievementsUnlocked() >= ACHIEVEMENTS.length; } }
+        ],
+        rewards: [{ type: "theme", key: "precipitacion" }, { type: "coins", amount: 5000 }],
+        fragments: [38, 39, 40, 41]
+      }
+    ]
+  },
+  {
+    id: "acumulador",
+    name: "EL ACUMULADOR ETERNO",
+    icon: "⚡",
+    desc: "Ya no juegas. El juego juega por vos.",
+    xp: 25600,
+    tiers: [
+      {
+        roman: "I", name: "EL UMBRAL", xp: 7680,
+        objectives: [
+          { text: "Alcanza 250,000 clicks", done: function() { return pathTotalClicks() >= 250000; } },
+          { text: "Derrota al Chaos God 50 veces", done: function() { return pathBossKills() >= 50; } },
+          { text: "Atrapa los 8 collectibles", done: function() { return pathCollectedTotal() >= 8; } }
+        ],
+        rewards: [{ type: "memory", fragment: 10 }, { type: "coins", amount: 5000 }],
+        fragments: [42, 43, 44]
+      },
+      {
+        roman: "II", name: "EL RITMO ETERNO", xp: 7680,
+        objectives: [
+          { text: "Alcanza 500,000 clicks", done: function() { return pathTotalClicks() >= 500000; } },
+          { text: "Activa 50 boosts", done: function() { return pathBoostCount() >= 50; } },
+          { text: "Llega al 100% de caos 30 veces", done: function() { return pathHundredCount() >= 30; } }
+        ],
+        rewards: [{ type: "boostPermanent", value: 4 }, { type: "autoCollectible", value: 5000 }],
+        fragments: [45, 46, 47]
+      },
+      {
+        roman: "III", name: "LA SUMA", xp: 7680,
+        objectives: [
+          { text: "Alcanza 750,000 clicks", done: function() { return pathTotalClicks() >= 750000; } },
+          { text: "Derrota al Chaos God 80 veces", done: function() { return pathBossKills() >= 80; } },
+          { text: "Infliges 5,000 de dano con armas", done: function() { return pathWeaponDamage() >= 5000; } }
+        ],
+        rewards: [{ type: "coins", amount: 10000 }, { type: "collectible", id: "spiderman" }],
+        fragments: []
+      },
+      {
+        roman: "IV", name: "EL QUE NO SE RINDE", xp: 2560,
+        objectives: [
+          { text: "Alcanza 1,500,000 clicks", done: function() { return pathTotalClicks() >= 1500000; } },
+          { text: "Derrota al Chaos God 100 veces", done: function() { return pathBossKills() >= 100; } },
+          { text: "Completa todos los logros", done: function() { return pathAchievementsUnlocked() >= ACHIEVEMENTS.length; } },
+          { text: "Llega al 100% de caos 50 veces", done: function() { return pathHundredCount() >= 50; } }
+        ],
+        rewards: [{ type: "memory", fragment: 11 }, { type: "passiveCoins", value: 30000 }, { type: "title", id: "insaciable" }],
+        fragments: []
+      }
+    ]
+  }
+];
+
+var pathState = safeJSON("chaosPathState", null);
+if (!pathState || typeof pathState !== "object") {
+  pathState = { xp: 0, activePath: "caminante", completedTiers: {}, completedPaths: [] };
+} else {
+  if (typeof pathState.xp !== "number") pathState.xp = 0;
+  if (typeof pathState.activePath !== "string") pathState.activePath = "caminante";
+  if (!pathState.completedTiers) pathState.completedTiers = {};
+  if (!Array.isArray(pathState.completedPaths)) pathState.completedPaths = [];
+}
+function persistPathState() { safeJSON_set("chaosPathState", pathState); }
+
+function getPathById(id) {
+  for (var i = 0; i < PATHS.length; i++) if (PATHS[i].id === id) return PATHS[i];
+  return null;
+}
+function isTierCompleted(pathId, tierIndex) {
+  return !!pathState.completedTiers[pathId + ":" + tierIndex];
+}
+function isPathCompleted(pathId) {
+  return pathState.completedPaths.indexOf(pathId) !== -1;
+}
+
+// Progreso del tier: XP ganado dentro de la ruta menos lo ya gastado en tiers previos
+function pathTierProgress(pathId, tierIndex) {
+  var path = getPathById(pathId);
+  if (!path) return { current: 0, need: 1, pct: 0 };
+  var base = 0;
+  for (var i = 0; i < PATHS.length; i++) {
+    if (PATHS[i].id === pathId) break;
+    if (isPathCompleted(PATHS[i].id)) base += PATHS[i].xp;
+  }
+  var spent = 0;
+  for (var t = 0; t < tierIndex; t++) spent += path.tiers[t].xp;
+  var earned = pathState.xp - base;
+  var need = path.tiers[tierIndex].xp;
+  var done = earned - spent;
+  if (done < 0) done = 0;
+  if (done > need) done = need;
+  return { current: done, need: need, pct: Math.floor((done / need) * 100) };
+}
+
+function pathTotalXpNeeded() {
+  var total = 0;
+  for (var i = 0; i < PATHS.length; i++) total += PATHS[i].xp;
+  return total;
+}
+
+// Buffer de XP: evita escribir en localStorage en cada click
+var _pathClickBuffer = 0;
+function accumulatePathXp() {
+  _pathClickBuffer++;
+  if (_pathClickBuffer < CLICKS_PER_XP) return;
+  var toConvert = _pathClickBuffer - (_pathClickBuffer % CLICKS_PER_XP);
+  _pathClickBuffer -= toConvert;
+  var baseXp = toConvert / CLICKS_PER_XP;
+  var mult = getPermanentBoost();
+  var gained = Math.floor(baseXp * mult);
+  if (gained < 1) gained = 1;
+  pathState.xp += gained;
+  persistPathState();
+  checkPathTierCompletion();
+  updatePathsMenuBadge();
+}
+
+// Verificar si el tier actual se completo y otorgar recompensas
+function checkPathTierCompletion() {
+  var path = getPathById(pathState.activePath);
+  if (!path) return;
+  for (var t = 0; t < path.tiers.length; t++) {
+    if (isTierCompleted(path.id, t)) continue;
+    var prog = pathTierProgress(path.id, t);
+    if (prog.current >= prog.need) {
+      completePathTier(path, t);
+    }
+    break; // solo un tier a la vez
+  }
+}
+
+function completePathTier(path, tierIndex) {
+  var tier = path.tiers[tierIndex];
+  pathState.completedTiers[path.id + ":" + tierIndex] = true;
+  persistPathState();
+
+  var msgs = [];
+  (tier.rewards || []).forEach(function(r) {
+    var m = grantPathReward(r);
+    if (m) msgs.push(m);
+  });
+  var fragMsg = grantPathFragments(tier.fragments || []);
+
+  var allDone = true;
+  for (var t = 0; t < path.tiers.length; t++) {
+    if (!isTierCompleted(path.id, t)) { allDone = false; break; }
+  }
+  if (allDone) {
+    pathState.completedPaths.push(path.id);
+    pathState.xp = 0;
+    for (var i = 0; i < PATHS.length; i++) {
+      if (!isPathCompleted(PATHS[i].id)) { pathState.activePath = PATHS[i].id; break; }
+    }
+    persistPathState();
+    showToast("¡RUTA " + path.name + " COMPLETADA!", "success");
+  } else {
+    showToast("¡T " + tier.roman + " de " + path.name + " completado!", "success");
+  }
+  if (msgs.length) showToast(msgs.join(" · "), "success");
+  if (fragMsg) showToast(fragMsg, "success");
+  if (typeof checkAchievements === "function") checkAchievements();
+  updatePathsMenuBadge();
+  buildPathsPanel();
+}
+
+// Cambiar de ruta activa (conserva el XP)
+function selectPath(pathId) {
+  if (pathId === pathState.activePath) return;
+  var path = getPathById(pathId);
+  if (!path) return;
+  if (isPathCompleted(pathId)) {
+    showToast("Esa ruta ya la completaste.", "error");
+    return;
+  }
+  pathState.activePath = pathId;
+  persistPathState();
+  showToast("Ruta activa: " + path.name, "success");
+  updatePathsMenuBadge();
+  buildPathsPanel();
+}
+
+/* ===== Recompensas de ruta ===== */
+function grantPathReward(r) {
+  switch (r.type) {
+    case "coins":
+      addCoins(r.amount, "path", false);
+      return "+" + r.amount + " monedas";
+    case "frame":
+      if (!inventory.frames) inventory.frames = [];
+      if (inventory.frames.indexOf(r.id) === -1) {
+        inventory.frames.push(r.id);
+        safeJSON_set("chaosInventory", inventory);
+        return "Marco desbloqueado";
+      }
+      return null;
+    case "picture":
+      if (inventory.pictures.indexOf(r.file) === -1) {
+        inventory.pictures.push(r.file);
+        safeJSON_set("chaosInventory", inventory);
+        return "Foto desbloqueada";
+      }
+      return null;
+    case "boostPermanent":
+      setPermanentBoost(r.value);
+      return "Boost x" + r.value + " permanente";
+    case "theme":
+      if (ownedThemes.indexOf(r.key) === -1) {
+        ownedThemes.push(r.key);
+        safeJSON_set("chaosOwnedThemes", ownedThemes);
+        return "Tema " + r.key.toUpperCase();
+      }
+      return null;
+    case "weapon":
+      grantPathWeapon(r.id);
+      return "Arma desbloqueada";
+    case "weaponSlots":
+      setWeaponSlots(r.value);
+      return r.value + " armas por pelea";
+    case "collectible":
+      spawnPathCollectible(r.id);
+      return r.id.toUpperCase() + " aparecio!";
+    case "memory":
+      grantPathMemoryFragment(r.fragment);
+      return "Fragmento de memoria #" + r.fragment;
+    case "autoCollectible":
+      setAutoCollectible(r.value);
+      return "Collectible automatico cada " + r.value;
+    case "passiveCoins":
+      setPassiveCoins(r.value);
+      return "Monedas pasivas activadas";
+    case "title":
+      setPathTitle(r.id);
+      return "Titulo desbloqueado";
+  }
+  return null;
+}
+
+// Fragmentos de Conocimiento (ex-hechos) — extra de cada tier
+function grantPathFragments(indices) {
+  var known = safeJSON("chaosKnowledge", []);
+  if (!Array.isArray(known)) known = [];
+  var granted = [];
+  indices.forEach(function(idx) {
+    if (typeof FACTS[idx] !== "string") return;
+    if (known.indexOf(idx) !== -1) return;
+    known.push(idx);
+    granted.push(idx);
+  });
+  if (!granted.length) return null;
+  safeJSON_set("chaosKnowledge", known);
+  return granted.length + " fragmento(s) de conocimiento";
+}
+
+// --- Recompensas permanentes ---
+function setPermanentBoost(value) {
+  var current = safeNumber("chaosPermanentBoost", 1, false);
+  if (value > current) localStorage.setItem("chaosPermanentBoost", String(value));
+}
+function getPermanentBoost() {
+  var b = safeNumber("chaosPermanentBoost", 1, false);
+  return b > 1 ? b : 1;
+}
+function setWeaponSlots(value) {
+  var current = safeNumber("chaosWeaponSlots", 2, true);
+  if (value > current) localStorage.setItem("chaosWeaponSlots", String(value));
+}
+function getWeaponSlots() { return safeNumber("chaosWeaponSlots", 2, true); }
+function setAutoCollectible(value) {
+  var current = safeNumber("chaosAutoCollectible", 0, true);
+  if (value > current) localStorage.setItem("chaosAutoCollectible", String(value));
+}
+function getAutoCollectible() { return safeNumber("chaosAutoCollectible", 0, true); }
+function setPassiveCoins(value) {
+  var current = safeNumber("chaosPassiveCoins", 0, true);
+  if (value > current) localStorage.setItem("chaosPassiveCoins", String(value));
+}
+function getPassiveCoins() { return safeNumber("chaosPassiveCoins", 0, true); }
+function setPathTitle(id) {
+  try { localStorage.setItem("chaosPathTitle", id); } catch (e) {}
+}
+
+// --- Armas de ruta ---
+var PATH_WEAPONS = {
+  laser: { id: "laser", name: "Laser Gun", src: "assets/images/laser-gun.png" },
+  thor: { id: "thor", name: "Martillo de Thor", src: "assets/images/martillo-de-Thor.png" }
+};
+function grantPathWeapon(id) {
+  var w = PATH_WEAPONS[id];
+  if (!w) return;
+  var a = safeJSON("chaosArsenal", {});
+  if (!a[id]) a[id] = { bought: 0, used: 0 };
+  a[id].bought = (a[id].bought || 0) + 1;
+  safeJSON_set("chaosArsenal", a);
+  if (typeof refreshArsenal === "function") refreshArsenal();
+  if (typeof buildArsenalPanel === "function") buildArsenalPanel();
+}
+
+// --- Collectible de ruta ---
+function spawnPathCollectible(id) {
+  if (typeof spawnCollectibleById === "function") spawnCollectibleById(id);
+}
+
+// --- Fragmento de memoria extra (9, 10, 11) ---
+// Usa unlockMemoryFragment() que ya existe en app.js
+function grantPathMemoryFragment(num) {
+  if (typeof unlockMemoryFragment === "function") unlockMemoryFragment(num);
+}
+
+/* ===== UI: Panel de Rutas ===== */
+function buildPathsPanel() {
+  var list = document.getElementById("pathsList");
+  var xpBar = document.getElementById("pathsXpBar");
+  if (!list) return;
+  list.innerHTML = "";
+
+  if (xpBar) {
+    var earnedTotal = 0;
+    for (var pi = 0; pi < PATHS.length; pi++) {
+      if (isPathCompleted(PATHS[pi].id)) earnedTotal += PATHS[pi].xp;
+    }
+    var totalNeeded = pathTotalXpNeeded();
+    var shown = earnedTotal + pathState.xp;
+    var pct = totalNeeded > 0 ? Math.floor((shown / totalNeeded) * 100) : 0;
+    xpBar.innerHTML =
+      '<div class="paths-xp-numbers"><span>XP TOTAL: ' + shown + " / " + totalNeeded + '</span>' +
+      '<span class="paths-xp-pct">' + pct + '%</span></div>' +
+      '<div class="paths-xp-track"><div class="paths-xp-fill" style="width:' + pct + '%"></div></div>' +
+      '<div class="paths-xp-hint">10 clicks = 1 XP · Solo clicks manuales</div>';
+  }
+
+  PATHS.forEach(function(path) {
+    var isActive = path.id === pathState.activePath;
+    var isDone = isPathCompleted(path.id);
+
+    var card = document.createElement("div");
+    card.className = "path-card" + (isActive ? " active" : "") + (isDone ? " completed" : "");
+
+    var head = document.createElement("div");
+    head.className = "path-card-head";
+    var icon = document.createElement("span");
+    icon.className = "path-icon";
+    icon.textContent = path.icon;
+    var titleWrap = document.createElement("div");
+    titleWrap.className = "path-title-wrap";
+    var name = document.createElement("div");
+    name.className = "path-name";
+    name.textContent = path.name;
+    var desc = document.createElement("div");
+    desc.className = "path-desc";
+    desc.textContent = path.desc;
+    titleWrap.appendChild(name);
+    titleWrap.appendChild(desc);
+    head.appendChild(icon);
+    head.appendChild(titleWrap);
+
+    var statusTag = document.createElement("span");
+    statusTag.className = "path-status";
+    if (isDone) { statusTag.textContent = "COMPLETADA"; statusTag.classList.add("done"); }
+    else if (isActive) { statusTag.textContent = "ACTIVA"; statusTag.classList.add("active"); }
+    else { statusTag.textContent = path.xp + " XP"; }
+    head.appendChild(statusTag);
+    card.appendChild(head);
+
+    var tiersWrap = document.createElement("div");
+    tiersWrap.className = "path-tiers";
+    path.tiers.forEach(function(tier, ti) {
+      var tierDone = isTierCompleted(path.id, ti);
+      var tierEl = document.createElement("div");
+      tierEl.className = "path-tier" + (tierDone ? " done" : "");
+
+      var tierHead = document.createElement("div");
+      tierHead.className = "path-tier-head";
+      var roman = document.createElement("span");
+      roman.className = "path-tier-roman";
+      roman.textContent = "T " + tier.roman;
+      var tName = document.createElement("span");
+      tName.className = "path-tier-name";
+      tName.textContent = tier.name;
+      var tXp = document.createElement("span");
+      tXp.className = "path-tier-xp";
+      tXp.textContent = tier.xp + " XP";
+      tierHead.appendChild(roman);
+      tierHead.appendChild(tName);
+      tierHead.appendChild(tXp);
+      tierEl.appendChild(tierHead);
+
+      if (!tierDone && isActive) {
+        var prog = pathTierProgress(path.id, ti);
+        var track = document.createElement("div");
+        track.className = "path-tier-track";
+        var fill = document.createElement("div");
+        fill.className = "path-tier-fill";
+        fill.style.width = prog.pct + "%";
+        track.appendChild(fill);
+        tierEl.appendChild(track);
+      }
+
+      var objWrap = document.createElement("div");
+      objWrap.className = "path-objectives";
+      (tier.objectives || []).forEach(function(obj) {
+        var objEl = document.createElement("div");
+        var met = false;
+        try { met = obj.done(); } catch (e) { met = false; }
+        objEl.className = "path-objective" + (met ? " met" : "");
+        var check = document.createElement("span");
+        check.className = "path-obj-check";
+        check.textContent = met ? "✓" : "○";
+        var txt = document.createElement("span");
+        txt.className = "path-obj-text";
+        txt.textContent = obj.text;
+        objEl.appendChild(check);
+        objEl.appendChild(txt);
+        objWrap.appendChild(objEl);
+      });
+      tierEl.appendChild(objWrap);
+
+      var rewWrap = document.createElement("div");
+      rewWrap.className = "path-tier-rewards";
+      (tier.rewards || []).forEach(function(r) {
+        var rEl = document.createElement("span");
+        rEl.className = "path-reward-chip";
+        rEl.textContent = pathRewardLabel(r);
+        rewWrap.appendChild(rEl);
+      });
+      if (tier.fragments && tier.fragments.length) {
+        var fEl = document.createElement("span");
+        fEl.className = "path-reward-chip fragments";
+        fEl.textContent = "+" + tier.fragments.length + " fragmento(s)";
+        rewWrap.appendChild(fEl);
+      }
+      tierEl.appendChild(rewWrap);
+
+      tiersWrap.appendChild(tierEl);
+    });
+    card.appendChild(tiersWrap);
+
+    if (!isDone && !isActive) {
+      var btn = document.createElement("button");
+      btn.className = "path-select-btn";
+      btn.textContent = "ELEGIR ESTA RUTA";
+      btn.onclick = function() { selectPath(path.id); };
+      card.appendChild(btn);
+    }
+
+    list.appendChild(card);
+  });
+}
+
+function pathRewardLabel(r) {
+  switch (r.type) {
+    case "coins": return r.amount + " monedas";
+    case "frame": return "Marco";
+    case "picture": return "Foto";
+    case "boostPermanent": return "Boost x" + r.value;
+    case "theme": return r.key.toUpperCase();
+    case "weapon": return (PATH_WEAPONS[r.id] ? PATH_WEAPONS[r.id].name : r.id);
+    case "weaponSlots": return r.value + " armas/pelea";
+    case "collectible": return r.id;
+    case "memory": return "Fragmento #" + r.fragment;
+    case "autoCollectible": return "Auto cada " + r.value;
+    case "passiveCoins": return "Monedas pasivas";
+    case "title": return "Titulo";
+  }
+  return r.type;
+}
+
+function openPaths() {
+  var p = document.getElementById("pathsPanel");
+  if (!p) return;
+  buildPathsPanel();
+  p.classList.add("open");
+}
+// Expuesto en window para debug/testing (mismo patron que startBossArena)
+if (typeof window !== "undefined") {
+  window.openPaths = openPaths;
+  window.closePaths = closePaths;
+  window.getPathState = function() { return pathState; };
+}
+function closePaths() {
+  var p = document.getElementById("pathsPanel");
+  if (p) p.classList.remove("open");
+}
+function updatePathsMenuBadge() {
+  var badge = document.getElementById("menuPathsState");
+  if (!badge) return;
+  var path = getPathById(pathState.activePath);
+  if (!path) { badge.textContent = ""; return; }
+  badge.textContent = pathState.xp + " XP";
+}
+
+var pathsPanelClose = document.getElementById("pathsPanelClose");
+if (pathsPanelClose) {
+  pathsPanelClose.addEventListener("click", closePaths);
+}
+updatePathsMenuBadge();
 
 })();
 

@@ -5,13 +5,13 @@
    for runtime fetches. Aggressive caching so the game works fully offline.
 */
 
-const CACHE_VERSION = "chaos-v51-daily-rewards";
+const CACHE_VERSION = "chaos-v52-rutas";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=50-acumulador",
-  "./app.js?v=50-acumulador",
-  "./boss.js?v=50-acumulador",
+  "./styles.css?v=52-rutas",
+  "./app.js?v=52-rutas",
+  "./boss.js?v=52-rutas",
   "./manifest.json",
   "./assets/icons/icon-192.png",
   "./assets/icons/icon-512.png",
@@ -70,6 +70,11 @@ const APP_SHELL = [
   // Daily rewards
   "./assets/images/deal-with-it.png",
   "./assets/images/noob.png",
+
+  // Paths (rutas) rewards
+  "./assets/images/spider-man.png",
+  "./assets/images/laser-gun.png",
+  "./assets/images/martillo-de-Thor.png",
 
   // Sounds
   "./assets/sounds/mouse-click-sound.mp3",

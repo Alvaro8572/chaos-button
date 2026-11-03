@@ -14,8 +14,8 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Bungee&amp;family=Monoton&amp;family=Rubik+Glitch&amp;family=Sixtyfour&amp;family=Honk&amp;family=Jersey+10&amp;family=Micro+5&amp;family=Nabla&amp;family=Orbitron:wght@400;600;900&amp;family=Press+Start+2P&amp;family=Rubik+Burned&amp;family=Smooch+Sans:wght@900&amp;family=Tilt+Prism&amp;family=UnifrakturMaguntia&amp;family=Dancing+Script:wght@400;700&amp;family=Great+Vibes&amp;family=Creepster&amp;family=Bowlby+One&amp;family=Black+Ops+One&amp;display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="styles.css?v=51-daily-rewards">
-<link rel="icon" href="assets/logo.jpg?v=51-daily-rewards" type="image/jpeg">
+<link rel="stylesheet" href="styles.css?v=52-rutas">
+<link rel="icon" href="assets/logo.jpg?v=52-rutas" type="image/jpeg">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#ff0055">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -27,7 +27,7 @@
 // any leftover SW before registering the new one. This makes hard-refresh
 // unnecessary after every deploy.
 (function() {
-  var CURRENT_BUILD = "51-daily-rewards";  // must match the sw.js?v= below
+  var CURRENT_BUILD = "52-rutas";  // must match the sw.js?v= below
   var savedBuild = null;
   try { savedBuild = localStorage.getItem("chaosBuildId"); } catch (e) {}
   if (savedBuild && savedBuild !== CURRENT_BUILD && "serviceWorker" in navigator) {
@@ -46,7 +46,7 @@
 <script>
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", function() {
-        navigator.serviceWorker.register("sw.js?v=51-daily-rewards").then(function(reg) {
+        navigator.serviceWorker.register("sw.js?v=52-rutas").then(function(reg) {
         console.log("[PWA] Service Worker registered:", reg.scope);
 
         // Aggressive update strategy: detect new SW and force activation
@@ -108,6 +108,11 @@
       <span class="menu-icon">🎁</span>
       <span class="menu-label">DIARIAS</span>
       <span class="menu-state" id="menuDailyRewardsState"></span>
+    </button>
+    <button class="menu-item" data-section="paths">
+      <span class="menu-icon">🗺️</span>
+      <span class="menu-label">RUTAS</span>
+      <span class="menu-state" id="menuPathsState"></span>
     </button>
     <button class="menu-item" data-section="profile">
       <span class="menu-icon">??</span>
@@ -472,7 +477,7 @@
 
 
 
-<script src="app.js?v=51-daily-rewards" defer></script>
+<script src="app.js?v=52-rutas" defer></script>
 
 
 
@@ -481,7 +486,7 @@
 <div id="memoryPanel" role="dialog" aria-label="Panel de memoria">
   <div id="memoryPanelHeader">
     <span id="memoryPanelTitle">MEMORIA</span>
-    <span id="memoryProgress">0 / 8</span>
+    <span id="memoryProgress">0 / 11</span>
     <button id="memoryPanelClose" aria-label="Cerrar memoria">×</button>
   </div>
   <div id="memoryList"></div>
@@ -569,7 +574,7 @@
   </div>
   <audio id="bossMusic" loop preload="auto"></audio>
 </div>
-<script src="boss.js?v=51-daily-rewards" defer></script>
+<script src="boss.js?v=52-rutas" defer></script>
 
 <div id="collectiblesPanel" role="dialog" aria-label="Coleccionables">
   <div id="collectiblesPanelInner">
@@ -599,6 +604,17 @@
     </div>
     <div id="dailyRewardsStreakInfo"></div>
     <div id="dailyRewardsGrid" class="daily-rewards-grid"></div>
+  </div>
+</div>
+
+<div id="pathsPanel" role="dialog" aria-label="Rutas">
+  <div id="pathsPanelInner">
+    <div id="pathsPanelHeader">
+      <span id="pathsPanelTitle">RUTAS</span>
+      <button id="pathsPanelClose" class="panel-close" aria-label="Cerrar rutas">×</button>
+    </div>
+    <div id="pathsXpBar"></div>
+    <div id="pathsList"></div>
   </div>
 </div>
 </body></html>

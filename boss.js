@@ -40,13 +40,25 @@
   var fightActive = false;
   var timerInterval = null;
   var bossMusicFade = null;
+  var bossStunnedUntil = 0;
+
+  // Maximo de armas por pelea. Base = 2. Las rutas pueden subirlo a 3 o 4.
+  function getMaxWeaponSlots() {
+    var slots = 2;
+    try { slots = parseInt(localStorage.getItem("chaosWeaponSlots") || "2", 10) || 2; } catch (e) {}
+    if (slots < 2) slots = 2;
+    if (slots > 4) slots = 4;
+    return slots;
+  }
 
   var BOSS_WEAPONS = [
     { id: "pollo", src: "assets/images/pollo-kentucky.png", name: "Pollo" },
     { id: "bazooka", src: "assets/images/bazooka.png", name: "Bazooka" },
     { id: "katana", src: "assets/images/katana.png", name: "Katana" },
     { id: "trex", src: "assets/images/t-rex.png", name: "T-Rex" },
-    { id: "plus4", src: "assets/images/plus4.png", name: "+4" }
+    { id: "plus4", src: "assets/images/plus4.png", name: "+4" },
+    { id: "laser", src: "assets/images/laser-gun.png", name: "Laser Gun" },
+    { id: "thor", src: "assets/images/martillo-de-Thor.png", name: "Martillo de Thor" }
   ];
   var usedThisFight = {};
   var usedCount = 0;
@@ -95,7 +107,7 @@
     for (var i = 0; i < btns.length; i++) {
       var id = btns[i].getAttribute("data-weapon");
       var remaining = getWeaponRemaining(id);
-      var capReached = usedCount >= 2;
+      var capReached = usedCount >= getMaxWeaponSlots();
       var alreadyUsed = !!usedThisFight[id];
       var noStock = remaining <= 0;
       var disabled = noStock || alreadyUsed || capReached;
@@ -122,7 +134,7 @@
 
   function activateWeapon(id) {
     if (!fightActive) return;
-    if (usedCount >= 2) return;
+    if (usedCount >= getMaxWeaponSlots()) return;
     if (usedThisFight[id]) return;
     if (getWeaponRemaining(id) <= 0) return;
     usedThisFight[id] = true;
@@ -152,6 +164,29 @@
       weaponTimers.push(setInterval(function() { if (fightActive) { bossHit(); addWeaponDamage(1); } }, 1000));
     } else if (id === "plus4") {
       weaponTimers.push(setInterval(function() { if (fightActive) { bossHit(); addWeaponDamage(1); } }, 250));
+    } else if (id === "laser") {
+      bossHp = Math.max(0, bossHp - 35);
+      addWeaponDamage(35);
+      flashBoss();
+      updateHpBar();
+      if (bossHp <= 0) { updateWeaponButtons(); winFight(); return; }
+      weaponTimers.push(setInterval(function() { if (fightActive) { bossHit(); addWeaponDamage(1); } }, 1000));
+    } else if (id === "thor") {
+      bossHp = Math.max(0, bossHp - 30);
+      addWeaponDamage(30);
+      flashBoss();
+      updateHpBar();
+      if (bossHp <= 0) { updateWeaponButtons(); winFight(); return; }
+      // Aturde al boss: no puede ser clickeado durante 2s
+      bossStunnedUntil = Date.now() + 2000;
+      $btn.disabled = true;
+      $btnText.textContent = "ATURDIDO!";
+      setTimeout(function() {
+        if (!fightActive) return;
+        bossStunnedUntil = 0;
+        $btn.disabled = false;
+        $btnText.textContent = "CLIQUEÁ PARA ATACAR";
+      }, 2000);
     }
     updateWeaponButtons();
   }
@@ -219,6 +254,7 @@
 
   function bossHit() {
     if (!fightActive) return;
+    if (Date.now() < bossStunnedUntil) return;
     totalClicks++;
     bossHp--;
     flashBoss();
@@ -328,6 +364,7 @@
     bossHp = currentStage.hp;
     timeLeft = TIME_LIMIT;
     totalClicks = 0;
+    bossStunnedUntil = 0;
     $imgWrap.classList.remove("boss-defeated", "boss-victor");
     $arena.style.display = "flex";
     document.body.style.overflow = "hidden";
