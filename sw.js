@@ -3,15 +3,21 @@
    ============================================
    Strategy: pre-cache everything in install, then stale-while-revalidate
    for runtime fetches. Aggressive caching so the game works fully offline.
+
+   Build-token guard: every asset URL carries a ?v=<build> query. When the
+   requested token differs from CACHE_VERSION, the cached copy is IGNORED
+   and the network is used instead. This prevents a stale SW from serving
+   old CSS/JS forever after a deploy.
 */
 
-const CACHE_VERSION = "chaos-v54-rutas-classic";
+const CACHE_VERSION = "chaos-v56-sw-fix";
+const BUILD_TOKEN = "56-sw-fix";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=54-rutas-classic",
-  "./app.js?v=54-rutas-classic",
-  "./boss.js?v=54-rutas-classic",
+  "./styles.css?v=56-sw-fix",
+  "./app.js?v=56-sw-fix",
+  "./boss.js?v=56-sw-fix",
   "./manifest.json",
   "./assets/icons/icon-192.png",
   "./assets/icons/icon-512.png",
@@ -156,6 +162,27 @@ self.addEventListener("fetch", function(event) {
         return caches.match(req).then(function(cached) {
           return cached || new Response("Offline", { status: 503, statusText: "Offline" });
         });
+      })
+    );
+    return;
+  }
+
+  // Build-token guard: if the URL carries a ?v= token that is NOT the current
+  // build, bypass the cache entirely and go to the network. A stale SW can
+  // therefore never serve an old CSS/JS bundle after a deploy.
+  var reqToken = url.searchParams.get("v");
+  var tokenMismatch = reqToken !== null && reqToken !== BUILD_TOKEN;
+
+  if (tokenMismatch) {
+    event.respondWith(
+      fetch(req).then(function(networkRes) {
+        if (networkRes && networkRes.status === 200) {
+          var copy = networkRes.clone();
+          caches.open(CACHE_VERSION).then(function(cache) { cache.put(req, copy); });
+        }
+        return networkRes;
+      }).catch(function() {
+        return new Response("Offline", { status: 503, statusText: "Offline" });
       })
     );
     return;
