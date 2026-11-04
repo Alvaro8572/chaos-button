@@ -5212,6 +5212,8 @@ var PATHS = [
     tiers: [
       {
         roman: "I", name: "PRIMEROS PASOS", xp: 30,
+
+        icon: "🪙",
         objectives: [
           { text: "Alcanza 100 clicks", done: function() { return pathTotalClicks() >= 100; } },
           { text: "Llega al 100% de caos", done: function() { return pathHundredCount() >= 1; } },
@@ -5223,6 +5225,8 @@ var PATHS = [
       },
       {
         roman: "II", name: "TOMANDO RITMO", xp: 30,
+
+        icon: "🪙",
         objectives: [
           { text: "Alcanza 5,000 clicks", done: function() { return pathTotalClicks() >= 5000; } },
           { text: "Gana una pelea contra el Chaos God", done: function() { return pathBossKills() >= 1; } },
@@ -5234,6 +5238,8 @@ var PATHS = [
       },
       {
         roman: "III", name: "CAOS VETERANO", xp: 40,
+
+        icon: "🪙",
         objectives: [
           { text: "Alcanza 25,000 clicks", done: function() { return pathTotalClicks() >= 25000; } },
           { text: "Derrota al Chaos God 5 veces", done: function() { return pathBossKills() >= 5; } },
@@ -5254,6 +5260,8 @@ var PATHS = [
     tiers: [
       {
         roman: "I", name: "CAZADOR", xp: 120,
+
+        icon: "🪙",
         objectives: [
           { text: "Atrapa los 5 Comunes", done: function() { return pathCollectedTier("comun") >= 5; } },
           { text: "Alcanza 5,000 clicks", done: function() { return pathTotalClicks() >= 5000; } },
@@ -5264,6 +5272,8 @@ var PATHS = [
       },
       {
         roman: "II", name: "RASTRO FRIO", xp: 120,
+
+        icon: "assets/images/spider-man.png",
         objectives: [
           { text: "Atrapa los 2 Raros", done: function() { return pathCollectedTier("raro") >= 2; } },
           { text: "Atrapa los 8 collectibles", done: function() { return pathCollectedTotal() >= 8; } },
@@ -5274,6 +5284,8 @@ var PATHS = [
       },
       {
         roman: "III", name: "OBSESION TOTAL", xp: 160,
+
+        icon: "🪙",
         objectives: [
           { text: "Atrapa los 2 Legendarios", done: function() { return pathCollectedTier("legendario") >= 2; } },
           { text: "Alcanza 50,000 clicks", done: function() { return pathTotalClicks() >= 50000; } },
@@ -5293,6 +5305,8 @@ var PATHS = [
     tiers: [
       {
         roman: "I", name: "PRIMERA SANGRE", xp: 480,
+
+        icon: "assets/images/laser-gun.png",
         objectives: [
           { text: "Compra 2 armas", done: function() { return ["pollo", "bazooka", "katana", "trex", "plus4"].filter(function(id) { return pathArsenalBought(id) >= 1; }).length >= 2; } },
           { text: "Infliges 50 de dano con armas", done: function() { return pathWeaponDamage() >= 50; } },
@@ -5303,6 +5317,8 @@ var PATHS = [
       },
       {
         roman: "II", name: "ARSENAL COMPLETO", xp: 480,
+
+        icon: "assets/images/martillo-de-Thor.png",
         objectives: [
           { text: "Compra las 5 armas", done: function() { return pathAllWeaponsBought(); } },
           { text: "Infliges 200 de dano con armas", done: function() { return pathWeaponDamage() >= 200; } },
@@ -5313,6 +5329,8 @@ var PATHS = [
       },
       {
         roman: "III", name: "MAESTRO DE LA GUERRA", xp: 640,
+
+        icon: "📈",
         objectives: [
           { text: "Usa el T-Rex 50 veces", done: function() { return pathArsenalUsed("trex") >= 50; } },
           { text: "Derrota al Chaos God 40 veces", done: function() { return pathBossKills() >= 40; } },
@@ -5332,6 +5350,8 @@ var PATHS = [
     tiers: [
       {
         roman: "I", name: "PROTOCOLO OCULTO", xp: 1920,
+
+        icon: "🪙",
         objectives: [
           { text: "Alcanza 100,000 clicks", done: function() { return pathTotalClicks() >= 100000; } },
           { text: "Completa 15 logros", done: function() { return pathAchievementsUnlocked() >= 15; } },
@@ -5342,6 +5362,8 @@ var PATHS = [
       },
       {
         roman: "II", name: "SENAL RECIBIDA", xp: 1920,
+
+        icon: "🕯️",
         objectives: [
           { text: "Alcanza 250,000 clicks", done: function() { return pathTotalClicks() >= 250000; } },
           { text: "Derrota al Chaos God 40 veces", done: function() { return pathBossKills() >= 40; } },
@@ -5352,6 +5374,8 @@ var PATHS = [
       },
       {
         roman: "III", name: "EL ARCHIVO", xp: 1920,
+
+        icon: "assets/images/spider-man.png",
         objectives: [
           { text: "Alcanza 500,000 clicks", done: function() { return pathTotalClicks() >= 500000; } },
           { text: "Completa 25 logros", done: function() { return pathAchievementsUnlocked() >= 25; } },
@@ -5362,6 +5386,8 @@ var PATHS = [
       },
       {
         roman: "IV", name: "LA VOZ DEL CAOS", xp: 640,
+
+        icon: "📈",
         objectives: [
           { text: "Alcanza 1,000,000 clicks", done: function() { return pathTotalClicks() >= 1000000; } },
           { text: "Derrota al Chaos God 60 veces", done: function() { return pathBossKills() >= 60; } },
@@ -5381,6 +5407,8 @@ var PATHS = [
     tiers: [
       {
         roman: "I", name: "EL UMBRAL", xp: 7680,
+
+        icon: "🕯️",
         objectives: [
           { text: "Alcanza 250,000 clicks", done: function() { return pathTotalClicks() >= 250000; } },
           { text: "Derrota al Chaos God 50 veces", done: function() { return pathBossKills() >= 50; } },
@@ -5391,6 +5419,8 @@ var PATHS = [
       },
       {
         roman: "II", name: "EL RITMO ETERNO", xp: 7680,
+
+        icon: "⚡",
         objectives: [
           { text: "Alcanza 500,000 clicks", done: function() { return pathTotalClicks() >= 500000; } },
           { text: "Activa 50 boosts", done: function() { return pathBoostCount() >= 50; } },
@@ -5401,6 +5431,8 @@ var PATHS = [
       },
       {
         roman: "III", name: "LA SUMA", xp: 7680,
+
+        icon: "assets/images/spider-man.png",
         objectives: [
           { text: "Alcanza 750,000 clicks", done: function() { return pathTotalClicks() >= 750000; } },
           { text: "Derrota al Chaos God 80 veces", done: function() { return pathBossKills() >= 80; } },
@@ -5411,6 +5443,8 @@ var PATHS = [
       },
       {
         roman: "IV", name: "EL QUE NO SE RINDE", xp: 2560,
+
+        icon: "🕯️",
         objectives: [
           { text: "Alcanza 1,500,000 clicks", done: function() { return pathTotalClicks() >= 1500000; } },
           { text: "Derrota al Chaos God 100 veces", done: function() { return pathBossKills() >= 100; } },
@@ -5839,22 +5873,45 @@ function buildPathsPanel() {
       var tierEl = document.createElement("div");
       tierEl.className = "path-tier" + (tierDone ? " done" : "");
 
-      // Cabecera del tier: romano + nombre + XP a la derecha
-      var tierHead = document.createElement("div");
-      tierHead.className = "path-tier-head";
+      // --- Cabecera de la recompensa: imagen circular (formato clasico) ---
+      var top = document.createElement("div");
+      top.className = "path-tier-top";
+
+      var imgWrap = document.createElement("div");
+      imgWrap.className = "path-tier-img-wrap";
+      var isImg = typeof tier.icon === "string" && tier.icon.indexOf("assets/") === 0;
+      if (isImg) {
+        var img = document.createElement("img");
+        img.className = "path-tier-img";
+        img.src = tier.icon;
+        img.alt = tier.name;
+        img.onerror = function() { this.style.display = "none"; };
+        imgWrap.appendChild(img);
+      } else {
+        imgWrap.classList.add("emoji");
+        imgWrap.textContent = tier.icon;
+      }
+      top.appendChild(imgWrap);
+
+      var infoWrap = document.createElement("div");
+      infoWrap.className = "path-tier-info";
+
+      var headRow = document.createElement("div");
+      headRow.className = "path-tier-head";
       var roman = document.createElement("span");
       roman.className = "path-tier-roman";
       roman.textContent = tier.roman;
-      var tName = document.createElement("span");
-      tName.className = "path-tier-name";
-      tName.textContent = tier.name;
       var tXp = document.createElement("span");
       tXp.className = "path-tier-xp";
-      tXp.textContent = tierDone ? "✓" : tier.xp + " XP";
-      tierHead.appendChild(roman);
-      tierHead.appendChild(tName);
-      tierHead.appendChild(tXp);
-      tierEl.appendChild(tierHead);
+      tXp.textContent = tierDone ? "\u2713" : tier.xp + " XP";
+      headRow.appendChild(roman);
+      headRow.appendChild(tXp);
+      infoWrap.appendChild(headRow);
+
+      var tName = document.createElement("div");
+      tName.className = "path-tier-name";
+      tName.textContent = tier.name;
+      infoWrap.appendChild(tName);
 
       // Barra de progreso del tier
       if (!tierDone) {
@@ -5865,13 +5922,15 @@ function buildPathsPanel() {
         fill.className = "path-tier-fill";
         fill.style.width = prog.pct + "%";
         track.appendChild(fill);
-        tierEl.appendChild(track);
-
+        infoWrap.appendChild(track);
         var progText = document.createElement("div");
         progText.className = "path-tier-progress";
         progText.textContent = prog.current + " / " + prog.need + " XP";
-        tierEl.appendChild(progText);
+        infoWrap.appendChild(progText);
       }
+
+      top.appendChild(infoWrap);
+      tierEl.appendChild(top);
 
       // Objetivos en una linea compacta
       var objWrap = document.createElement("div");
@@ -5883,7 +5942,7 @@ function buildPathsPanel() {
         objEl.className = "path-objective" + (met ? " met" : "");
         var check = document.createElement("span");
         check.className = "path-obj-check";
-        check.textContent = met ? "✓" : "○";
+        check.textContent = met ? "\u2713" : "\u25CB";
         var txt = document.createElement("span");
         txt.className = "path-obj-text";
         txt.textContent = obj.text;
