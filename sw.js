@@ -5,13 +5,13 @@
    for runtime fetches. Aggressive caching so the game works fully offline.
 */
 
-const CACHE_VERSION = "chaos-v52-rutas";
+const CACHE_VERSION = "chaos-v53-rutas-ui";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=52-rutas",
-  "./app.js?v=52-rutas",
-  "./boss.js?v=52-rutas",
+  "./styles.css?v=53-rutas-ui",
+  "./app.js?v=53-rutas-ui",
+  "./boss.js?v=53-rutas-ui",
   "./manifest.json",
   "./assets/icons/icon-192.png",
   "./assets/icons/icon-512.png",

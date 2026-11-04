@@ -5562,6 +5562,8 @@ function selectPath(pathId) {
   }
   pathState.activePath = pathId;
   persistPathState();
+  // Si el XP ya alcanza para un tier, completarlo ahora
+  checkPathTierCompletion();
   showToast("Ruta activa: " + path.name, "success");
   updatePathsMenuBadge();
   buildPathsPanel();
@@ -5728,6 +5730,8 @@ function buildPathsPanel() {
   if (!list) return;
   list.innerHTML = "";
 
+
+  // --- Barra de XP global (compacta) ---
   if (xpBar) {
     var earnedTotal = 0;
     for (var pi = 0; pi < PATHS.length; pi++) {
@@ -5737,24 +5741,31 @@ function buildPathsPanel() {
     var shown = earnedTotal + pathState.xp;
     var pct = totalNeeded > 0 ? Math.floor((shown / totalNeeded) * 100) : 0;
     xpBar.innerHTML =
-      '<div class="paths-xp-numbers"><span>XP TOTAL: ' + shown + " / " + totalNeeded + '</span>' +
-      '<span class="paths-xp-pct">' + pct + '%</span></div>' +
-      '<div class="paths-xp-track"><div class="paths-xp-fill" style="width:' + pct + '%"></div></div>' +
-      '<div class="paths-xp-hint">10 clicks = 1 XP · Solo clicks manuales</div>';
+      '<div class="paths-xp-row">' +
+        '<div class="paths-xp-label">XP</div>' +
+        '<div class="paths-xp-value">' + shown + '<span>/' + totalNeeded + '</span></div>' +
+        '<div class="paths-xp-pct">' + pct + '%</div>' +
+      '</div>' +
+      '<div class="paths-xp-track"><div class="paths-xp-fill" style="width:' + pct + '%"></div></div>';
   }
 
-  PATHS.forEach(function(path) {
+  PATHS.forEach(function(path, pathIdx) {
     var isActive = path.id === pathState.activePath;
     var isDone = isPathCompleted(path.id);
+    var isExpanded = isActive;
 
     var card = document.createElement("div");
-    card.className = "path-card" + (isActive ? " active" : "") + (isDone ? " completed" : "");
+    card.className = "path-card" + (isActive ? " active" : "") + (isDone ? " completed" : "") + (isExpanded ? " expanded" : "");
 
-    var head = document.createElement("div");
+    // --- Cabecera compacta de la ruta ---
+    var head = document.createElement("button");
     head.className = "path-card-head";
+    head.type = "button";
+
     var icon = document.createElement("span");
     icon.className = "path-icon";
     icon.textContent = path.icon;
+
     var titleWrap = document.createElement("div");
     titleWrap.className = "path-title-wrap";
     var name = document.createElement("div");
@@ -5768,14 +5779,59 @@ function buildPathsPanel() {
     head.appendChild(icon);
     head.appendChild(titleWrap);
 
+    // Estado a la derecha: XP requerido oCompletada
     var statusTag = document.createElement("span");
     statusTag.className = "path-status";
-    if (isDone) { statusTag.textContent = "COMPLETADA"; statusTag.classList.add("done"); }
-    else if (isActive) { statusTag.textContent = "ACTIVA"; statusTag.classList.add("active"); }
-    else { statusTag.textContent = path.xp + " XP"; }
+    if (isDone) {
+      statusTag.textContent = "✓";
+      statusTag.classList.add("done");
+      statusTag.title = "Ruta completada";
+    } else {
+      var tiersDone = 0;
+      path.tiers.forEach(function(t, ti) { if (isTierCompleted(path.id, ti)) tiersDone++; });
+      statusTag.textContent = tiersDone + "/" + path.tiers.length;
+      statusTag.title = path.xp + " XP · " + tiersDone + " de " + path.tiers.length + " tiers";
+    }
     head.appendChild(statusTag);
+
+    // Chevron
+    var chev = document.createElement("span");
+    chev.className = "path-chevron";
+    chev.textContent = "›";
+    head.appendChild(chev);
+
+    head.addEventListener("click", function(e) {
+      e.stopPropagation();
+      togglePathExpanded(path.id);
+    });
     card.appendChild(head);
 
+    // --- Resumen de XP de la ruta (solo si no esta activa) ---
+    if (!isExpanded) {
+      var summary = document.createElement("div");
+      summary.className = "path-summary";
+      var totalDone = 0;
+      path.tiers.forEach(function(t, ti) {
+        if (isTierCompleted(path.id, ti)) totalDone += t.xp;
+      });
+      var routePct = Math.floor((totalDone / path.xp) * 100);
+      summary.innerHTML =
+        '<div class="path-summary-bar"><div class="path-summary-fill" style="width:' + routePct + '%"></div></div>' +
+        '<div class="path-summary-text">' + path.xp + " XP</div>";
+      card.appendChild(summary);
+
+      if (!isDone) {
+        var btn = document.createElement("button");
+        btn.className = "path-select-btn";
+        btn.textContent = "ELEGIR RUTA";
+        btn.onclick = function(e) { e.stopPropagation(); selectPath(path.id); };
+        card.appendChild(btn);
+      }
+      list.appendChild(card);
+      return;
+    }
+
+    // --- Tiers expandidos (solo ruta activa) ---
     var tiersWrap = document.createElement("div");
     tiersWrap.className = "path-tiers";
     path.tiers.forEach(function(tier, ti) {
@@ -5783,23 +5839,25 @@ function buildPathsPanel() {
       var tierEl = document.createElement("div");
       tierEl.className = "path-tier" + (tierDone ? " done" : "");
 
+      // Cabecera del tier: romano + nombre + XP a la derecha
       var tierHead = document.createElement("div");
       tierHead.className = "path-tier-head";
       var roman = document.createElement("span");
       roman.className = "path-tier-roman";
-      roman.textContent = "T " + tier.roman;
+      roman.textContent = tier.roman;
       var tName = document.createElement("span");
       tName.className = "path-tier-name";
       tName.textContent = tier.name;
       var tXp = document.createElement("span");
       tXp.className = "path-tier-xp";
-      tXp.textContent = tier.xp + " XP";
+      tXp.textContent = tierDone ? "✓" : tier.xp + " XP";
       tierHead.appendChild(roman);
       tierHead.appendChild(tName);
       tierHead.appendChild(tXp);
       tierEl.appendChild(tierHead);
 
-      if (!tierDone && isActive) {
+      // Barra de progreso del tier
+      if (!tierDone) {
         var prog = pathTierProgress(path.id, ti);
         var track = document.createElement("div");
         track.className = "path-tier-track";
@@ -5808,14 +5866,20 @@ function buildPathsPanel() {
         fill.style.width = prog.pct + "%";
         track.appendChild(fill);
         tierEl.appendChild(track);
+
+        var progText = document.createElement("div");
+        progText.className = "path-tier-progress";
+        progText.textContent = prog.current + " / " + prog.need + " XP";
+        tierEl.appendChild(progText);
       }
 
+      // Objetivos en una linea compacta
       var objWrap = document.createElement("div");
       objWrap.className = "path-objectives";
       (tier.objectives || []).forEach(function(obj) {
-        var objEl = document.createElement("div");
         var met = false;
         try { met = obj.done(); } catch (e) { met = false; }
+        var objEl = document.createElement("div");
         objEl.className = "path-objective" + (met ? " met" : "");
         var check = document.createElement("span");
         check.className = "path-obj-check";
@@ -5829,6 +5893,7 @@ function buildPathsPanel() {
       });
       tierEl.appendChild(objWrap);
 
+      // Recompensas
       var rewWrap = document.createElement("div");
       rewWrap.className = "path-tier-rewards";
       (tier.rewards || []).forEach(function(r) {
@@ -5840,7 +5905,7 @@ function buildPathsPanel() {
       if (tier.fragments && tier.fragments.length) {
         var fEl = document.createElement("span");
         fEl.className = "path-reward-chip fragments";
-        fEl.textContent = "+" + tier.fragments.length + " fragmento(s)";
+        fEl.textContent = "+" + tier.fragments.length + " frag";
         rewWrap.appendChild(fEl);
       }
       tierEl.appendChild(rewWrap);
@@ -5849,16 +5914,19 @@ function buildPathsPanel() {
     });
     card.appendChild(tiersWrap);
 
-    if (!isDone && !isActive) {
-      var btn = document.createElement("button");
-      btn.className = "path-select-btn";
-      btn.textContent = "ELEGIR ESTA RUTA";
-      btn.onclick = function() { selectPath(path.id); };
-      card.appendChild(btn);
-    }
-
     list.appendChild(card);
   });
+}
+
+// Expandir/colapsar una ruta (solo una a la vez)
+var _expandedPathId = null;
+function togglePathExpanded(pathId) {
+  if (_expandedPathId === pathId) {
+    _expandedPathId = null;
+  } else {
+    _expandedPathId = pathId;
+  }
+  buildPathsPanel();
 }
 
 function pathRewardLabel(r) {
@@ -5882,6 +5950,8 @@ function pathRewardLabel(r) {
 function openPaths() {
   var p = document.getElementById("pathsPanel");
   if (!p) return;
+  // Verificar tiers completables (por si el XP se restauro o cambio de ruta)
+  checkPathTierCompletion();
   buildPathsPanel();
   p.classList.add("open");
 }
