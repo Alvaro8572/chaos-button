@@ -4302,7 +4302,7 @@ if (memoryFinalCloseBtn) {
 }
 var infoPanelCloseBtn = document.getElementById("infoPanelClose");
 if (infoPanelCloseBtn) {
-  infoPanelCloseBtn.addEventListener("click", function() { closeInfo(); });
+  infoPanelCloseBtn.addEventListener("click", closeInfo);
 }
 var statsPanelCloseBtn = document.getElementById("statsPanelClose");
 if (statsPanelCloseBtn) {

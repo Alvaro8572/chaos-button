@@ -10,14 +10,14 @@
    old CSS/JS forever after a deploy.
 */
 
-const CACHE_VERSION = "chaos-v56-sw-fix";
-const BUILD_TOKEN = "56-sw-fix";
+const CACHE_VERSION = "chaos-v57-rutas-final";
+const BUILD_TOKEN = "57-rutas-final";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=56-sw-fix",
-  "./app.js?v=56-sw-fix",
-  "./boss.js?v=56-sw-fix",
+  "./styles.css?v=57-rutas-final",
+  "./app.js?v=57-rutas-final",
+  "./boss.js?v=57-rutas-final",
   "./manifest.json",
   "./assets/icons/icon-192.png",
   "./assets/icons/icon-512.png",
