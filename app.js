@@ -5764,7 +5764,6 @@ function buildPathsPanel() {
   if (!list) return;
   list.innerHTML = "";
 
-
   // --- Barra de XP global (compacta) ---
   if (xpBar) {
     var earnedTotal = 0;
@@ -5783,209 +5782,268 @@ function buildPathsPanel() {
       '<div class="paths-xp-track"><div class="paths-xp-fill" style="width:' + pct + '%"></div></div>';
   }
 
-  PATHS.forEach(function(path, pathIdx) {
+  // ============ GRID DE RUTAS (estilo COLECCION) ============
+  var gridWrap = document.createElement("div");
+  gridWrap.className = "paths-grid";
+
+  PATHS.forEach(function(path) {
     var isActive = path.id === pathState.activePath;
     var isDone = isPathCompleted(path.id);
-    var isExpanded = isActive;
 
-    var card = document.createElement("div");
-    card.className = "path-card" + (isActive ? " active" : "") + (isDone ? " completed" : "") + (isExpanded ? " expanded" : "");
+    var card = document.createElement("button");
+    card.className = "paths-grid-card" + (isActive ? " active" : "") + (isDone ? " completed" : "");
+    card.type = "button";
 
-    // --- Cabecera compacta de la ruta ---
-    var head = document.createElement("button");
-    head.className = "path-card-head";
-    head.type = "button";
+    // Imagen circular (icono de la ruta)
+    var imgWrap = document.createElement("div");
+    imgWrap.className = "paths-grid-img-wrap";
+    imgWrap.textContent = path.icon;
+    card.appendChild(imgWrap);
 
-    var icon = document.createElement("span");
-    icon.className = "path-icon";
-    icon.textContent = path.icon;
-
-    var titleWrap = document.createElement("div");
-    titleWrap.className = "path-title-wrap";
     var name = document.createElement("div");
-    name.className = "path-name";
+    name.className = "paths-grid-name";
     name.textContent = path.name;
-    var desc = document.createElement("div");
-    desc.className = "path-desc";
-    desc.textContent = path.desc;
-    titleWrap.appendChild(name);
-    titleWrap.appendChild(desc);
-    head.appendChild(icon);
-    head.appendChild(titleWrap);
+    card.appendChild(name);
 
-    // Estado a la derecha: XP requerido oCompletada
-    var statusTag = document.createElement("span");
-    statusTag.className = "path-status";
+    var xp = document.createElement("div");
+    xp.className = "paths-grid-xp";
     if (isDone) {
-      statusTag.textContent = "✓";
-      statusTag.classList.add("done");
-      statusTag.title = "Ruta completada";
+      xp.textContent = "COMPLETADA";
     } else {
       var tiersDone = 0;
       path.tiers.forEach(function(t, ti) { if (isTierCompleted(path.id, ti)) tiersDone++; });
-      statusTag.textContent = tiersDone + "/" + path.tiers.length;
-      statusTag.title = path.xp + " XP · " + tiersDone + " de " + path.tiers.length + " tiers";
+      xp.textContent = path.xp + " XP · " + tiersDone + "/" + path.tiers.length;
     }
-    head.appendChild(statusTag);
+    card.appendChild(xp);
 
-    // Chevron
-    var chev = document.createElement("span");
-    chev.className = "path-chevron";
-    chev.textContent = "›";
-    head.appendChild(chev);
+    // Progreso de la ruta
+    var bar = document.createElement("div");
+    bar.className = "paths-grid-bar";
+    var fill = document.createElement("div");
+    fill.className = "paths-grid-bar-fill";
+    var doneXp = 0;
+    path.tiers.forEach(function(t, ti) { if (isTierCompleted(path.id, ti)) doneXp += t.xp; });
+    fill.style.width = Math.floor((doneXp / path.xp) * 100) + "%";
+    bar.appendChild(fill);
+    card.appendChild(bar);
 
-    head.addEventListener("click", function(e) {
-      e.stopPropagation();
-      togglePathExpanded(path.id);
-    });
-    card.appendChild(head);
-
-    // --- Resumen de XP de la ruta (solo si no esta activa) ---
-    if (!isExpanded) {
-      var summary = document.createElement("div");
-      summary.className = "path-summary";
-      var totalDone = 0;
-      path.tiers.forEach(function(t, ti) {
-        if (isTierCompleted(path.id, ti)) totalDone += t.xp;
+    if (!isDone) {
+      card.addEventListener("click", function(e) {
+        e.stopPropagation();
+        selectPath(path.id);
       });
-      var routePct = Math.floor((totalDone / path.xp) * 100);
-      summary.innerHTML =
-        '<div class="path-summary-bar"><div class="path-summary-fill" style="width:' + routePct + '%"></div></div>' +
-        '<div class="path-summary-text">' + path.xp + " XP</div>";
-      card.appendChild(summary);
-
-      if (!isDone) {
-        var btn = document.createElement("button");
-        btn.className = "path-select-btn";
-        btn.textContent = "ELEGIR RUTA";
-        btn.onclick = function(e) { e.stopPropagation(); selectPath(path.id); };
-        card.appendChild(btn);
-      }
-      list.appendChild(card);
-      return;
     }
-
-    // --- Tiers expandidos (solo ruta activa) ---
-    var tiersWrap = document.createElement("div");
-    tiersWrap.className = "path-tiers";
-    path.tiers.forEach(function(tier, ti) {
-      var tierDone = isTierCompleted(path.id, ti);
-      var tierEl = document.createElement("div");
-      tierEl.className = "path-tier" + (tierDone ? " done" : "");
-
-      // --- Cabecera de la recompensa: imagen circular (formato clasico) ---
-      var top = document.createElement("div");
-      top.className = "path-tier-top";
-
-      var imgWrap = document.createElement("div");
-      imgWrap.className = "path-tier-img-wrap";
-      var isImg = typeof tier.icon === "string" && tier.icon.indexOf("assets/") === 0;
-      if (isImg) {
-        var img = document.createElement("img");
-        img.className = "path-tier-img";
-        img.src = tier.icon;
-        img.alt = tier.name;
-        img.onerror = function() { this.style.display = "none"; };
-        imgWrap.appendChild(img);
-      } else {
-        imgWrap.classList.add("emoji");
-        imgWrap.textContent = tier.icon;
-      }
-      top.appendChild(imgWrap);
-
-      var infoWrap = document.createElement("div");
-      infoWrap.className = "path-tier-info";
-
-      var headRow = document.createElement("div");
-      headRow.className = "path-tier-head";
-      var roman = document.createElement("span");
-      roman.className = "path-tier-roman";
-      roman.textContent = tier.roman;
-      var tXp = document.createElement("span");
-      tXp.className = "path-tier-xp";
-      tXp.textContent = tierDone ? "\u2713" : tier.xp + " XP";
-      headRow.appendChild(roman);
-      headRow.appendChild(tXp);
-      infoWrap.appendChild(headRow);
-
-      var tName = document.createElement("div");
-      tName.className = "path-tier-name";
-      tName.textContent = tier.name;
-      infoWrap.appendChild(tName);
-
-      // Barra de progreso del tier
-      if (!tierDone) {
-        var prog = pathTierProgress(path.id, ti);
-        var track = document.createElement("div");
-        track.className = "path-tier-track";
-        var fill = document.createElement("div");
-        fill.className = "path-tier-fill";
-        fill.style.width = prog.pct + "%";
-        track.appendChild(fill);
-        infoWrap.appendChild(track);
-        var progText = document.createElement("div");
-        progText.className = "path-tier-progress";
-        progText.textContent = prog.current + " / " + prog.need + " XP";
-        infoWrap.appendChild(progText);
-      }
-
-      top.appendChild(infoWrap);
-      tierEl.appendChild(top);
-
-      // Objetivos en una linea compacta
-      var objWrap = document.createElement("div");
-      objWrap.className = "path-objectives";
-      (tier.objectives || []).forEach(function(obj) {
-        var met = false;
-        try { met = obj.done(); } catch (e) { met = false; }
-        var objEl = document.createElement("div");
-        objEl.className = "path-objective" + (met ? " met" : "");
-        var check = document.createElement("span");
-        check.className = "path-obj-check";
-        check.textContent = met ? "\u2713" : "\u25CB";
-        var txt = document.createElement("span");
-        txt.className = "path-obj-text";
-        txt.textContent = obj.text;
-        objEl.appendChild(check);
-        objEl.appendChild(txt);
-        objWrap.appendChild(objEl);
-      });
-      tierEl.appendChild(objWrap);
-
-      // Recompensas
-      var rewWrap = document.createElement("div");
-      rewWrap.className = "path-tier-rewards";
-      (tier.rewards || []).forEach(function(r) {
-        var rEl = document.createElement("span");
-        rEl.className = "path-reward-chip";
-        rEl.textContent = pathRewardLabel(r);
-        rewWrap.appendChild(rEl);
-      });
-      if (tier.fragments && tier.fragments.length) {
-        var fEl = document.createElement("span");
-        fEl.className = "path-reward-chip fragments";
-        fEl.textContent = "+" + tier.fragments.length + " frag";
-        rewWrap.appendChild(fEl);
-      }
-      tierEl.appendChild(rewWrap);
-
-      tiersWrap.appendChild(tierEl);
-    });
-    card.appendChild(tiersWrap);
-
-    list.appendChild(card);
+    gridWrap.appendChild(card);
   });
+
+  list.appendChild(gridWrap);
+
+  // ============ MAPA DE LA RUTA ACTIVA ============
+  var path = getPathById(pathState.activePath);
+  if (!path) return;
+
+  var mapWrap = document.createElement("div");
+  mapWrap.className = "paths-map";
+
+  var mapHead = document.createElement("div");
+  mapHead.className = "paths-map-head";
+  var mIcon = document.createElement("span");
+  mIcon.className = "paths-map-icon";
+  mIcon.textContent = path.icon;
+  var mName = document.createElement("span");
+  mName.className = "paths-map-name";
+  mName.textContent = path.name;
+  var mXp = document.createElement("span");
+  mXp.className = "paths-map-xp";
+  mXp.textContent = path.xp + " XP";
+  mapHead.appendChild(mIcon);
+  mapHead.appendChild(mName);
+  mapHead.appendChild(mXp);
+  mapWrap.appendChild(mapHead);
+
+  // --- Nodos en zigzag: cada fila es un flex, las filas alternan sentido ---
+  var nodesWrap = document.createElement("div");
+  nodesWrap.className = "paths-nodes";
+  var PER_ROW = 3;
+
+  // Helper: construccion de un nodo
+  function makeNode(tier, ti) {
+    var tierDone = isTierCompleted(path.id, ti);
+    var node = document.createElement("button");
+    node.className = "paths-node" + (tierDone ? " done" : "");
+    if (ti === 0 && !tierDone) node.classList.add("current");
+    node.type = "button";
+
+    var nImg = document.createElement("div");
+    nImg.className = "paths-node-img-wrap";
+    var isImg = typeof tier.icon === "string" && tier.icon.indexOf("assets/") === 0;
+    if (isImg) {
+      var img = document.createElement("img");
+      img.className = "paths-node-img";
+      img.src = tier.icon;
+      img.alt = tier.name;
+      img.onerror = function() { this.style.display = "none"; };
+      nImg.appendChild(img);
+    } else {
+      nImg.classList.add("emoji");
+      nImg.textContent = tier.icon;
+    }
+    if (!tierDone) {
+      var lock = document.createElement("span");
+      lock.className = "paths-node-lock";
+      lock.textContent = "\u{1F512}";
+      nImg.appendChild(lock);
+    }
+    node.appendChild(nImg);
+
+    var nRoman = document.createElement("span");
+    nRoman.className = "paths-node-roman";
+    nRoman.textContent = tier.roman;
+    node.appendChild(nRoman);
+
+    node.addEventListener("click", function(e) {
+      e.stopPropagation();
+      openPathTierPopup(path, tier, ti);
+    });
+    return node;
+  }
+
+  // Helper: construccion de la flecha hacia el siguiente tier
+  function makeArrow(ti, glyph) {
+    var nextTier = path.tiers[ti + 1];
+    var nextDone = isTierCompleted(path.id, ti + 1);
+    var arrow = document.createElement("div");
+    arrow.className = "paths-arrow" + (nextDone ? " done" : "");
+
+    var arrowGlyph = document.createElement("span");
+    arrowGlyph.className = "paths-arrow-glyph";
+    arrowGlyph.textContent = glyph;
+    arrow.appendChild(arrowGlyph);
+
+    var arrowLabel = document.createElement("span");
+    arrowLabel.className = "paths-arrow-label";
+    if (nextDone) {
+      arrowLabel.textContent = "\u2713";
+    } else {
+      var prog = pathTierProgress(path.id, ti + 1);
+      var missing = Math.max(0, prog.need - prog.current);
+      arrowLabel.textContent = missing > 0 ? ("-" + missing + " XP") : "\u00a1LISTO!";
+    }
+    arrow.appendChild(arrowLabel);
+    return arrow;
+  }
+
+  // Armar filas
+  var totalRows = Math.ceil(path.tiers.length / PER_ROW);
+  for (var row = 0; row < totalRows; row++) {
+    var rowEl = document.createElement("div");
+    rowEl.className = "paths-row" + (row % 2 === 1 ? " reverse" : "");
+
+    // Indices de esta fila, en orden de recorrido
+    var idxs = [];
+    for (var k = 0; k < PER_ROW; k++) {
+      var idx = row * PER_ROW + k;
+      if (idx < path.tiers.length) idxs.push(idx);
+    }
+    // Filas impares se dibujan al reves para hacer el serpentin
+    var drawOrder = (row % 2 === 0) ? idxs : idxs.slice().reverse();
+
+    drawOrder.forEach(function(ti, pos) {
+      rowEl.appendChild(makeNode(path.tiers[ti], ti));
+      // Flecha entre este nodo y el siguiente de la fila (o hacia abajo)
+      var isLastInRow = (pos === drawOrder.length - 1);
+      var isLastTier = (ti === path.tiers.length - 1);
+      if (!isLastTier) {
+        var glyph;
+        if (isLastInRow) {
+          glyph = "\u2193"; // baja a la siguiente fila
+        } else {
+          glyph = (row % 2 === 0) ? "\u2192" : "\u2190";
+        }
+        rowEl.appendChild(makeArrow(ti, glyph));
+      }
+    });
+
+    nodesWrap.appendChild(rowEl);
+  }
+
+  mapWrap.appendChild(nodesWrap);
+  list.appendChild(mapWrap);
 }
 
-// Expandir/colapsar una ruta (solo una a la vez)
-var _expandedPathId = null;
-function togglePathExpanded(pathId) {
-  if (_expandedPathId === pathId) {
-    _expandedPathId = null;
+// ============ POPUP DE DETALLE DE TIER ============
+function openPathTierPopup(path, tier, tierIndex) {
+  var popup = document.getElementById("pathTierPopup");
+  if (!popup) return;
+
+  var done = isTierCompleted(path.id, tierIndex);
+  var prog = pathTierProgress(path.id, tierIndex);
+
+  // Imagen
+  var imgWrap = document.getElementById("pathTierPopupImgWrap");
+  var isImg = typeof tier.icon === "string" && tier.icon.indexOf("assets/") === 0;
+  imgWrap.innerHTML = "";
+  if (isImg) {
+    var img = document.createElement("img");
+    img.className = "path-tier-popup-img";
+    img.src = tier.icon;
+    img.alt = tier.name;
+    img.onerror = function() { this.style.display = "none"; };
+    imgWrap.appendChild(img);
   } else {
-    _expandedPathId = pathId;
+    var em = document.createElement("div");
+    em.className = "path-tier-popup-emoji";
+    em.textContent = tier.icon;
+    imgWrap.appendChild(em);
   }
-  buildPathsPanel();
+  if (done) imgWrap.classList.add("done");
+  else imgWrap.classList.remove("done");
+
+  // Titulo
+  document.getElementById("pathTierPopupRoman").textContent = "TIER " + tier.roman;
+  document.getElementById("pathTierPopupName").textContent = tier.name;
+  document.getElementById("pathTierPopupXp").textContent = done ? "COMPLETADO" : (prog.current + " / " + prog.need + " XP");
+
+  // Objetivos
+  var objWrap = document.getElementById("pathTierPopupObjectives");
+  objWrap.innerHTML = "";
+  (tier.objectives || []).forEach(function(obj) {
+    var met = false;
+    try { met = obj.done(); } catch (e) { met = false; }
+    var el = document.createElement("div");
+    el.className = "path-popup-objective" + (met ? " met" : "");
+    var chk = document.createElement("span");
+    chk.className = "path-popup-check";
+    chk.textContent = met ? "✓" : "○";
+    var txt = document.createElement("span");
+    txt.textContent = obj.text;
+    el.appendChild(chk);
+    el.appendChild(txt);
+    objWrap.appendChild(el);
+  });
+
+  // Recompensas
+  var rewWrap = document.getElementById("pathTierPopupRewards");
+  rewWrap.innerHTML = "";
+  (tier.rewards || []).forEach(function(r) {
+    var chip = document.createElement("span");
+    chip.className = "path-reward-chip";
+    chip.textContent = pathRewardLabel(r);
+    rewWrap.appendChild(chip);
+  });
+  if (tier.fragments && tier.fragments.length) {
+    var fChip = document.createElement("span");
+    fChip.className = "path-reward-chip fragments";
+    fChip.textContent = "+" + tier.fragments.length + " fragmento(s) de conocimiento";
+    rewWrap.appendChild(fChip);
+  }
+
+  popup.classList.add("show");
+}
+
+function closePathTierPopup() {
+  var popup = document.getElementById("pathTierPopup");
+  if (popup) popup.classList.remove("show");
 }
 
 function pathRewardLabel(r) {
@@ -6035,6 +6093,16 @@ function updatePathsMenuBadge() {
 var pathsPanelClose = document.getElementById("pathsPanelClose");
 if (pathsPanelClose) {
   pathsPanelClose.addEventListener("click", closePaths);
+}
+var pathTierPopupClose = document.getElementById("pathTierPopupClose");
+if (pathTierPopupClose) {
+  pathTierPopupClose.addEventListener("click", closePathTierPopup);
+}
+var pathTierPopup = document.getElementById("pathTierPopup");
+if (pathTierPopup) {
+  pathTierPopup.addEventListener("click", function(e) {
+    if (e.target === pathTierPopup) closePathTierPopup();
+  });
 }
 updatePathsMenuBadge();
 
