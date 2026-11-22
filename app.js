@@ -4742,6 +4742,10 @@ window.__chaosDebug = {
     if (typeof startMalumaEvent === "function") startMalumaEvent();
     else console.warn("startMalumaEvent not available");
   },
+  startMalumaGame: function() {
+    if (typeof window.startMalumaGame === "function") window.startMalumaGame();
+    else console.warn("startMalumaGame not available");
+  },
   malumaState: function() {
     if (typeof getMalumaState === "function") console.log(JSON.stringify(getMalumaState()));
   },
@@ -4915,6 +4919,7 @@ window.__chaosDebug = {
       "  __chaosDebug.givePathXp(1000)       - Set path XP\n" +
       "  __chaosDebug.spawnMaluma()           - Spawn Maluma Beibei\n" +
       "  __chaosDebug.startMalumaEvent()      - Start the Maluma event\n" +
+      "  __chaosDebug.startMalumaGame()       - Jump to the minigame phase\n" +
       "  __chaosDebug.malumaState()           - Show Maluma counters\n" +
       "  __chaosDebug.spawnGato()            - Spawn Gato\n" +
       "  __chaosDebug.spawnSardina()         - Spawn Sardina\n" +
@@ -6666,6 +6671,19 @@ if (typeof document !== "undefined") {
 if (typeof window !== "undefined") {
   window.startMalumaEvent = startMalumaEvent;
   window.endMalumaEvent = endMalumaEvent;
+  window.startMalumaGame = function() {
+    // Salta directo a la fase del minijuego (para probar los botones en mobile
+    // sin esperar el hackeo ni la pila).
+    if (!$malumaEvent) initMalumaEvent();
+    if (malumaEventActive) endMalumaEvent();
+    malumaEventActive = true;
+    malumaClearTimers();
+    malumaPileItems = [];
+    if ($malumaEventPile) $malumaEventPile.innerHTML = "";
+    $malumaEvent.classList.add("active");
+    malumaLockScroll(true);
+    malumaBuildGamePhase();
+  };
   window.getMalumaState = function() {
     return { clicks: malumaClickCounter, pending: malumaPending, captures: malumaCaptures(), active: malumaEventActive };
   };
