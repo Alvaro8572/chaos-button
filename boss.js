@@ -42,6 +42,22 @@
   var bossMusicFade = null;
   var bossStunnedUntil = 0;
 
+  // Scroll lock compartido con el evento Maluma (app.js).
+  // El contador vive en window para que el orden de carga de los scripts
+  // no importa: varias capas pueden bloquear el scroll a la vez y el body
+  // se desbloquea solo cuando la ultima capa devuelve su lock.
+  function lockScroll(lock) {
+    if (typeof window === "undefined") return;
+    if (typeof window.__chaosScrollLocks !== "number") window.__chaosScrollLocks = 0;
+    if (lock) {
+      window.__chaosScrollLocks++;
+      if (window.__chaosScrollLocks === 1) document.body.style.overflow = "hidden";
+      return;
+    }
+    if (window.__chaosScrollLocks > 0) window.__chaosScrollLocks--;
+    if (window.__chaosScrollLocks === 0) document.body.style.overflow = "";
+  }
+
   // Maximo de armas por pelea. Base = 2. Las rutas pueden subirlo a 3 o 4.
   function getMaxWeaponSlots() {
     var slots = 2;
@@ -367,7 +383,7 @@
     bossStunnedUntil = 0;
     $imgWrap.classList.remove("boss-defeated", "boss-victor");
     $arena.style.display = "flex";
-    document.body.style.overflow = "hidden";
+    lockScroll(true);
     usedThisFight = {};
     usedCount = 0;
     clearWeaponTimers();
@@ -383,7 +399,7 @@
     clearWeaponTimers();
     if ($audio) { $audio.pause(); $audio.currentTime = 0; }
     $arena.style.display = "none";
-    document.body.style.overflow = "";
+    lockScroll(false);
     try {
       document.dispatchEvent(new CustomEvent("chaosBossEnd", { detail: { outcome: outcome || "" } }));
     } catch (e) {}

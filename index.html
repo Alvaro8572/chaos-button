@@ -14,8 +14,8 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Bungee&amp;family=Monoton&amp;family=Rubik+Glitch&amp;family=Sixtyfour&amp;family=Honk&amp;family=Jersey+10&amp;family=Micro+5&amp;family=Nabla&amp;family=Orbitron:wght@400;600;900&amp;family=Press+Start+2P&amp;family=Rubik+Burned&amp;family=Smooch+Sans:wght@900&amp;family=Tilt+Prism&amp;family=UnifrakturMaguntia&amp;family=Dancing+Script:wght@400;700&amp;family=Great+Vibes&amp;family=Creepster&amp;family=Bowlby+One&amp;family=Black+Ops+One&amp;display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="styles.css?v=58-rutas-map">
-<link rel="icon" href="assets/logo.jpg?v=58-rutas-map" type="image/jpeg">
+<link rel="stylesheet" href="styles.css?v=59-maluma-beibei">
+<link rel="icon" href="assets/logo.jpg?v=59-maluma-beibei" type="image/jpeg">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#ff0055">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -27,7 +27,7 @@
 // any leftover SW before registering the new one. This makes hard-refresh
 // unnecessary after every deploy.
 (function() {
-  var CURRENT_BUILD = "58-rutas-map";  // must match the sw.js?v= below
+  var CURRENT_BUILD = "59-maluma-beibei";  // must match the sw.js?v= below
   var savedBuild = null;
   try { savedBuild = localStorage.getItem("chaosBuildId"); } catch (e) {}
   if (savedBuild && savedBuild !== CURRENT_BUILD && "serviceWorker" in navigator) {
@@ -46,7 +46,7 @@
 <script>
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", function() {
-        navigator.serviceWorker.register("sw.js?v=58-rutas-map", { updateViaCache: "none" }).then(function(reg) {
+        navigator.serviceWorker.register("sw.js?v=59-maluma-beibei", { updateViaCache: "none" }).then(function(reg) {
         console.log("[PWA] Service Worker registered:", reg.scope);
 
         // Aggressive update strategy: detect new SW and force activation
@@ -446,7 +446,7 @@
 
     <div style="display:flex;align-items:center;gap:12px;">
 
-      <div id="achievementsCount">0 / 25</div>
+      <div id="achievementsCount">0 / 37</div>
 
       <button id="achievementsClose" aria-label="Cerrar logros">&times;</button>
 
@@ -478,7 +478,7 @@
 
 
 
-<script src="app.js?v=58-rutas-map" defer></script>
+<script src="app.js?v=59-maluma-beibei" defer></script>
 
 
 
@@ -545,7 +545,7 @@
       <div class="stat-row"><span class="stat-label">Monedas totales</span><span class="stat-value" id="statCoinsTotal">0</span></div>
       <div class="stat-row"><span class="stat-label">Boosts activados</span><span class="stat-value" id="statBoosts">0</span></div>
       <div class="stat-row"><span class="stat-label">Veces al 100% caos</span><span class="stat-value" id="statHundred">0</span></div>
-      <div class="stat-row"><span class="stat-label">Logros</span><span class="stat-value" id="statAchievements">0 / 25</span></div>
+      <div class="stat-row"><span class="stat-label">Logros</span><span class="stat-value" id="statAchievements">0 / 37</span></div>
       <div class="stat-row stat-trueending" id="statTrueEndingRow">
         <span class="stat-label">True Ending</span>
         <span class="stat-value" id="statTrueEnding">NO</span>
@@ -575,7 +575,7 @@
   </div>
   <audio id="bossMusic" loop preload="auto"></audio>
 </div>
-<script src="boss.js?v=58-rutas-map" defer></script>
+<script src="boss.js?v=59-maluma-beibei" defer></script>
 
 <div id="collectiblesPanel" role="dialog" aria-label="Coleccionables">
   <div id="collectiblesPanelInner">
@@ -629,6 +629,34 @@
     <div id="pathTierPopupRewards"></div>
     <button id="pathTierPopupClose" class="panel-close" aria-label="Cerrar detalle">×</button>
   </div>
+</div>
+
+<div id="malumaEvent" role="dialog" aria-label="Evento Maluma Beibei">
+  <div id="malumaEventBackdrop"></div>
+  <div id="malumaEventPile"></div>
+
+  <div id="malumaHackPhase" class="maluma-phase">
+    <img id="malumaHackImg" src="assets/maluma-event/Maluma-Beibe.gif" alt="Maluma Beibei">
+    <div id="malumaHackText">MALUMA TE ESTÁ HACKEANDO</div>
+    <div id="malumaHackSub">NO PODÉS ESCAPAR DEL BEIBI</div>
+  </div>
+
+  <div id="malumaGamePhase" class="maluma-phase">
+    <div id="malumaGameTitle">DESBLOQUEA EL MODO BEIBI</div>
+    <div id="malumaGamePrompt">MALUMABEIBE</div>
+    <div id="malumaGameSlots"></div>
+    <input id="malumaGameInput" type="text" inputmode="latin" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Escribí la palabra">
+    <div id="malumaGameKeys"></div>
+    <div id="malumaGameTimer"></div>
+    <div id="malumaGameHint">Sin tildes. Sin espacios. Mayusculas da igual.</div>
+  </div>
+
+  <div id="malumaRickPhase" class="maluma-phase">
+    <img id="malumaRickImg" src="assets/maluma-event/rickroll.gif" alt="Rickroll">
+    <div id="malumaRickText">HAS SIDO RICKROLLEADO</div>
+  </div>
+
+  <div id="malumaEventBanner">MALUMA BEIBEI</div>
 </div>
 </body></html>
 

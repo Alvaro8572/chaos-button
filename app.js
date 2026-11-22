@@ -1279,6 +1279,11 @@ function resetEverything() {
 
   document.body.style.cssText = "";
   document.body.style.fontFamily = "Orbitron, monospace";
+  // El reset borra los estilos inline del body, incluido el bloqueo de scroll
+  // que.layers abiertas (boss arena, evento Maluma) pueden tener tomado.
+  if (typeof window !== "undefined" && window.__chaosScrollLocks > 0) {
+    document.body.style.overflow = "hidden";
+  }
 
   title.style.cssText = "";
   title.style.fontFamily = "Orbitron, monospace";
@@ -1323,6 +1328,9 @@ function chaos() {
 
   // XP por clicks manuales (bufferizado)
   accumulatePathXp();
+
+  // Contador de aparicion de Maluma (1 cada 2005 clicks)
+  tickMalumaCounter();
 
   // Collectible automatico (si esta desbloqueado)
   checkAutoCollectible();
@@ -1414,6 +1422,7 @@ function chaos() {
 
   // Collectibles (comun 0.55%, raro 0.1%, legendario 0.01% por click)
   trySpawnCollectible();
+  trySpawnMaluma();
 
   // Random sound (can play over other sounds except click)
   if (Math.random() < 0.2) {
@@ -1653,12 +1662,14 @@ var ACHIEVEMENTS = [
   { id: "coleccionista_comun", tier: "silver", name: "Coleccionista Común", desc: "Agarra los 5 Comunes al menos una vez", category: "collectibles", reward: null },
   { id: "ojo_raro", tier: "silver", name: "Ojo Raro", desc: "Agarra los 2 Raros al menos una vez", category: "collectibles", reward: null },
   { id: "cazador_legendario", tier: "gold", name: "Cazador Legendario", desc: "Agarra tu primer Legendario", category: "collectibles", reward: null },
-  { id: "maestro_del_caos", tier: "gold", name: "Maestro del Caos", desc: "Agarra los 2 Legendarios al menos una vez", category: "collectibles", reward: null },
+  { id: "maestro_del_caos", tier: "gold", name: "Maestro del Caos", desc: "Agarra los 4 Legendarios al menos una vez", category: "collectibles", reward: null },
   { id: "bien_armado", tier: "silver", name: "Bien Armado", desc: "Gana una pelea usando 2 armas distintas", category: "arsenal", reward: null },
   { id: "coleccionista_arsenal", tier: "gold", name: "Coleccionista del Arsenal", desc: "Compra al menos 1 de cada una de las 5 armas", category: "arsenal", reward: null },
   { id: "destructor_armado", tier: "silver", name: "Destructor Armado", desc: "Inflige 200 HP de da\u00f1o total con armas", category: "arsenal", reward: null },
   { id: "racha_3", tier: "silver", name: "Racha de 3", desc: "Ingres\u00e1 3 d\u00edas seguidos", category: "daily", reward: null },
-  { id: "racha_7", tier: "gold",   name: "Racha de 7", desc: "Ingres\u00e1 7 d\u00edas seguidos", category: "daily", reward: null }
+  { id: "racha_7", tier: "gold",   name: "Racha de 7", desc: "Ingres\u00e1 7 d\u00edas seguidos", category: "daily", reward: null },
+  { id: "maluma_beibei", tier: "bronze", name: "Maluma Beibei", desc: "Atrap\u00e1 a Maluma por primera vez", category: "collectibles", reward: null },
+  { id: "maluma_leyenda", tier: "gold", name: "Leyenda Beibei", desc: "Atrap\u00e1 a Maluma 5 veces", category: "collectibles", reward: null }
 ];
 
 var achievementsUnlocked = safeJSON("chaosAchievements", []);
@@ -1799,6 +1810,8 @@ function checkAchievements() {
       case "destructor_armado": unlocked = (parseInt(localStorage.getItem("chaosWeaponDamage") || "0", 10) >= 200); break;
       case "racha_3": unlocked = (dailyState && typeof dailyState.streak === "number" && dailyState.streak >= 3); break;
       case "racha_7": unlocked = (dailyState && typeof dailyState.streak === "number" && dailyState.streak >= 7); break;
+      case "maluma_beibei": unlocked = malumaCaptures() >= 1; break;
+      case "maluma_leyenda": unlocked = malumaCaptures() >= 5; break;
     }
     if (unlocked) unlockAchievement(ach.id);
   });
@@ -2634,7 +2647,8 @@ var COLLECTIBLES = [
   { id: "honguito", name: "Honguito Mágico", src: "assets/images/honguito.png", sound: "assets/sounds/mario-64-lets-a-go.mp3", tier: "raro", desc: "Un hongo que gira y crece." },
   { id: "amongus", name: "Among Us", src: "assets/images/amongus.png", sound: "assets/sounds/emergency-meeting-among-us.mp3", tier: "legendario", desc: "Un tripulante sospechoso." },
   { id: "pizzaguy", name: "Pizza Guy", src: "assets/images/pizza-guy.png", sound: "assets/sounds/pizza-roblox.mp3", tier: "legendario", desc: "El repartidor que esquiva.", house: "assets/images/house.png" },
-  { id: "spiderman", name: "Spiderman", src: "assets/images/spider-man.png", sound: "assets/sounds/powerup.mp3", tier: "legendario", desc: "Cruza la pantalla en diagonal. Rapido." }
+  { id: "spiderman", name: "Spiderman", src: "assets/images/spider-man.png", sound: "assets/sounds/powerup.mp3", tier: "legendario", desc: "Cruza la pantalla en diagonal. Rapido." },
+  { id: "maluma", name: "Maluma Beibei", src: "assets/maluma-event/maluma.png", sound: "assets/maluma-event/borro-casette.mp3", tier: "legendario", desc: "Te esta hackeando. No hay escapatoria." }
 ];
 
 var WEAPONS = [
@@ -2920,6 +2934,7 @@ function spawnCollectibleById(id) {
     case "amongus": spawnAmongus(); break;
     case "pizzaguy": spawnPizzaGuy(); break;
     case "spiderman": spawnSpiderman(); break;
+    case "maluma": spawnMaluma(); break;
     default:
       var c = COLLECTIBLES.find(function(x) { return x.id === id; });
       if (c) makeBasicCollectible(c);
@@ -2957,8 +2972,131 @@ function spawnSpiderman() {
   }, 1600);
 }
 
+// ============================================
+//    MALUMA BEIBEI — Collectible + Evento
+//    ============================================
+//    - Aparece 1 de cada 2005 clicks manuales.
+//    - Al picarlo, dispara el evento de 30 segundos.
+//    - Durante el evento: 5% de spawn de legendarios por click.
+//    - Maluma queda excluido del pool de legendarios.
+//    ============================================
+
+var MALUMA_CLICKS_PER_SPAWN = 2005;
+var MALUMA_ASSET_DIR = "assets/maluma-event/";
+var MALUMA_POOL = [
+  "Albert-Einstein.gif", "Amongus.gif", "Cat-cat.gif", "cat-vanishing.gif",
+  "dancing-baby.gif", "Einstein-Sosmart.gif", "gigachad.gif", "gigachad-roblox.gif",
+  "insane-cat.gif", "Maluma-Beibe.gif", "Maluma-Beibe2.gif", "Mambo-matikan.gif",
+  "maxwell-the-cat.gif", "mexican-nyan-cat.gif", "miku-dancing.gif",
+  "miku-saying-no.gif", "moonwalk.gif", "nyan-cat.gif", "oguri-dancing.gif",
+  "Pikachu-Dance.gif", "Pikachu-rancio.gif", "Punch-Haru-Urara.gif",
+  "rickroll.gif", "Roblox-niños-ratas.gif", "Roblox-twerk.gif",
+  "shrek-dance.gif", "Shrek-smile.gif", "uiae.gif"
+];
+var MALUMA_AUDIO = [
+  "assets/maluma-event/borro-casette.mp3",
+  "assets/maluma-event/felices-los-4.mp3",
+  "assets/maluma-event/hawai.mp3"
+];
+var MALUMA_TYPING_PHRASES = ["MALUMABEIBE", "CROQUETIZACION", "ABUELITA"];
+var MALUMA_PHRASE_REWARDS = [
+  { coins: 500, xp: 5 },
+  { coins: 750, xp: 8 },
+  { coins: 500, xp: 5 }
+];
+var MALUMA_EVENT_LEGENDARY_CHANCE = 0.05;
+var MALUMA_EVENT_DURATION = 30000;
+var MALUMA_EVENT_PHASES = { hack: 5000, pile: 12000, game: 8000, rick: 5000 };
+var MALUMA_CHAOS_CAP = 95;
+
+var malumaClickCounter = safeNumber("chaosMalumaClicks", 0, true);
+var malumaPending = safeJSON("chaosMalumaPending", false) === true;
+var malumaEventActive = false;
+
+function persistMalumaClicks() {
+  try { localStorage.setItem("chaosMalumaClicks", String(malumaClickCounter)); } catch (e) {}
+}
+function persistMalumaPending() {
+  safeJSON_set("chaosMalumaPending", malumaPending);
+}
+function malumaCaptures() {
+  return safeNumber("chaosMalumaCaptures", 0, true);
+}
+function bumpMalumaCaptures() {
+  var n = malumaCaptures() + 1;
+  try { localStorage.setItem("chaosMalumaCaptures", String(n)); } catch (e) {}
+  return n;
+}
+
+// Contador de clicks hacia la proxima aparicion de Maluma.
+function tickMalumaCounter() {
+  if (malumaEventActive) return;
+  if (malumaPending) return;
+  malumaClickCounter++;
+  if (malumaClickCounter >= MALUMA_CLICKS_PER_SPAWN) {
+    malumaClickCounter = 0;
+    malumaPending = true;
+    persistMalumaClicks();
+    persistMalumaPending();
+  } else {
+    persistMalumaClicks();
+  }
+}
+
+// Intenta hacer aparecer a Maluma. Solo 1 pendiente a la vez.
+function trySpawnMaluma() {
+  if (!malumaPending) return;
+  if (activeCollectible) return;
+  malumaPending = false;
+  persistMalumaPending();
+  spawnMaluma();
+}
+
+// Maluma: rebota lentamente y se queda 12 segundos en pantalla.
+function spawnMaluma() {
+  if (activeCollectible) return;
+  var c = COLLECTIBLES.find(function(x) { return x.id === "maluma"; });
+  if (!c) return;
+  var el = document.createElement("div");
+  el.className = "collectible collectible-maluma tier-" + c.tier;
+  var img = document.createElement("img");
+  img.src = c.src;
+  img.alt = c.name;
+  img.setAttribute("draggable", "false");
+  el.appendChild(img);
+  el.style.left = (20 + Math.random() * 55) + "%";
+  el.style.top = (25 + Math.random() * 35) + "%";
+  document.body.appendChild(el);
+
+  var obj = { id: c.id, name: c.name, src: c.src, sound: c.sound, el: el, caught: false };
+  activeCollectible = obj;
+
+  el.addEventListener("click", function(e) {
+    e.stopPropagation();
+    if (obj.caught) return;
+    obj.caught = true;
+    collectItem(obj);
+    var captures = bumpMalumaCaptures();
+    if (captures >= 1 && typeof unlockAchievement === "function") unlockAchievement("maluma_beibei");
+    if (captures >= 5 && typeof unlockAchievement === "function") unlockAchievement("maluma_leyenda");
+    startMalumaEvent();
+  });
+
+  el.classList.add("maluma-bounce");
+
+  setTimeout(function() {
+    if (obj.caught) return;
+    if (el.parentNode) el.parentNode.removeChild(el);
+    if (obj === activeCollectible) activeCollectible = null;
+  }, 12000);
+}
+
 function trySpawnCollectible() {
   if (activeCollectible) return;
+  if (malumaEventActive) {
+    trySpawnEventLegendary();
+    return;
+  }
   var r = Math.random();
   var comunChance = 0.0055;
   var raroChance = 0.001;
@@ -4597,6 +4735,17 @@ window.__chaosDebug = {
   spawnHonguito: function() { if (typeof spawnCollectibleById === "function") spawnCollectibleById("honguito"); },
   spawnAmongus: function() { if (typeof spawnCollectibleById === "function") spawnCollectibleById("amongus"); },
   spawnPizzaGuy: function() { if (typeof spawnCollectibleById === "function") spawnCollectibleById("pizzaguy"); },
+  spawnMaluma: function() {
+    if (typeof spawnCollectibleById === "function") spawnCollectibleById("maluma");
+    else console.warn("spawnCollectibleById not available");
+  },
+  startMalumaEvent: function() {
+    if (typeof startMalumaEvent === "function") startMalumaEvent();
+    else console.warn("startMalumaEvent not available");
+  },
+  malumaState: function() {
+    if (typeof getMalumaState === "function") console.log(JSON.stringify(getMalumaState()));
+  },
   clearCollectible: function() { if (activeCollectible && activeCollectible.el && activeCollectible.el.parentNode) activeCollectible.el.parentNode.removeChild(activeCollectible.el); activeCollectible = null; console.log("✓ collectible cleared"); },
   getCollection: function() { console.log(JSON.stringify(collectedCounts, null, 2)); },
   giveClicks: function(n) {
@@ -4765,6 +4914,9 @@ window.__chaosDebug = {
       "  __chaosDebug.giveRouletteSpins(100) - Set roulette total spins\n" +
       "  __chaosDebug.giveFacts()            - Unlock all knowledge fragments\n" +
       "  __chaosDebug.givePathXp(1000)       - Set path XP\n" +
+      "  __chaosDebug.spawnMaluma()           - Spawn Maluma Beibei\n" +
+      "  __chaosDebug.startMalumaEvent()      - Start the Maluma event\n" +
+      "  __chaosDebug.malumaState()           - Show Maluma counters\n" +
       "  __chaosDebug.spawnGato()            - Spawn Gato\n" +
       "  __chaosDebug.spawnSardina()         - Spawn Sardina\n" +
       "  __chaosDebug.spawnSandwich()        - Spawn Sandwich\n" +
@@ -5276,7 +5428,7 @@ var PATHS = [
         icon: "assets/images/spider-man.png",
         objectives: [
           { text: "Atrapa los 2 Raros", done: function() { return pathCollectedTier("raro") >= 2; } },
-          { text: "Atrapa los 8 collectibles", done: function() { return pathCollectedTotal() >= 8; } },
+          { text: "Atrapa los 9 collectibles", done: function() { return pathCollectedTotal() >= 9; } },
           { text: "Alcanza 20,000 clicks", done: function() { return pathTotalClicks() >= 20000; } }
         ],
         rewards: [{ type: "coins", amount: 400 }, { type: "collectible", id: "spiderman" }],
@@ -5287,7 +5439,7 @@ var PATHS = [
 
         icon: "🪙",
         objectives: [
-          { text: "Atrapa los 2 Legendarios", done: function() { return pathCollectedTier("legendario") >= 2; } },
+          { text: "Atrapa los 3 Legendarios", done: function() { return pathCollectedTier("legendario") >= 3; } },
           { text: "Alcanza 50,000 clicks", done: function() { return pathTotalClicks() >= 50000; } },
           { text: "Derrota al Chaos God 25 veces", done: function() { return pathBossKills() >= 25; } }
         ],
@@ -5367,7 +5519,7 @@ var PATHS = [
         objectives: [
           { text: "Alcanza 250,000 clicks", done: function() { return pathTotalClicks() >= 250000; } },
           { text: "Derrota al Chaos God 40 veces", done: function() { return pathBossKills() >= 40; } },
-          { text: "Atrapa los 8 collectibles 3 veces cada uno", done: function() { return COLLECTIBLES.every(function(c) { return pathCollected(c.id) >= 3; }); } }
+          { text: "Atrapa los 9 collectibles 3 veces cada uno", done: function() { return COLLECTIBLES.every(function(c) { return pathCollected(c.id) >= 3; }); } }
         ],
         rewards: [{ type: "memory", fragment: 9 }],
         fragments: [32, 33, 34]
@@ -5412,7 +5564,7 @@ var PATHS = [
         objectives: [
           { text: "Alcanza 250,000 clicks", done: function() { return pathTotalClicks() >= 250000; } },
           { text: "Derrota al Chaos God 50 veces", done: function() { return pathBossKills() >= 50; } },
-          { text: "Atrapa los 8 collectibles", done: function() { return pathCollectedTotal() >= 8; } }
+          { text: "Atrapa los 9 collectibles", done: function() { return pathCollectedTotal() >= 9; } }
         ],
         rewards: [{ type: "memory", fragment: 10 }, { type: "coins", amount: 5000 }],
         fragments: [42, 43, 44]
@@ -6108,6 +6260,417 @@ updatePathsMenuBadge();
 
 // Arrancar monedas pasivas si ya estan desbloqueadas
 if (getPassiveCoins() > 0) startPassiveCoins();
+
+/* ============================================
+   MALUMA BEIBEI — Evento de 30 segundos
+   ============================================
+   Fases: hackeo (5s) -> pila de gifs (12s) -> minijuego de tipeo (8s) -> rickroll (5s).
+   Durante todo el evento el 5% de clicks manuales spawnea collectibles legendarios.
+   El minijuego da monedas + XP de ruta (mitad de recompensa si se agota el tiempo).
+   ============================================ */
+
+var $malumaEvent, $malumaEventPile, $malumaEventBanner;
+var $malumaHackPhase, $malumaGamePhase, $malumaRickPhase;
+var $malumaGamePrompt, $malumaGameSlots, $malumaGameInput, $malumaGameKeys, $malumaGameTimer, $malumaGameTitle;
+var $malumaRickImg;
+var malumaEventTimers = [];
+var malumaGameTimerId = null;
+var malumaGameState = null;
+var malumaPileItems = [];
+var malumaPileInterval = null;
+var malumaAudioEl = null;
+var malumaTypingResolved = false;
+
+// Legendarios disponibles durante el evento (Maluma queda excluido a proposito).
+var MALUMA_EVENT_LEGENDARIES = ["amongus", "pizzaguy", "spiderman"];
+
+function malumaSetTimeout(fn, ms) {
+  var id = setTimeout(function() {
+    var idx = malumaEventTimers.indexOf(id);
+    if (idx !== -1) malumaEventTimers.splice(idx, 1);
+    fn();
+  }, ms);
+  malumaEventTimers.push(id);
+  return id;
+}
+function malumaClearTimers() {
+  for (var i = 0; i < malumaEventTimers.length; i++) clearTimeout(malumaEventTimers[i]);
+  malumaEventTimers = [];
+  if (malumaGameTimerId) { clearInterval(malumaGameTimerId); malumaGameTimerId = null; }
+  if (malumaPileInterval) { clearInterval(malumaPileInterval); malumaPileInterval = null; }
+}
+
+// Scroll lock con contador compartido (boss.js usa el mismo contador en window).
+// El body solo se desbloquea cuando la ultima capa devuelve su lock.
+function malumaLockScroll(lock) {
+  if (typeof window === "undefined") return;
+  if (typeof window.__chaosScrollLocks !== "number") window.__chaosScrollLocks = 0;
+  if (lock) {
+    window.__chaosScrollLocks++;
+    if (window.__chaosScrollLocks === 1) document.body.style.overflow = "hidden";
+    return;
+  }
+  if (window.__chaosScrollLocks > 0) window.__chaosScrollLocks--;
+  if (window.__chaosScrollLocks === 0) document.body.style.overflow = "";
+}
+
+function malumaIsTouchDevice() {
+  if (typeof window === "undefined") return false;
+  var coarse = false;
+  try { coarse = window.matchMedia("(pointer: coarse)").matches; } catch (e) {}
+  var hasTouch = ("ontouchstart" in window) || (navigator.maxTouchPoints > 0);
+  return hasTouch && coarse;
+}
+
+// Normaliza el texto: sin mayusculas, sin tildes, sin espacios ni simbolos.
+function malumaNormalize(text) {
+  var s = String(text || "");
+  s = s.toLowerCase();
+  if (typeof s.normalize === "function") {
+    try { s = s.normalize("NFD").replace(/[\u0300-\u036f]/g, ""); } catch (e) {}
+  }
+  return s.replace(/[^a-z0-9]/g, "");
+}
+
+function malumaDetectTouch() {
+  return malumaIsTouchDevice();
+}
+
+// --- FASE 1: Hackeo ---
+function malumaBuildHackPhase() {
+  $malumaHackPhase.classList.add("active");
+  $malumaEventBanner.classList.add("show");
+  var audio = MALUMA_AUDIO[Math.floor(Math.random() * MALUMA_AUDIO.length)];
+  if (soundEnabled) {
+    try {
+      malumaAudioEl = new Audio(audio);
+      malumaAudioEl.volume = 0.55;
+      malumaAudioEl.loop = true;
+      malumaAudioEl.preload = "auto";
+      malumaAudioEl.play().catch(function() {});
+    } catch (e) { malumaAudioEl = null; }
+  }
+}
+
+// --- FASE 2: Pila de gifs ---
+function malumaRandomGif() {
+  var pool = MALUMA_POOL.slice();
+  var pick = pool[Math.floor(Math.random() * pool.length)];
+  return MALUMA_ASSET_DIR + pick;
+}
+
+function malumaSpawnPileItem() {
+  if (!$malumaEventPile) return;
+  var el = document.createElement("img");
+  el.className = "maluma-pile-item";
+  el.src = malumaRandomGif();
+  el.alt = "";
+  el.setAttribute("aria-hidden", "true");
+  var size = 70 + Math.floor(Math.random() * 110);
+  el.style.width = size + "px";
+  el.style.height = size + "px";
+  el.style.left = (8 + Math.random() * 74) + "%";
+  el.style.top = (12 + Math.random() * 68) + "%";
+  el.style.setProperty("--pile-rot", (Math.floor(Math.random() * 720) - 360) + "deg");
+  el.style.setProperty("--pile-dur", (1.6 + Math.random() * 2.4).toFixed(2) + "s");
+  el.style.setProperty("--pile-delay", (Math.random() * 0.5).toFixed(2) + "s");
+  el.style.setProperty("--pile-scale", (0.7 + Math.random() * 1.1).toFixed(2));
+  $malumaEventPile.appendChild(el);
+  malumaPileItems.push(el);
+  while (malumaPileItems.length > 22) {
+    var old = malumaPileItems.shift();
+    if (old && old.parentNode) old.parentNode.removeChild(old);
+  }
+}
+
+// --- FASE 3: Minijuego de tipeo ---
+function malumaBuildGamePhase() {
+  $malumaHackPhase.classList.remove("active");
+  $malumaEventPile.classList.remove("active");
+  $malumaGamePhase.classList.add("active");
+
+  var idx = Math.floor(Math.random() * MALUMA_TYPING_PHRASES.length);
+  var phrase = MALUMA_TYPING_PHRASES[idx];
+  var reward = MALUMA_PHRASE_REWARDS[idx];
+  var timeLimit = 8000;
+
+  malumaGameState = {
+    phrase: phrase,
+    target: malumaNormalize(phrase),
+    typed: "",
+    reward: reward,
+    timeLimit: timeLimit,
+    timeLeft: timeLimit,
+    done: false,
+    success: false
+  };
+  malumaTypingResolved = false;
+
+  $malumaGameTitle.textContent = "DESBLOQUEA EL MODO BEIBI";
+  $malumaGamePrompt.textContent = phrase;
+  $malumaGameSlots.innerHTML = "";
+  $malumaGameTimer.textContent = "";
+  $malumaGameTimer.className = "";
+
+  var slotsWrap = $malumaGameSlots;
+  for (var i = 0; i < phrase.length; i++) {
+    var slot = document.createElement("span");
+    slot.className = "maluma-slot";
+    slot.textContent = phrase.charAt(i);
+    slotsWrap.appendChild(slot);
+  }
+
+  $malumaGameInput.value = "";
+  $malumaGameKeys.innerHTML = "";
+
+  var touch = malumaDetectTouch();
+  if (touch) {
+    $malumaGameInput.classList.add("hidden");
+    $malumaGameKeys.classList.add("active");
+    var letters = phrase.split("");
+    for (var li = letters.length - 1; li > 0; li--) {
+      var rnd = Math.floor(Math.random() * (li + 1));
+      var tmp = letters[li];
+      letters[li] = letters[rnd];
+      letters[rnd] = tmp;
+    }
+    letters.forEach(function(ch) {
+      var key = document.createElement("button");
+      key.className = "maluma-key";
+      key.type = "button";
+      key.textContent = ch;
+      key.addEventListener("click", function(e) {
+        e.preventDefault();
+        malumaGameType(ch);
+      });
+      $malumaGameKeys.appendChild(key);
+    });
+  } else {
+    $malumaGameInput.classList.remove("hidden");
+    $malumaGameKeys.classList.remove("active");
+    $malumaGameInput.focus();
+    $malumaGameInput.addEventListener("input", function() {
+      var raw = $malumaGameInput.value;
+      var norm = malumaNormalize(raw);
+      malumaGameState.typed = norm;
+      malumaGameRender();
+      if (norm === malumaGameState.target) malumaGameFinish(true);
+    });
+    $malumaGameInput.addEventListener("keydown", function(e) {
+      if (e.key === "Enter") e.preventDefault();
+    });
+  }
+
+  malumaGameTimerId = setInterval(function() {
+    if (!malumaGameState || malumaGameState.done) return;
+    malumaGameState.timeLeft -= 100;
+    if (malumaGameState.timeLeft <= 0) {
+      malumaGameState.timeLeft = 0;
+      malumaGameTimer.textContent = "TIEMPO FUERA";
+      malumaGameTimer.className = "fail";
+      malumaGameFinish(false);
+      return;
+    }
+    malumaGameTimer.textContent = "FALTAN " + (Math.ceil(malumaGameState.timeLeft / 1000)) + "s";
+    malumaGameTimer.className = malumaGameState.timeLeft <= 3000 ? "danger" : "";
+  }, 100);
+}
+
+function malumaGameType(ch) {
+  if (!malumaGameState || malumaGameState.done) return;
+  var norm = malumaNormalize(ch);
+  if (!norm) return;
+  var next = malumaGameState.typed + norm;
+  malumaGameState.typed = next;
+  malumaGameRender();
+  if (next === malumaGameState.target) malumaGameFinish(true);
+}
+
+function malumaGameRender() {
+  if (!malumaGameState) return;
+  var typed = malumaGameState.typed;
+  var target = malumaGameState.target;
+  var slots = $malumaGameSlots.querySelectorAll(".maluma-slot");
+  for (var i = 0; i < slots.length; i++) {
+    var slot = slots[i];
+    var originalChar = malumaNormalize(malumaGameState.phrase.charAt(i));
+    if (i < typed.length) {
+      slot.classList.add("filled");
+      slot.classList.toggle("wrong", typed.charAt(i) !== originalChar);
+    } else {
+      slot.classList.remove("filled");
+      slot.classList.remove("wrong");
+    }
+  }
+  var wrong = false;
+  for (var k = 0; k < typed.length && k < target.length; k++) {
+    if (typed.charAt(k) !== target.charAt(k)) { wrong = true; break; }
+  }
+  $malumaGamePhase.classList.toggle("wrong", wrong);
+}
+
+function malumaGameFinish(success) {
+  if (!malumaGameState || malumaGameState.done) return;
+  malumaGameState.done = true;
+  malumaGameState.success = success;
+  if (malumaGameTimerId) { clearInterval(malumaGameTimerId); malumaGameTimerId = null; }
+
+  var factor = success ? 1 : 0.5;
+  var coins = Math.round(malumaGameState.reward.coins * factor);
+  var xp = Math.round(malumaGameState.reward.xp * factor);
+
+  if (coins > 0) addCoins(coins, "maluma", true);
+  if (xp > 0) {
+    pathState.xp += xp;
+    persistPathState();
+    updatePathsMenuBadge();
+  }
+
+  if (success) {
+    $malumaGameTimer.textContent = "BEIBI DESBLOQUEADO! +" + coins + " 🪙 +" + xp + " XP";
+    $malumaGameTimer.className = "success";
+    $malumaGamePhase.classList.add("completed");
+    if (typeof playSoundSafe === "function") playSoundSafe("assets/sounds/powerup.mp3", 0.5);
+  } else {
+    $malumaGameTimer.textContent = "FALLASTE. +" + coins + " 🪙 +" + xp + " XP";
+    $malumaGameTimer.className = "fail";
+    if (typeof playSoundSafe === "function") playSoundSafe("assets/sounds/spongebob-fail.mp3", 0.4);
+  }
+
+  malumaSetTimeout(function() {
+    malumaGamePhase.classList.remove("active", "completed", "wrong");
+    $malumaGamePhase.classList.add("done");
+    malumaSetTimeout(function() {
+      $malumaGamePhase.classList.remove("done");
+    }, 1200);
+  }, 1400);
+}
+
+// --- FASE 4: Rickroll + caos ---
+function malumaBuildRickPhase() {
+  $malumaGamePhase.classList.remove("active");
+  $malumaRickPhase.classList.add("active");
+  if ($malumaRickImg) {
+    $malumaRickImg.src = MALUMA_ASSET_DIR + "rickroll.gif";
+  }
+  malumaSetTimeout(function() {
+    var current = Math.min(MALUMA_CHAOS_CAP, chaosLevel + 25);
+    chaosLevel = current;
+    clicks = Math.round((chaosLevel / 100) * 200);
+    updateChaosMeter();
+  }, 2600);
+}
+
+// --- Ciclo de vida del evento ---
+function malumaGrantChaos() {
+  var current = Math.min(MALUMA_CHAOS_CAP, chaosLevel + 25);
+  chaosLevel = current;
+  clicks = Math.round((chaosLevel / 100) * 200);
+  updateChaosMeter();
+}
+
+function startMalumaEvent() {
+  if (malumaEventActive) return;
+  if (!$malumaEvent) return;
+  malumaEventActive = true;
+  malumaClearTimers();
+  malumaPileItems = [];
+  if ($malumaEventPile) $malumaEventPile.innerHTML = "";
+  $malumaEvent.classList.add("active");
+  malumaLockScroll(true);
+
+  malumaBuildHackPhase();
+
+  malumaSetTimeout(function() {
+    malumaBuildPilePhase();
+  }, MALUMA_EVENT_PHASES.hack);
+
+  malumaSetTimeout(function() {
+    malumaBuildGamePhase();
+  }, MALUMA_EVENT_PHASES.hack + MALUMA_EVENT_PHASES.pile);
+
+  malumaSetTimeout(function() {
+    malumaBuildRickPhase();
+  }, MALUMA_EVENT_PHASES.hack + MALUMA_EVENT_PHASES.pile + MALUMA_EVENT_PHASES.game);
+
+  malumaSetTimeout(function() {
+    endMalumaEvent();
+  }, MALUMA_EVENT_DURATION);
+}
+
+function malumaBuildPilePhase() {
+  $malumaHackPhase.classList.remove("active");
+  $malumaEventPile.classList.add("active");
+  for (var i = 0; i < 8; i++) malumaSpawnPileItem();
+  malumaPileInterval = setInterval(function() {
+    malumaSpawnPileItem();
+  }, 550);
+}
+
+function endMalumaEvent() {
+  malumaClearTimers();
+  malumaEventActive = false;
+  malumaTypingResolved = false;
+  if ($malumaEvent) $malumaEvent.classList.remove("active");
+  if ($malumaHackPhase) $malumaHackPhase.classList.remove("active");
+  if ($malumaGamePhase) $malumaGamePhase.classList.remove("active", "completed", "wrong", "done");
+  if ($malumaRickPhase) $malumaRickPhase.classList.remove("active");
+  if ($malumaEventPile) {
+    $malumaEventPile.classList.remove("active");
+    $malumaEventPile.innerHTML = "";
+  }
+  if ($malumaEventBanner) $malumaEventBanner.classList.remove("show");
+  malumaPileItems = [];
+  if (malumaAudioEl) {
+    try { malumaAudioEl.pause(); malumaAudioEl.currentTime = 0; } catch (e) {}
+    malumaAudioEl = null;
+  }
+  malumaLockScroll(false);
+  if (typeof checkAchievements === "function") checkAchievements();
+  if (typeof checkAcumulador === "function") checkAcumulador();
+}
+
+// 5% de legendarios por click mientras dura el evento.
+function trySpawnEventLegendary() {
+  if (activeCollectible) return;
+  if (Math.random() >= MALUMA_EVENT_LEGENDARY_CHANCE) return;
+  var pool = MALUMA_EVENT_LEGENDARIES.slice();
+  var pick = pool[Math.floor(Math.random() * pool.length)];
+  spawnCollectibleById(pick);
+}
+
+function initMalumaEvent() {
+  $malumaEvent = document.getElementById("malumaEvent");
+  $malumaEventPile = document.getElementById("malumaEventPile");
+  $malumaEventBanner = document.getElementById("malumaEventBanner");
+  $malumaHackPhase = document.getElementById("malumaHackPhase");
+  $malumaGamePhase = document.getElementById("malumaGamePhase");
+  $malumaRickPhase = document.getElementById("malumaRickPhase");
+  $malumaGamePrompt = document.getElementById("malumaGamePrompt");
+  $malumaGameSlots = document.getElementById("malumaGameSlots");
+  $malumaGameInput = document.getElementById("malumaGameInput");
+  $malumaGameKeys = document.getElementById("malumaGameKeys");
+  $malumaGameTimer = document.getElementById("malumaGameTimer");
+  $malumaGameTitle = document.getElementById("malumaGameTitle");
+  $malumaRickImg = document.getElementById("malumaRickImg");
+}
+
+if (typeof document !== "undefined") {
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initMalumaEvent);
+  } else {
+    initMalumaEvent();
+  }
+}
+
+// Expuesto en window para debug/testing (mismo patron que startBossArena)
+if (typeof window !== "undefined") {
+  window.startMalumaEvent = startMalumaEvent;
+  window.endMalumaEvent = endMalumaEvent;
+  window.getMalumaState = function() {
+    return { clicks: malumaClickCounter, pending: malumaPending, captures: malumaCaptures(), active: malumaEventActive };
+  };
+}
 
 })();
 

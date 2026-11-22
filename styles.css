@@ -5675,3 +5675,335 @@
   .paths-nodes { gap: 5px 6px; }
   .paths-node-img-wrap { width: 46px; height: 46px; font-size: 22px; }
 }
+
+/* ===== MALUMA BEIBEI (collectible + evento) ===== */
+.collectible-maluma {
+  z-index: 8002;
+  animation: malumaFloat 1.4s ease-in-out infinite alternate;
+}
+.collectible-maluma img {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 16px rgba(255, 0, 200, 0.75));
+}
+.collectible-maluma.maluma-bounce {
+  animation: malumaFloat 1.4s ease-in-out infinite alternate, malumaSpin 5s linear infinite;
+}
+@keyframes malumaFloat {
+  0%   { transform: translateY(0) scale(1); }
+  100% { transform: translateY(-26px) scale(1.08); }
+}
+@keyframes malumaSpin {
+  0%   { filter: drop-shadow(0 0 16px rgba(255, 0, 200, 0.75)) hue-rotate(0deg); }
+  50%  { filter: drop-shadow(0 0 26px rgba(0, 255, 255, 0.85)) hue-rotate(180deg); }
+  100% { filter: drop-shadow(0 0 16px rgba(255, 0, 200, 0.75)) hue-rotate(360deg); }
+}
+
+#malumaEvent {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-family: "Comic Sans MS", "Chalkboard SE", "Courier New", monospace;
+}
+#malumaEvent.active { display: flex; }
+
+#malumaEventBackdrop {
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.35) 0 2px, rgba(0, 0, 0, 0) 2px 4px),
+    radial-gradient(circle at 50% 50%, #2a0033 0%, #0b0016 70%);
+  animation: malumaBackdropShift 0.35s steps(4) infinite;
+}
+@keyframes malumaBackdropShift {
+  0%   { background-position: 0 0, 0 0; }
+  25%  { background-position: 0 0, 12px 8px; }
+  50%  { background-position: 0 0, -10px 14px; }
+  75%  { background-position: 0 0, 8px -12px; }
+  100% { background-position: 0 0, 0 0; }
+}
+
+#malumaEventBanner {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%) scale(0);
+  z-index: 4;
+  padding: 8px 22px;
+  font-size: clamp(18px, 5vw, 34px);
+  font-weight: 900;
+  letter-spacing: 6px;
+  color: #00ff66;
+  background: #000;
+  border: 4px solid #ff00cc;
+  box-shadow: 0 0 24px #ff00cc, inset 0 0 18px #00ff66;
+  text-shadow: 3px 3px 0 #ff0000, -3px -3px 0 #00ffff;
+  white-space: nowrap;
+}
+#malumaEventBanner.show { animation: malumaBannerPop 0.6s steps(3) forwards; }
+@keyframes malumaBannerPop {
+  0%   { transform: translateX(-50%) scale(0) rotate(-25deg); }
+  60%  { transform: translateX(-50%) scale(1.15) rotate(6deg); }
+  100% { transform: translateX(-50%) scale(1) rotate(-3deg); }
+}
+
+.maluma-phase {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  text-align: center;
+}
+.maluma-phase.active { display: flex; }
+
+/* --- FASE 1: hackeo --- */
+#malumaHackImg {
+  width: clamp(180px, 42vw, 340px);
+  height: clamp(180px, 42vw, 340px);
+  object-fit: contain;
+  animation: malumaHackSpin 0.6s steps(5) infinite;
+  filter: drop-shadow(0 0 30px #ff00cc);
+}
+@keyframes malumaHackSpin {
+  0%   { transform: scale(1) rotate(0deg); }
+  50%  { transform: scale(1.12) rotate(8deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+#malumaHackText {
+  margin-top: 14px;
+  font-size: clamp(24px, 8vw, 66px);
+  font-weight: 900;
+  letter-spacing: 3px;
+  color: #ffff00;
+  text-shadow:
+    4px 4px 0 #ff0000,
+    -4px -4px 0 #00ffff,
+    0 0 26px #ff00cc;
+  animation: malumaHackJitter 0.16s steps(3) infinite;
+}
+@keyframes malumaHackJitter {
+  0%   { transform: translate(0, 0) skewX(0deg); }
+  25%  { transform: translate(-5px, 3px) skewX(-7deg); }
+  50%  { transform: translate(4px, -4px) skewX(6deg); }
+  75%  { transform: translate(-3px, -2px) skewX(-4deg); }
+  100% { transform: translate(5px, 2px) skewX(5deg); }
+}
+#malumaHackSub {
+  margin-top: 10px;
+  font-size: clamp(13px, 3.4vw, 24px);
+  font-weight: 900;
+  letter-spacing: 4px;
+  color: #00ff66;
+  background: rgba(0, 0, 0, 0.72);
+  padding: 6px 16px;
+  border: 3px solid #00ff66;
+  animation: malumaBlink 0.28s steps(2) infinite;
+}
+@keyframes malumaBlink {
+  0%   { opacity: 1; }
+  50%  { opacity: 0.25; }
+  100% { opacity: 1; }
+}
+
+/* --- FASE 2: pila de gifs --- */
+#malumaEventPile {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: none;
+  overflow: hidden;
+  pointer-events: none;
+}
+#malumaEventPile.active { display: block; }
+.maluma-pile-item {
+  position: absolute;
+  object-fit: contain;
+  animation: malumaPileFloat var(--pile-dur, 2.4s) ease-in-out var(--pile-delay, 0s) infinite alternate;
+  will-change: transform;
+  filter: drop-shadow(0 0 12px rgba(255, 0, 200, 0.55));
+}
+@keyframes malumaPileFloat {
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(var(--pile-scale, 1));
+  }
+  25% {
+    transform: translate(22px, -34px) rotate(calc(var(--pile-rot, 90deg) * 0.4)) scale(calc(var(--pile-scale, 1) * 1.1));
+  }
+  50% {
+    transform: translate(-28px, 18px) rotate(calc(var(--pile-rot, 90deg) * 0.7)) scale(calc(var(--pile-scale, 1) * 0.9));
+  }
+  75% {
+    transform: translate(30px, 26px) rotate(calc(var(--pile-rot, 90deg) * 0.9)) scale(calc(var(--pile-scale, 1) * 1.15));
+  }
+  100% {
+    transform: translate(-18px, -22px) rotate(var(--pile-rot, 90deg)) scale(var(--pile-scale, 1));
+  }
+}
+
+/* --- FASE 3: minijuego de tipeo --- */
+#malumaGamePhase {
+  gap: 10px;
+  background: rgba(10, 0, 20, 0.82);
+}
+#malumaGameTitle {
+  font-size: clamp(16px, 4.4vw, 30px);
+  font-weight: 900;
+  letter-spacing: 4px;
+  color: #ff00cc;
+  text-shadow: 0 0 18px #ff00cc;
+}
+#malumaGamePrompt {
+  font-size: clamp(20px, 6vw, 44px);
+  font-weight: 900;
+  letter-spacing: 5px;
+  color: #00ffff;
+  text-shadow: 3px 3px 0 #000, 0 0 20px #00ffff;
+  word-break: break-all;
+}
+#malumaGameSlots {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+  max-width: min(94vw, 720px);
+}
+.maluma-slot {
+  min-width: 20px;
+  padding: 3px 5px;
+  font-size: clamp(15px, 4vw, 30px);
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 255, 255, 0.14);
+  border-radius: 4px;
+}
+.maluma-slot.filled {
+  color: #00ff66;
+  background: rgba(0, 255, 102, 0.14);
+  border-color: #00ff66;
+}
+.maluma-slot.filled.wrong {
+  color: #ff2222;
+  background: rgba(255, 34, 34, 0.18);
+  border-color: #ff2222;
+}
+#malumaGamePhase.wrong #malumaGamePrompt { color: #ff2222; }
+#malumaGameInput {
+  width: min(92vw, 520px);
+  padding: 10px 14px;
+  font-family: "Courier New", monospace;
+  font-size: clamp(16px, 4.4vw, 26px);
+  font-weight: 700;
+  letter-spacing: 4px;
+  text-align: center;
+  text-transform: uppercase;
+  color: #00ff66;
+  background: rgba(0, 0, 0, 0.85);
+  border: 3px solid #00ff66;
+  border-radius: 6px;
+  outline: none;
+}
+#malumaGameInput.hidden { display: none; }
+#malumaGameKeys {
+  display: none;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 7px;
+  max-width: min(96vw, 620px);
+}
+#malumaGameKeys.active { display: flex; }
+.maluma-key {
+  min-width: 44px;
+  padding: 12px 10px;
+  font-family: "Courier New", monospace;
+  font-size: clamp(17px, 4.6vw, 26px);
+  font-weight: 900;
+  color: #000;
+  background: #00ff66;
+  border: 3px solid #000;
+  border-radius: 6px;
+  cursor: pointer;
+  box-shadow: 3px 3px 0 #ff00cc;
+}
+.maluma-key:active {
+  transform: translate(3px, 3px);
+  box-shadow: 0 0 0 #ff00cc;
+}
+#malumaGameTimer {
+  min-height: 26px;
+  font-size: clamp(14px, 3.6vw, 22px);
+  font-weight: 900;
+  letter-spacing: 3px;
+  color: #ffcc00;
+}
+#malumaGameTimer.danger { color: #ff4444; }
+#malumaGameTimer.success { color: #00ff66; }
+#malumaGameTimer.fail { color: #ff4444; }
+#malumaGameHint {
+  font-size: clamp(10px, 2.6vw, 14px);
+  letter-spacing: 2px;
+  color: rgba(255, 255, 255, 0.55);
+}
+#malumaGamePhase.completed { animation: malumaWinFlash 0.5s steps(4) 2; }
+@keyframes malumaWinFlash {
+  0%   { background: rgba(10, 0, 20, 0.82); }
+  50%  { background: rgba(0, 255, 102, 0.28); }
+  100% { background: rgba(10, 0, 20, 0.82); }
+}
+
+/* --- FASE 4: rickroll --- */
+#malumaRickImg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(1.6) contrast(1.15);
+}
+#malumaRickText {
+  position: relative;
+  z-index: 2;
+  padding: 12px 24px;
+  font-size: clamp(24px, 8.5vw, 72px);
+  font-weight: 900;
+  letter-spacing: 4px;
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.78);
+  border: 5px solid #ff00cc;
+  box-shadow: 0 0 30px #ff00cc;
+  text-shadow: 4px 4px 0 #ff0000, -4px -4px 0 #00ffff;
+  animation: malumaRickJitter 0.2s steps(3) infinite;
+}
+@keyframes malumaRickJitter {
+  0%   { transform: scale(1) rotate(0deg); }
+  50%  { transform: scale(1.06) rotate(-4deg); }
+  100% { transform: scale(1) rotate(3deg); }
+}
+
+@media (max-width: 520px) {
+  #malumaEventBanner { font-size: 15px; letter-spacing: 3px; padding: 6px 12px; }
+  .maluma-slot { min-width: 16px; padding: 2px 3px; }
+  .maluma-key { min-width: 38px; padding: 10px 8px; }
+  #malumaGameHint { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #malumaEventBackdrop,
+  #malumaHackImg,
+  #malumaHackText,
+  #malumaHackSub,
+  #malumaRickText,
+  .maluma-pile-item,
+  .collectible-maluma {
+    animation: none !important;
+  }
+}

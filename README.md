@@ -38,7 +38,7 @@ El proyecto incluye el arsenal, el cierre narrativo del fragmento #8, recompensa
 
 - **Clicker principal** — Cada clic sube el caos. La barra tiene una *safe zone* (0–89%) y una rampa final (0–3% en el último 10%) para que 100% sea alcanzable sin RNG puro.
 - **Monedas** — Currency para la tienda y el arsenal. Boost de monedas (+25 por 10s) al activar el boost bar.
-- **35 logros** — Bronce, plata y oro, con recompensas como fotos, marcos y fuentes. Incluye logros de arsenal, collectibles, rutas y racha diaria.
+- **37 logros** — Bronce, plata y oro, con recompensas como fotos, marcos y fuentes. Incluye logros de arsenal, collectibles, rutas, racha diaria y el evento Maluma.
 
 ### Menú ☰ (hamburger)
 
@@ -63,10 +63,10 @@ Las categorías **TIENDA** y **PROGRESO** muestran sus submenús en el mismo pan
 
 - **RUTAS** — Mapa de progresión por XP con cinco rutas, tiers romanos, objetivos, recompensas y Fragmentos de Conocimiento.
 - **LOGROS** — Panel con tiers (🥉/🥈/🥇) y progreso x/total.
-- **COLECCION** — Los 9 collectibles con su mecánica. Marco dorado en legendarios.
+- **COLECCION** — Los 10 collectibles con su mecánica. Marco dorado en legendarios.
 - **MEMORIA** — 11 fragmentos narrativos. El #8 ("El Último Humano") es *El Acumulador*; los #9–#11 se obtienen completando rutas.
-- **FRAGMENTOS** — 48 Fragmentos de Conocimiento, antes llamados "Hechos". Se acumulan como recompensa extra de cada tier de ruta.
-- **STATS** — Clicks exactos, monedas actuales/totales, boosts, veces al 100%, logros x/35, True Ending destacado.
+- **FRAGMENTOS** — 47 Fragmentos de Conocimiento, antes llamados "Hechos". Se acumulan como recompensa extra de cada tier de ruta.
+- **STATS** — Clicks exactos, monedas actuales/totales, boosts, veces al 100%, logros x/37, True Ending destacado.
 
 ### Rutas
 
@@ -92,6 +92,25 @@ El estado se persiste en `chaosPathState`:
   "completedPaths": []
 }
 ```
+
+### Evento Maluma Beibei
+
+Maluma aparece como collectible **legendario** una vez cada **2005 clicks manuales**. Al picarlo, se dispara un evento de **30 segundos** que bloquea el juego:
+
+| Fase | Duración | Qué pasa |
+|---|---:|---|
+| 1 — Hackeo | 0–5 s | GIF de Maluma con el texto "MALUMA TE ESTÁ HACKEANDO" en tipografía y colores estridentes, con animación tipo dank meme. Suena uno de los 3 audios al azar. |
+| 2 — Pila de caos | 5–17 s | Una pila de GIFs de `assets/maluma-event/` que recorren la pantalla, giran, escalan y se superponen. |
+| 3 — Modo Beibei | 17–25 s | Minijuego de tipeo: hay que escribir una de 3 frases (`MALUMABEIBE`, `CROQUETIZACIÓN`, `ABUELITA`) en 8 segundos. |
+| 4 — Rickroll | 25–30 s | `rickroll.gif` a pantalla completa con el texto "HAS SIDO RICKROLLEADO" y un salto de **+25% de caos** (con tope en 95%). El overlay se cierra solo. |
+
+- **Tipeo sin tildes** — El detector ignora mayúsculas, tildes y espacios: `CROQUETIZACIÓN` y `croquetizacion` valen lo mismo.
+- **Mobile** — En dispositivos táctiles se detectan automáticamente y aparecen botones con las letras en vez del teclado.
+- **Recompensas del minijuego** — Monedas + XP de ruta. Si se agota el tiempo, el jugador recibe la mitad.
+- **5% de legendarios** — Durante los 30 segundos del evento, cada click manual tiene 5% de probabilidad de generar un collectible legendario. Maluma queda excluido de ese pool.
+- **Logros** — "Maluma Beibei" en la primera captura y "Leyenda Beibei" en la quinta.
+
+Estado persistido en `chaosMalumaClicks`, `chaosMalumaPending` y `chaosMalumaCaptures`.
 
 ### Recompensas Diarias
 
@@ -135,13 +154,15 @@ En la pelea aparecen los botones bajo `CLIQUEÁ PARA ATACAR`: **amarillo + círc
 
 Logros de arsenal: **Bien Armado** (ganar usando 2 armas distintas), **Coleccionista del Arsenal** (comprar las 5 comprables), **Destructor Armado** (infligir 200 HP de daño con armas).
 
-### Coleccionables (9 ítems, mecánica propia)
+### Coleccionables (10 ítems, mecánica propia)
 
 - **Gato**, **Sardina**, **Sandwich de Vainilla** y **La C del Caos** — Coleccionables comunes con movimiento y aparición característicos.
 - **Refresco Zuko** y **Honguito Mágico** — Coleccionables raros: zigzag, y crecer girando → quieto 1s (agarrable) → achica girando.
-- **Among Us**, **Pizza Guy + Casa** y **Spiderman** — Legendarios con comportamiento de evasión y movimiento diagonal.
+- **Among Us**, **Pizza Guy + Casa**, **Spiderman** y **Maluma Beibei** — Legendarios con comportamiento de evasión y movimiento diagonal.
 
 Rates base: ~1 común cada 2–3 min, ~1 raro cada 1000 clicks, ~1 legendario cada 10000 clicks. Solo uno a la vez en pantalla. Las rutas pueden sumar un collectible automático cada cierta cantidad de clicks.
+
+Maluma tiene su propia regla: aparece **exclusivamente** cada 2005 clicks manuales y nunca por la tirada aleatoria.
 
 ### Eventos aleatorios del caos
 
@@ -163,7 +184,7 @@ Terremoto, explosión, invasión, virus, portal, glitch, hacker, supernova, auro
 3. Comprá items en la tienda con monedas.
 4. Activá el boost bar (cada 1000 clicks) para x2 monedas por 10 segundos.
 5. A los 1000+ clicks se desbloquea la ruleta (5 premios).
-6. Llegá a 100% para que aparezcan los collectibles (1 a la vez). Atrapá los 9.
+6. Llegá a 100% para que aparezcan los collectibles (1 a la vez). Atrapá los 10.
 7. Peleá contra el Chaos God (empieza a aparecer a partir de ~1500 clicks). Empezás en nivel 1, subís con cada victoria. Llegá al 10.
 8. Comprá armas en ARSENAL y usá 2 distintas para ganar la pelea → achievement **Bien Armado**. Juntá las 5 comprables → **Coleccionista del Arsenal**. Infligí 200 HP de daño con armas → **Destructor Armado**.
 9. Completá **El Acumulador** (100% caos + collectibles + boss nivel 10) → se desbloquea el **fragmento de memoria #8** y el cierre narrativo en la pestaña MEMORIA.
@@ -215,6 +236,9 @@ __chaosDebug.giveClicks(99999)    // setear clicks totales
 __chaosDebug.giveCoins(99999)    // setear monedas
 __chaosDebug.givePathXp(1000)    // setear XP de rutas
 __chaosDebug.giveFacts()         // todos los Fragmentos de Conocimiento
+__chaosDebug.spawnMaluma()       // spawnear Maluma Beibei
+__chaosDebug.startMalumaEvent()  // arrancar el evento Maluma
+__chaosDebug.malumaState()       // ver los contadores de Maluma
 __chaosDebug.giveAll()           // todo desbloqueado + stats al máximo
 __chaosDebug.spawnGato()         // spawnea un collectible
 __chaosDebug.clearCollectible()  // borra el collectible activo
@@ -238,18 +262,19 @@ javascript:void(startBossArena(10))
 
 ```text
 chaos-button/
-├── index.html              # Entry point y shell (~1747 líneas)
-├── styles.css              # Todos los estilos (~5677 líneas, organizado por sección)
-├── app.js                  # Lógica principal (~6113 líneas, organizado por feature)
-├── boss.js                 # Overlay del boss fight + lógica de armas (~420 líneas)
+├── index.html              # Entry point y shell (~1775 líneas)
+├── styles.css              # Todos los estilos (~6009 líneas, organizado por sección)
+├── app.js                  # Lógica principal (~6676 líneas, organizado por feature)
+├── boss.js                 # Overlay del boss fight + lógica de armas (~436 líneas)
 ├── manifest.json           # PWA metadata
-├── sw.js                   # Service worker con self-heal y build-token guard (~207 líneas)
+├── sw.js                   # Service worker con self-heal y build-token guard (~216 líneas)
 ├── assets/
 │   ├── images/             # Shop, collectibles, armas, fotos y memes (~45 imágenes)
 │   ├── sounds/             # Efectos de sonido (~20 archivos)
 │   ├── fonts/              # 4 fuentes custom
 │   ├── icons/              # 2 iconos PWA
 │   ├── videos/             # 3 videos de recompensa
+│   ├── maluma-event/       # GIFs, imagen y audios del evento Maluma Beibei
 │   ├── logo.jpg
 │   ├── boss.jpg
 │   └── music-boss-{1,2,3}.mp3
@@ -288,14 +313,18 @@ var legChance    = 0.0001;  // ~1 cada 10000
 
 Las recompensas disponibles incluyen `coins`, `frame`, `picture`, `boostPermanent`, `theme`, `weapon`, `weaponSlots`, `collectible`, `memory`, `autoCollectible`, `passiveCoins` y `title`.
 
+### Cambiar el evento Maluma
+
+`app.js` contiene las constantes del evento Maluma: `MALUMA_CLICKS_PER_SPAWN` (2005), `MALUMA_EVENT_LEGENDARY_CHANCE` (0.05), `MALUMA_EVENT_DURATION` (30000) y `MALUMA_TYPING_PHRASES` (las 3 frases del minijuego). Los GIFs de la pila viven en `MALUMA_POOL` y los audios en `MALUMA_AUDIO`, dentro de `assets/maluma-event/`.
+
 ### Bump de build (cuando cambiás JS/CSS/SW)
 
-Todo cambio en JavaScript, CSS o Service Worker requiere actualizar el build token. El token actual es `58-rutas-map` y aparece en **10 lugares**:
+Todo cambio en JavaScript, CSS o Service Worker requiere actualizar el build token. El token actual es `59-maluma-beibei` y aparece en **11 lugares**:
 
 - `index.html` (6): `styles.css?v=`, `assets/logo.jpg?v=`, `CURRENT_BUILD`, `sw.js?v=`, `app.js?v=`, `boss.js?v=`
-- `sw.js` (4): `CACHE_VERSION`, `BUILD_TOKEN` y los tres assets del `APP_SHELL` (`styles.css?v=`, `app.js?v=`, `boss.js?v=`)
+- `sw.js` (5): `CACHE_VERSION`, `BUILD_TOKEN` y los tres assets del `APP_SHELL` (`styles.css?v=`, `app.js?v=`, `boss.js?v=`)
 
-Reemplazá el token viejo por el nuevo en esos 10 lugares. Sin esto, la SW puede servir la versión vieja. Los cambios únicamente en Markdown no requieren bump.
+Reemplazá el token viejo por el nuevo en esos 11 lugares. Sin esto, la SW puede servir la versión vieja. Los cambios únicamente en Markdown no requieren bump.
 
 ---
 

@@ -10,14 +10,14 @@
    old CSS/JS forever after a deploy.
 */
 
-const CACHE_VERSION = "chaos-v58-rutas-map";
-const BUILD_TOKEN = "58-rutas-map";
+const CACHE_VERSION = "chaos-v59-maluma-beibei";
+const BUILD_TOKEN = "59-maluma-beibei";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=58-rutas-map",
-  "./app.js?v=58-rutas-map",
-  "./boss.js?v=58-rutas-map",
+  "./styles.css?v=59-maluma-beibei",
+  "./app.js?v=59-maluma-beibei",
+  "./boss.js?v=59-maluma-beibei",
   "./manifest.json",
   "./assets/icons/icon-192.png",
   "./assets/icons/icon-512.png",
@@ -81,6 +81,15 @@ const APP_SHELL = [
   "./assets/images/spider-man.png",
   "./assets/images/laser-gun.png",
   "./assets/images/martillo-de-Thor.png",
+
+  // Maluma Beibei event
+  "./assets/maluma-event/maluma.png",
+  "./assets/maluma-event/Maluma-Beibe.gif",
+  "./assets/maluma-event/Maluma-Beibe2.gif",
+  "./assets/maluma-event/rickroll.gif",
+  "./assets/maluma-event/borro-casette.mp3",
+  "./assets/maluma-event/felices-los-4.mp3",
+  "./assets/maluma-event/hawai.mp3",
 
   // Sounds
   "./assets/sounds/mouse-click-sound.mp3",
