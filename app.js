@@ -6320,10 +6320,12 @@ function malumaLockScroll(lock) {
 
 function malumaIsTouchDevice() {
   if (typeof window === "undefined") return false;
-  var coarse = false;
-  try { coarse = window.matchMedia("(pointer: coarse)").matches; } catch (e) {}
-  var hasTouch = ("ontouchstart" in window) || (navigator.maxTouchPoints > 0);
-  return hasTouch && coarse;
+  // Override manual para forzar el modo botones (util para testear en desktop
+  // o en DevTools device mode que a veces no reporta pointer: coarse).
+  if (window.__chaosForceMobile === true) return true;
+  if (navigator.maxTouchPoints > 0) return true;
+  if ("ontouchstart" in window) return true;
+  return false;
 }
 
 // Normaliza el texto: sin mayusculas, sin tildes, sin espacios ni simbolos.
