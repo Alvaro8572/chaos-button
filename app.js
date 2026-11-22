@@ -6323,8 +6323,10 @@ function malumaIsTouchDevice() {
   // Override manual para forzar el modo botones (util para testear en desktop
   // o en DevTools device mode que a veces no reporta pointer: coarse).
   if (window.__chaosForceMobile === true) return true;
+  // maxTouchPoints es la senal confiable: 0 en desktop sin touch, > 0 en
+  // moviles y en DevTools device mode. ("ontouchstart" in window NO sirve
+  // porque en Chrome desktop devuelve true aunque no haya touchscreen).
   if (navigator.maxTouchPoints > 0) return true;
-  if ("ontouchstart" in window) return true;
   return false;
 }
 
@@ -6398,7 +6400,9 @@ function malumaBuildGamePhase() {
   var idx = Math.floor(Math.random() * MALUMA_TYPING_PHRASES.length);
   var phrase = MALUMA_TYPING_PHRASES[idx];
   var reward = MALUMA_PHRASE_REWARDS[idx];
-  var timeLimit = 8000;
+  // En mobile tocar los botones es mas incomodo que tipear, asi que se le
+  // da un poco mas de tiempo que en desktop.
+  var timeLimit = malumaDetectTouch() ? 12000 : 8000;
 
   malumaGameState = {
     phrase: phrase,
@@ -6548,6 +6552,10 @@ function malumaGameFinish(success) {
     $malumaGamePhase.classList.add("done");
     malumaSetTimeout(function() {
       $malumaGamePhase.classList.remove("done");
+      malumaBuildRickPhase();
+      malumaSetTimeout(function() {
+        endMalumaEvent();
+      }, MALUMA_EVENT_PHASES.rick);
     }, 1200);
   }, 1400);
 }
@@ -6595,13 +6603,12 @@ function startMalumaEvent() {
     malumaBuildGamePhase();
   }, MALUMA_EVENT_PHASES.hack + MALUMA_EVENT_PHASES.pile);
 
+  // Safety net: si el minijuego no termina (edge case), el evento se cierra
+  // solo despues de un margen generoso. El flujo normal dispara el rickroll y
+  // el cierre desde malumaGameFinish().
   malumaSetTimeout(function() {
-    malumaBuildRickPhase();
-  }, MALUMA_EVENT_PHASES.hack + MALUMA_EVENT_PHASES.pile + MALUMA_EVENT_PHASES.game);
-
-  malumaSetTimeout(function() {
-    endMalumaEvent();
-  }, MALUMA_EVENT_DURATION);
+    if (malumaEventActive) endMalumaEvent();
+  }, MALUMA_EVENT_DURATION + 15000);
 }
 
 function malumaBuildPilePhase() {
