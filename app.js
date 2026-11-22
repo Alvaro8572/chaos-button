@@ -1329,7 +1329,7 @@ function chaos() {
   // XP por clicks manuales (bufferizado)
   accumulatePathXp();
 
-  // Contador de aparicion de Maluma (1 cada 2005 clicks)
+  // Contador de aparicion de Maluma (1 cada 4005 clicks)
   tickMalumaCounter();
 
   // Collectible automatico (si esta desbloqueado)
@@ -2975,13 +2975,13 @@ function spawnSpiderman() {
 // ============================================
 //    MALUMA BEIBEI — Collectible + Evento
 //    ============================================
-//    - Aparece 1 de cada 2005 clicks manuales.
+//    - Aparece 1 de cada 4005 clicks manuales.
 //    - Al picarlo, dispara el evento de 30 segundos.
 //    - Durante el evento: 5% de spawn de legendarios por click.
 //    - Maluma queda excluido del pool de legendarios.
 //    ============================================
 
-var MALUMA_CLICKS_PER_SPAWN = 2005;
+var MALUMA_CLICKS_PER_SPAWN = 4005;
 var MALUMA_ASSET_DIR = "assets/maluma-event/";
 var MALUMA_POOL = [
   "Albert-Einstein.gif", "Amongus.gif", "Cat-cat.gif", "cat-vanishing.gif",
@@ -3074,7 +3074,6 @@ function spawnMaluma() {
   el.addEventListener("click", function(e) {
     e.stopPropagation();
     if (obj.caught) return;
-    obj.caught = true;
     collectItem(obj);
     var captures = bumpMalumaCaptures();
     if (captures >= 1 && typeof unlockAchievement === "function") unlockAchievement("maluma_beibei");

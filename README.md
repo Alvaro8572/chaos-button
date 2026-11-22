@@ -95,7 +95,7 @@ El estado se persiste en `chaosPathState`:
 
 ### Evento Maluma Beibei
 
-Maluma aparece como collectible **legendario** una vez cada **2005 clicks manuales**. Al picarlo, se dispara un evento de **30 segundos** que bloquea el juego:
+Maluma aparece como collectible **legendario** una vez cada **4005 clicks manuales**. Al picarlo, se dispara un evento de **30 segundos** que bloquea el juego:
 
 | Fase | Duración | Qué pasa |
 |---|---:|---|
@@ -162,7 +162,7 @@ Logros de arsenal: **Bien Armado** (ganar usando 2 armas distintas), **Coleccion
 
 Rates base: ~1 común cada 2–3 min, ~1 raro cada 1000 clicks, ~1 legendario cada 10000 clicks. Solo uno a la vez en pantalla. Las rutas pueden sumar un collectible automático cada cierta cantidad de clicks.
 
-Maluma tiene su propia regla: aparece **exclusivamente** cada 2005 clicks manuales y nunca por la tirada aleatoria.
+Maluma tiene su propia regla: aparece **exclusivamente** cada 4005 clicks manuales y nunca por la tirada aleatoria.
 
 ### Eventos aleatorios del caos
 
@@ -315,7 +315,7 @@ Las recompensas disponibles incluyen `coins`, `frame`, `picture`, `boostPermanen
 
 ### Cambiar el evento Maluma
 
-`app.js` contiene las constantes del evento Maluma: `MALUMA_CLICKS_PER_SPAWN` (2005), `MALUMA_EVENT_LEGENDARY_CHANCE` (0.05), `MALUMA_EVENT_DURATION` (30000) y `MALUMA_TYPING_PHRASES` (las 3 frases del minijuego). Los GIFs de la pila viven en `MALUMA_POOL` y los audios en `MALUMA_AUDIO`, dentro de `assets/maluma-event/`.
+`app.js` contiene las constantes del evento Maluma: `MALUMA_CLICKS_PER_SPAWN` (4005), `MALUMA_EVENT_LEGENDARY_CHANCE` (0.05), `MALUMA_EVENT_DURATION` (30000) y `MALUMA_TYPING_PHRASES` (las 3 frases del minijuego). Los GIFs de la pila viven en `MALUMA_POOL` y los audios en `MALUMA_AUDIO`, dentro de `assets/maluma-event/`.
 
 ### Bump de build (cuando cambiás JS/CSS/SW)
 
