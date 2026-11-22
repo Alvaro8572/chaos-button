@@ -2648,7 +2648,7 @@ var COLLECTIBLES = [
   { id: "amongus", name: "Among Us", src: "assets/images/amongus.png", sound: "assets/sounds/emergency-meeting-among-us.mp3", tier: "legendario", desc: "Un tripulante sospechoso." },
   { id: "pizzaguy", name: "Pizza Guy", src: "assets/images/pizza-guy.png", sound: "assets/sounds/pizza-roblox.mp3", tier: "legendario", desc: "El repartidor que esquiva.", house: "assets/images/house.png" },
   { id: "spiderman", name: "Spiderman", src: "assets/images/spider-man.png", sound: "assets/sounds/powerup.mp3", tier: "legendario", desc: "Cruza la pantalla en diagonal. Rapido." },
-  { id: "maluma", name: "Maluma Beibei", src: "assets/maluma-event/maluma.png", sound: "assets/maluma-event/borro-casette.mp3", tier: "legendario", desc: "Te esta hackeando. No hay escapatoria." }
+  { id: "maluma", name: "Maluma Beibei", src: "assets/maluma-event/maluma.png", tier: "legendario", desc: "Te esta hackeando. No hay escapatoria." }
 ];
 
 var WEAPONS = [
@@ -6348,6 +6348,11 @@ function malumaDetectTouch() {
 function malumaBuildHackPhase() {
   $malumaHackPhase.classList.add("active");
   $malumaEventBanner.classList.add("show");
+  // Por las dudas, para cualquier audio previo antes de arrancar uno nuevo.
+  if (malumaAudioEl) {
+    try { malumaAudioEl.pause(); malumaAudioEl.currentTime = 0; } catch (e) {}
+    malumaAudioEl = null;
+  }
   var audio = MALUMA_AUDIO[Math.floor(Math.random() * MALUMA_AUDIO.length)];
   if (soundEnabled) {
     try {
