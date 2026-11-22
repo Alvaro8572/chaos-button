@@ -10,14 +10,14 @@
    old CSS/JS forever after a deploy.
 */
 
-const CACHE_VERSION = "chaos-v59-maluma-beibei";
-const BUILD_TOKEN = "59-maluma-beibei";
+const CACHE_VERSION = "chaos-v60-maluma-count-fix";
+const BUILD_TOKEN = "60-maluma-count-fix";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=59-maluma-beibei",
-  "./app.js?v=59-maluma-beibei",
-  "./boss.js?v=59-maluma-beibei",
+  "./styles.css?v=60-maluma-count-fix",
+  "./app.js?v=60-maluma-count-fix",
+  "./boss.js?v=60-maluma-count-fix",
   "./manifest.json",
   "./assets/icons/icon-192.png",
   "./assets/icons/icon-512.png",
